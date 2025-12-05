@@ -2,9 +2,10 @@ import "@/app/globals.css";
 import type { Metadata } from "next";
 import { Providers } from "@/components/providers";
 
-const appDomain = "https://glazecorp.vercel.app";
+const appDomain = "https://donutamagotchi.netlify.app";
 const heroImageUrl = `${appDomain}/media/hero.png`;
 const splashImageUrl = `${appDomain}/media/splash.png`;
+const iconImageUrl = `${appDomain}/media/icon.png`;
 
 const miniAppEmbed = {
   version: "1",
@@ -23,10 +24,10 @@ const miniAppEmbed = {
 
 export const metadata: Metadata = {
   title: "Donutamagotchi",
-  description: "Care for your virtual donut pet and earn $DONUT tokens on Base",
+  description: "Raise your donut pet with unique traits, breed offspring, and build a generational legacy. Earn $DONUT tokens while you play.",
   openGraph: {
     title: "Donutamagotchi",
-    description: "Feed your donut pet, earn tokens, and compete to be the best caretaker!",
+    description: "A next-gen tamagotchi game with breeding, traits, and real blockchain earnings on Base.",
     url: appDomain,
     images: [
       {

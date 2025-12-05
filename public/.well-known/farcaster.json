@@ -1,30 +1,36 @@
 {
   "accountAssociation": {
     "header": "eyJmaWQiOjI3MjEwOSwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDQ5REI1QTFjOWZlRjBFMkY5OTVCNDZiMEI3MWJFQmJEOTEyQkYwZTMifQ",
-    "payload": "eyJkb21haW4iOiJnbGF6ZWNvcnAudmVyY2VsLmFwcCJ9",
+    "payload": "eyJkb21haW4iOiJkb251dGFtYWdvdGNoaS5uZXRsaWZ5LmFwcCJ9",
     "signature": "Xun297i8tZiQWxuVqo5bKPxSOs1CFDa1lFzDY4dJgOYJ7l16eBnWCJSxwqrgKnR0t74OmCHW7eg5HtIHMz+NZBs="
   },
   "miniapp": {
     "version": "1",
-    "name": "GlazeCorp",
-    "tagline": "Together we glaze the world",
-    "description": "Command GlazeCorp's donut mine, compete for control, and keep the rewards flowing on Base.",
-    "iconUrl": "https://glazecorp.vercel.app/media/icon.png",
-    "homeUrl": "https://glazecorp.vercel.app/",
-    "splashImageUrl": "https://glazecorp.vercel.app/media/splash.png",
+    "name": "Donutamagotchi",
+    "tagline": "Raise your donut, build your legacy",
+    "description": "A next-gen tamagotchi game with breeding, traits, and real blockchain earnings. Raise unique donuts, breed offspring, and build generational bloodlines while earning $DONUT tokens on Base.",
+    "iconUrl": "https://donutamagotchi.netlify.app/media/icon.png",
+    "homeUrl": "https://donutamagotchi.netlify.app/",
+    "splashImageUrl": "https://donutamagotchi.netlify.app/media/splash.png",
     "splashBackgroundColor": "#FEE7EC",
-    "heroImageUrl": "https://glazecorp.vercel.app/media/hero.png",
-    "buttonTitle": "We Glaze The World",
-    "ogTitle": "We Glaze The World",
-    "ogDescription": "Race the rink to seize the donut mine and keep the glaze flowing.",
-    "ogImageUrl": "https://glazecorp.vercel.app/media/hero.png",
+    "heroImageUrl": "https://donutamagotchi.netlify.app/media/hero.png",
+    "buttonTitle": "Play Donutamagotchi",
+    "ogTitle": "Donutamagotchi",
+    "ogDescription": "Raise your donut pet with unique traits, breed offspring, and build a generational legacy. Earn $DONUT tokens while you play.",
+    "ogImageUrl": "https://donutamagotchi.netlify.app/media/hero.png",
     "requiredChains": [
       "eip155:8453"
     ],
-    "primaryCategory": "finance",
+    "primaryCategory": "gaming",
+    "secondaryCategory": "finance",
     "tags": [
       "gaming",
+      "tamagotchi",
       "base",
+      "breeding",
+      "tokens",
+      "blockchain",
+      "defi",
       "rewards"
     ],
     "actions": [

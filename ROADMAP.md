@@ -179,6 +179,60 @@ We are **not** replacing or competing with the protocol—we are **enhancing it*
 
 ---
 
+## Phase 1.5: Decay System (Weeks 3-4)
+
+**Goal:** Create natural care rhythm and urgency through stat decay
+
+### Decay-Based Needs
+
+**Problem:** Current system relies on price decay (external economic event). Better approach: natural stat degradation encourages regular check-ins.
+
+**Implementation:**
+- **Health Decay**: -0.5% every 30 minutes (halted if fed recently)
+- **Happiness Decay**: -1% every 30 minutes (halted if played with)
+- **Cleanliness Decay**: -2% every 30 minutes (halted if "cleaned"/interacted)
+
+**Check-in Pattern:**
+```
+Ideal pet care routine (casual):
+├─ Feed every 4 hours (prevents health critical)
+├─ Play every 6 hours (prevents happiness critical)
+├─ Pet/interact every 2 hours (prevents cleanliness critical)
+└─ Total: ~5-6 interactions per day
+```
+
+**Why This Matters:**
+- Creates natural urgency without external events
+- Encourages daily habits (vs one-time engagement)
+- Makes breeding viable without feeding (high cleanliness = higher breed success)
+- Aligns with original tamagotchi (require regular care or pet dies)
+
+### Breeding Success Rates
+
+**Stat-Based Breeding Viability:**
+```
+Breeding Success = (health + cleanliness) / 2
+├─ <30%: High chance of sickly offspring (lower earning potential)
+├─ 30-70%: Normal offspring
+└─ >70%: Healthy offspring (bonus trait variation chances)
+```
+
+This incentivizes **quality** breeding over quantity.
+
+### Interaction Decay Tracking
+
+**Implementation Notes:**
+- Track `lastInteractedAt` timestamp (already have this)
+- Calculate current stats client-side: `currentStat = baseStat - (minutesElapsed * decayRate)`
+- Visual indicator: health/happiness bars animate down in real-time
+- Threshold alerts at 30%, 10%, 0% (visual + audio cue)
+
+**No Contract Changes Needed**
+- All calculated from `lastInteractedAt` + `lastFedAt` timestamps
+- Subgraph can index timestamps for historical queries
+
+---
+
 ## Phase 2: Lifecycle (Weeks 4-5)
 
 **Goal:** Give donuts natural growth cycles and retirement options
@@ -502,12 +556,29 @@ Earn through gameplay, spend on cosmetics:
 - "Social Butterfly": Visit 50 different donuts
 - "Hall of Famer": Retire a donut
 
-**Notification System**
-- Donut aging milestones
-- Breeding offers received
-- Followers viewing your donut
-- Achievements unlocked
-- Cosmetics available
+### Notification System (New)
+
+**Browser/Mobile Push Notifications:**
+
+**Trigger Rules (Sparse - Max 1-2 per day):**
+- **Stat Alert** (when stat drops below 20%): "Your donut is {hungry|sad|dirty}!"
+- **Breeding Ready** (when mature + health+cleanliness >70%): "Your donut is ready to breed!"
+- **Breeding Offer** (when another player requests): "Someone wants to breed with your donut!"
+- **Social** (when another player views): "Someone visited your donut!" (batched, max 1/hour)
+- **Milestone** (maturation, Hall of Fame): "Your donut reached Prime age!"
+
+**Implementation:**
+- Web Notifications API for browser
+- Optional: Firebase Cloud Messaging for mobile
+- Opt-out available in settings
+- Never spam (max 1-2 notifications per 12 hours)
+
+**Why This Matters:**
+- Drives re-engagement without being annoying
+- Highlights key moments (breeding, milestones)
+- Creates FOMO safely (social notifications are optional)
+
+
 
 ---
 
@@ -745,14 +816,129 @@ Earn through gameplay, spend on cosmetics:
 
 ---
 
+## Phase 5: LLM Flavor Text (Month 4+, Optional)
+
+**Goal:** Add unique personality through AI-generated flavor text
+
+**Features (Post-Launch Enhancement):**
+- **Breeding Announcements**: LLM generates unique offspring announcements
+  - "A spirited pup with mom's curiosity and dad's appetite was born!"
+  - Generated via Ollama (local inference, ~$0.001 per generation)
+- **Pet Journal**: Weekly recap of pet's week (flavor text only)
+- **Hall of Fame Profiles**: Unique personality summaries
+- **Breeding Comments**: When breeding, parents "react" to offspring
+
+**Why Phase 5:**
+- Not core gameplay (nice-to-have)
+- Better done post-launch with user data
+- Ollama setup requires infrastructure
+- Depends on community size justifying inference costs
+
+**Technical Approach:**
+- Use Ollama (self-hosted, free inference)
+- Generate async (don't block gameplay)
+- Cache flavor text (don't regenerate same pet daily)
+- Optional feature (toggle in settings)
+
+---
+
+## Technical Architecture
+
+### Event-Driven Design (Adopted from Aptogotchi)
+
+**Every interaction emits blockchain event:**
+```
+Pet Fed → ChainEvent(petAddress, "feed", timestamp, hash(message))
+Pet Played → ChainEvent(petAddress, "play", timestamp)
+Pet Bred → ChainEvent(parentA, parentB, offspring, traits)
+Stat Update → ChainEvent(petAddress, "statChange", newValues)
+```
+
+**Subgraph Indexing:**
+- Indexes all events for leaderboards, history, pedigree
+- Enables complex queries: "Show all offspring of this donut"
+- Real-time subscriptions for live stat updates
+- Historical queries: "How many times was this donut bred?"
+
+**Benefits:**
+- No on-chain storage (cheaper than Aptogotchi's approach)
+- Client-side state calculation with indexed verification
+- Scales to thousands of concurrent players
+
+### State Management Pattern (Adopted from Petty)
+
+**Current Approach:** React useState
+**Enhanced Approach:** Nanostores (lightweight alternative)
+
+```typescript
+// Single source of truth for pet state
+const petStateStore = atom({
+  health: 100,
+  happiness: 80,
+  cleanliness: 60,
+  lastInteractedAt: timestamp,
+  lastFedAt: timestamp,
+})
+
+// Access anywhere without prop drilling
+export const usePetState = () => useStore(petStateStore)
+```
+
+**Benefits:**
+- Multiple components access same state (canvas, stats bar, leaderboard)
+- No re-render overhead on frequent updates
+- Easier to implement decay system (one calc, multiple renders)
+
+**Migration Timeline:** Phase 2 (optional, can do later)
+
+### Canvas Animation Pipeline
+
+**Improvements from Learning Projects:**
+
+1. **GSAP Integration (from Petty)**
+   - Smoother gesture transitions
+   - Easing functions for natural motion
+   - Better performance than manual tweens
+
+2. **Frame-Based Decay (from AI-Tamago pattern)**
+   - Animate stat bars filling/emptying in real-time
+   - Visual feedback for decay without constant redraws
+
+3. **State-Driven Rendering**
+   - Pet appearance updates when stats change (color shifts)
+   - Animations queue based on state transitions
+   - No race conditions (single animation system)
+
+### Database & Indexing
+
+**What Lives Where:**
+
+| Data | Storage | Why |
+|------|---------|-----|
+| Pet traits | Generated from miner address | Deterministic, no storage needed |
+| Pet stats | Client-side + Subgraph | Calculated from lastInteractedAt |
+| Events | Blockchain | Immutable, verifiable, indexed |
+| Leaderboards | Subgraph queries | Complex filtering, real-time |
+| Pedigree/breeding | Subgraph | Historical tracking |
+| Cosmetics owned | $DONUTAMAGOTCHI contract | ERC20 balance |
+
+**No Centralized Database Needed**
+- Everything derives from events or is client-side
+- Subgraph is the source of truth for complex queries
+- Reduces backend complexity, improves censorship resistance
+
+---
+
 ## Timeline & Milestones
 
 | Phase | Duration | Key Deliverables | Metrics |
 |-------|----------|------------------|---------|
 | **Phase 1: Foundation** | Weeks 1-3 | Traits, $DONUTAMAGOTCHI token, Explorer | 50+ unique players, $0.10+ token price |
+| **Phase 1.5: Decay System** | Weeks 3-4 | Stat decay, care rhythm, breeding viability | 80% daily retention, 5-6 interactions/player/day |
 | **Phase 2: Lifecycle** | Weeks 4-5 | Age system, Sanctuary, Hall of Fame | 100+ retired donuts, 20% retention |
 | **Phase 3: Breeding** | Weeks 6-8 | Breeding contracts, Pedigree, Matchmaking | 200+ successful breeds, community coordination |
-| **Phase 4: Social** | Weeks 9-12 | Leaderboards, Cosmetics, Achievements | 500+ players, 10+ cosmetics sold daily |
+| **Phase 4: Social** | Weeks 9-12 | Leaderboards, Cosmetics, Notifications, Achievements | 500+ players, 10+ cosmetics sold daily |
+| **Phase 5: LLM Flavor** | Month 4+ | Personality text, breeding announcements, journals | Community feedback on flavor quality |
 
 **Success Metrics:**
 - Daily active users (target: 300+ by month 3)
