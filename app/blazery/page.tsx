@@ -8,16 +8,13 @@ import {
   useReadContract,
   useWaitForTransactionReceipt,
   useWriteContract,
-  useSimulateContract,
 } from "wagmi";
 import { base } from "wagmi/chains";
-import { formatEther, formatUnits, zeroAddress, type Address, maxUint256 } from "viem";
+import { formatEther, zeroAddress, type Address } from "viem";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { CONTRACT_ADDRESSES, MULTICALL_ABI } from "@/lib/contracts";
-import { cn, getEthPrice } from "@/lib/utils";
+import { getEthPrice } from "@/lib/utils";
 import { NavBar } from "@/components/nav-bar";
 
 type MiniAppContext = {
@@ -50,33 +47,31 @@ const toBigInt = (value: bigint | number) =>
 const formatEth = (value: bigint, maximumFractionDigits = 4) => {
   if (value === 0n) return "0";
   const asNumber = Number(formatEther(value));
-  if (!Number.isFinite(asNumber)) {
-    return formatEther(value);
-  }
-  return asNumber.toLocaleString(undefined, {
-    maximumFractionDigits,
-  });
+  if (!Number.isFinite(asNumber)) return formatEther(value);
+  return asNumber.toLocaleString(undefined, { maximumFractionDigits });
 };
 
-const initialsFrom = (label?: string) => {
-  if (!label) return "";
-  const stripped = label.replace(/[^a-zA-Z0-9]/g, "");
-  if (!stripped) return label.slice(0, 2).toUpperCase();
-  return stripped.slice(0, 2).toUpperCase();
-};
+const ERC20_ABI = [
+  {
+    inputs: [
+      { internalType: "address", name: "spender", type: "address" },
+      { internalType: "uint256", name: "amount", type: "uint256" },
+    ],
+    name: "approve",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+] as const;
 
 export default function BlazeryPage() {
   const readyRef = useRef(false);
   const autoConnectAttempted = useRef(false);
   const [context, setContext] = useState<MiniAppContext | null>(null);
   const [ethUsdPrice, setEthUsdPrice] = useState<number>(3500);
-  const [blazeResult, setBlazeResult] = useState<"success" | "failure" | null>(
-    null,
-  );
+  const [blazeResult, setBlazeResult] = useState<"success" | "failure" | null>(null);
   const [txStep, setTxStep] = useState<"idle" | "approving" | "buying">("idle");
-  const blazeResultTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
+  const blazeResultTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const resetBlazeResult = useCallback(() => {
     if (blazeResultTimeoutRef.current) {
@@ -86,19 +81,16 @@ export default function BlazeryPage() {
     setBlazeResult(null);
   }, []);
 
-  const showBlazeResult = useCallback(
-    (result: "success" | "failure") => {
-      if (blazeResultTimeoutRef.current) {
-        clearTimeout(blazeResultTimeoutRef.current);
-      }
-      setBlazeResult(result);
-      blazeResultTimeoutRef.current = setTimeout(() => {
-        setBlazeResult(null);
-        blazeResultTimeoutRef.current = null;
-      }, 3000);
-    },
-    [],
-  );
+  const showBlazeResult = useCallback((result: "success" | "failure") => {
+    if (blazeResultTimeoutRef.current) {
+      clearTimeout(blazeResultTimeoutRef.current);
+    }
+    setBlazeResult(result);
+    blazeResultTimeoutRef.current = setTimeout(() => {
+      setBlazeResult(null);
+      blazeResultTimeoutRef.current = null;
+    }, 3000);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,9 +99,7 @@ export default function BlazeryPage() {
         const ctx = (await (sdk as unknown as {
           context: Promise<MiniAppContext> | MiniAppContext;
         }).context) as MiniAppContext;
-        if (!cancelled) {
-          setContext(ctx);
-        }
+        if (!cancelled) setContext(ctx);
       } catch {
         if (!cancelled) setContext(null);
       }
@@ -120,16 +110,13 @@ export default function BlazeryPage() {
     };
   }, []);
 
-  // Fetch ETH price on mount and every minute
   useEffect(() => {
     const fetchPrice = async () => {
       const price = await getEthPrice();
       setEthUsdPrice(price);
     };
-
     fetchPrice();
-    const interval = setInterval(fetchPrice, 60_000); // Update every minute
-
+    const interval = setInterval(fetchPrice, 60_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -156,12 +143,7 @@ export default function BlazeryPage() {
   const primaryConnector = connectors[0];
 
   useEffect(() => {
-    if (
-      autoConnectAttempted.current ||
-      isConnected ||
-      !primaryConnector ||
-      isConnecting
-    ) {
+    if (autoConnectAttempted.current || isConnected || !primaryConnector || isConnecting) {
       return;
     }
     autoConnectAttempted.current = true;
@@ -171,35 +153,21 @@ export default function BlazeryPage() {
     }).catch(() => {});
   }, [connectAsync, isConnected, isConnecting, primaryConnector]);
 
-  const { data: rawAuctionState, refetch: refetchAuctionState } =
-    useReadContract({
-      address: CONTRACT_ADDRESSES.multicall,
-      abi: MULTICALL_ABI,
-      functionName: "getAuction",
-      args: [address ?? zeroAddress],
-      chainId: base.id,
-      query: {
-        refetchInterval: 3_000,
-      },
-    });
+  const { data: rawAuctionState, refetch: refetchAuctionState } = useReadContract({
+    address: CONTRACT_ADDRESSES.multicall,
+    abi: MULTICALL_ABI,
+    functionName: "getAuction",
+    args: [address ?? zeroAddress],
+    chainId: base.id,
+    query: {
+      refetchInterval: 3_000,
+    },
+  });
 
   const auctionState = useMemo(() => {
     if (!rawAuctionState) return undefined;
     return rawAuctionState as unknown as AuctionState;
   }, [rawAuctionState]);
-
-  const ERC20_ABI = [
-    {
-      inputs: [
-        { internalType: "address", name: "spender", type: "address" },
-        { internalType: "uint256", name: "amount", type: "uint256" },
-      ],
-      name: "approve",
-      outputs: [{ internalType: "bool", name: "", type: "bool" }],
-      stateMutability: "nonpayable",
-      type: "function",
-    },
-  ] as const;
 
   useEffect(() => {
     if (!readyRef.current && auctionState) {
@@ -215,11 +183,10 @@ export default function BlazeryPage() {
     reset: resetWrite,
   } = useWriteContract();
 
-  const { data: receipt, isLoading: isConfirming } =
-    useWaitForTransactionReceipt({
-      hash: txHash,
-      chainId: base.id,
-    });
+  const { data: receipt, isLoading: isConfirming } = useWaitForTransactionReceipt({
+    hash: txHash,
+    chainId: base.id,
+  });
 
   const handleBlaze = useCallback(async () => {
     if (!auctionState) return;
@@ -242,12 +209,9 @@ export default function BlazeryPage() {
 
       const price = auctionState.price;
       const epochId = toBigInt(auctionState.epochId);
-      const deadline = BigInt(
-        Math.floor(Date.now() / 1000) + DEADLINE_BUFFER_SECONDS,
-      );
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + DEADLINE_BUFFER_SECONDS);
       const maxPaymentTokenAmount = price;
 
-      // If we're in idle or approval failed, start with approval
       if (txStep === "idle") {
         setTxStep("approving");
         await writeContract({
@@ -261,7 +225,6 @@ export default function BlazeryPage() {
         return;
       }
 
-      // If approval succeeded, now call buy
       if (txStep === "buying") {
         await writeContract({
           account: targetAddress as Address,
@@ -273,22 +236,12 @@ export default function BlazeryPage() {
         });
       }
     } catch (error) {
-      console.error("Failed to blaze:", error);
+      console.error("Failed to buy:", error);
       showBlazeResult("failure");
       setTxStep("idle");
       resetWrite();
     }
-  }, [
-    address,
-    connectAsync,
-    auctionState,
-    primaryConnector,
-    resetBlazeResult,
-    resetWrite,
-    showBlazeResult,
-    writeContract,
-    txStep,
-  ]);
+  }, [address, connectAsync, auctionState, primaryConnector, resetBlazeResult, resetWrite, showBlazeResult, writeContract, txStep]);
 
   useEffect(() => {
     if (!receipt) return;
@@ -297,221 +250,160 @@ export default function BlazeryPage() {
         showBlazeResult("failure");
         setTxStep("idle");
         refetchAuctionState();
-        const resetTimer = setTimeout(() => {
-          resetWrite();
-        }, 500);
+        const resetTimer = setTimeout(() => resetWrite(), 500);
         return () => clearTimeout(resetTimer);
       }
 
-      // If approval succeeded, now call buy
       if (txStep === "approving") {
         resetWrite();
         setTxStep("buying");
         return;
       }
 
-      // If buy succeeded
       if (txStep === "buying") {
         showBlazeResult("success");
         setTxStep("idle");
         refetchAuctionState();
-        const resetTimer = setTimeout(() => {
-          resetWrite();
-        }, 500);
+        const resetTimer = setTimeout(() => resetWrite(), 500);
         return () => clearTimeout(resetTimer);
       }
     }
     return;
   }, [receipt, refetchAuctionState, resetWrite, showBlazeResult, txStep]);
 
-  // Auto-trigger buy after approval
   useEffect(() => {
     if (txStep === "buying" && !isWriting && !isConfirming && !txHash) {
       handleBlaze();
     }
   }, [txStep, isWriting, isConfirming, txHash, handleBlaze]);
 
-  const auctionPriceDisplay = auctionState
-    ? formatEth(auctionState.price, auctionState.price === 0n ? 0 : 5)
-    : "—";
-
-  const claimableDisplay = auctionState
-    ? formatEth(auctionState.wethAccumulated, 8)
-    : "—";
+  const auctionPriceDisplay = auctionState ? formatEth(auctionState.price, 5) : "0";
+  const claimableDisplay = auctionState ? formatEth(auctionState.wethAccumulated, 8) : "0";
 
   const buttonLabel = useMemo(() => {
-    if (!auctionState) return "Loading…";
-    if (blazeResult === "success") return "SUCCESS";
-    if (blazeResult === "failure") return "FAILURE";
+    if (!auctionState) return "LOADING...";
+    if (blazeResult === "success") return "SUCCESS! 🎉";
+    if (blazeResult === "failure") return "FAILED 😢";
     if (isWriting || isConfirming) {
-      if (txStep === "approving") return "APPROVING…";
-      if (txStep === "buying") return "BLAZING…";
-      return "PROCESSING…";
+      if (txStep === "approving") return "APPROVING...";
+      if (txStep === "buying") return "BUYING...";
+      return "PROCESSING...";
     }
-    return "BLAZE";
+    return "🔥 BUY & BURN";
   }, [blazeResult, isConfirming, isWriting, auctionState, txStep]);
 
   const hasInsufficientLP = auctionState && auctionState.paymentTokenBalance < auctionState.price;
 
-  // Calculate profit/loss for blazing
-  const blazeProfitLoss = useMemo(() => {
+  const profitLoss = useMemo(() => {
     if (!auctionState) return null;
-
-    // LP token value in USD
     const lpValueInEth = Number(formatEther(auctionState.price)) * Number(formatEther(auctionState.paymentTokenPrice));
     const lpValueInUsd = lpValueInEth * ethUsdPrice;
-
-    // WETH value in USD
     const wethReceivedInEth = Number(formatEther(auctionState.wethAccumulated));
     const wethValueInUsd = wethReceivedInEth * ethUsdPrice;
-
     const profitLoss = wethValueInUsd - lpValueInUsd;
-    const isProfitable = profitLoss > 0;
-
     return {
       profitLoss,
-      isProfitable,
+      isProfitable: profitLoss > 0,
       lpValueInUsd,
       wethValueInUsd,
     };
   }, [auctionState, ethUsdPrice]);
 
-  const isBlazeDisabled =
-    !auctionState || isWriting || isConfirming || blazeResult !== null || hasInsufficientLP;
-
-  const userDisplayName =
-    context?.user?.displayName ?? context?.user?.username ?? "Farcaster user";
-  const userHandle = context?.user?.username
-    ? `@${context.user.username}`
-    : context?.user?.fid
-      ? `fid ${context.user.fid}`
-      : "";
-  const userAvatarUrl = context?.user?.pfpUrl ?? null;
+  const isBlazeDisabled = !auctionState || isWriting || isConfirming || blazeResult !== null || hasInsufficientLP;
 
   return (
-    <main className="flex h-screen w-screen justify-center overflow-hidden bg-black font-mono text-white">
+    <main className="flex h-screen w-screen justify-center overflow-hidden bg-gradient-to-b from-purple-900 via-pink-900 to-orange-900 font-mono text-white">
       <div
-        className="relative flex h-full w-full max-w-[520px] flex-1 flex-col overflow-hidden rounded-[28px] bg-black px-2 pb-4 shadow-inner"
+        className="relative flex h-full w-full max-w-[520px] flex-1 flex-col overflow-hidden px-4 pb-4"
         style={{
-          paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
+          paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)",
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)",
         }}
       >
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold tracking-wide">BLAZERY</h1>
-            {context?.user ? (
-              <div className="flex items-center gap-2 rounded-full bg-black px-3 py-1">
-                <Avatar className="h-8 w-8 border border-zinc-800">
-                  <AvatarImage
-                    src={userAvatarUrl || undefined}
-                    alt={userDisplayName}
-                    className="object-cover"
-                  />
-                  <AvatarFallback className="bg-zinc-800 text-white">
-                    {initialsFrom(userDisplayName)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="leading-tight text-left">
-                  <div className="text-sm font-bold">{userDisplayName}</div>
-                  {userHandle ? (
-                    <div className="text-xs text-gray-400">{userHandle}</div>
-                  ) : null}
-                </div>
+        <div className="flex flex-1 flex-col overflow-y-auto space-y-3">
+          <div className="bg-yellow-300 border-4 border-black rounded-2xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <h1 className="text-3xl font-black text-center text-black tracking-tight">
+              DONUT SHOP
+            </h1>
+            <p className="text-center text-xs text-black/70 font-bold mt-1">
+              BUY & BURN LP TOKENS
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-pink-300 border-4 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <div className="text-[10px] font-black text-black/60 mb-1">YOU PAY</div>
+              <div className="text-xl font-black text-black">{auctionPriceDisplay}</div>
+              <div className="text-[10px] font-black text-black/60">LP TOKENS</div>
+              <div className="text-xs font-bold text-black/80 mt-1">
+                $
+                {auctionState
+                  ? (
+                      Number(formatEther(auctionState.price)) *
+                      Number(formatEther(auctionState.paymentTokenPrice)) *
+                      ethUsdPrice
+                    ).toFixed(2)
+                  : "0.00"}
               </div>
-            ) : null}
+            </div>
+
+            <div className="bg-cyan-300 border-4 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <div className="text-[10px] font-black text-black/60 mb-1">YOU GET</div>
+              <div className="text-xl font-black text-black">Ξ{claimableDisplay}</div>
+              <div className="text-[10px] font-black text-black/60">WETH</div>
+              <div className="text-xs font-bold text-black/80 mt-1">
+                $
+                {auctionState
+                  ? (Number(formatEther(auctionState.wethAccumulated)) * ethUsdPrice).toFixed(2)
+                  : "0.00"}
+              </div>
+            </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <Card className="border-pink-500 bg-black">
-              <CardContent className="grid gap-1.5 p-2.5">
-                <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-gray-400">
-                  PAY
-                </div>
-                <div className="text-2xl font-semibold text-pink-400">
-                  {auctionPriceDisplay} LP
-                </div>
-                <div className="text-xs text-gray-400">
-                  $
-                  {auctionState
-                    ? (
-                        Number(formatEther(auctionState.price)) *
-                        Number(formatEther(auctionState.paymentTokenPrice)) *
-                        ethUsdPrice
-                      ).toFixed(2)
-                    : "0.00"}
-                </div>
-              </CardContent>
-            </Card>
+          {profitLoss && (
+            <div className={`border-4 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${
+              profitLoss.isProfitable ? "bg-green-300" : "bg-red-300"
+            }`}>
+              <div className="text-center text-sm font-black text-black">
+                {profitLoss.isProfitable ? "💰 PROFITABLE!" : "⚠️ UNPROFITABLE"}
+              </div>
+              <div className="text-center text-xs font-bold text-black/80 mt-1">
+                {profitLoss.profitLoss >= 0 ? "+" : ""}${profitLoss.profitLoss.toFixed(2)}
+              </div>
+            </div>
+          )}
 
-            <Card className="border-zinc-800 bg-black">
-              <CardContent className="grid gap-1.5 p-2.5">
-                <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-gray-400">
-                  GET
-                </div>
-                <div className="text-2xl font-semibold text-white">
-                  Ξ{claimableDisplay}
-                </div>
-                <div className="text-xs text-gray-400">
-                  $
-                  {auctionState
-                    ? (
-                        Number(formatEther(auctionState.wethAccumulated)) * ethUsdPrice
-                      ).toFixed(2)
-                    : "0.00"}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <Button
+            className="w-full h-16 rounded-2xl bg-gradient-to-b from-orange-400 to-orange-600 border-4 border-black text-black text-xl font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+            onClick={handleBlaze}
+            disabled={isBlazeDisabled}
+          >
+            {buttonLabel}
+          </Button>
 
-          <div className="mt-4 flex flex-col gap-2">
-            <Button
-              className="w-full rounded-2xl bg-pink-500 py-3 text-base font-bold text-black shadow-lg transition-colors hover:bg-pink-400 disabled:cursor-not-allowed disabled:bg-pink-500/40"
-              onClick={handleBlaze}
-              disabled={isBlazeDisabled}
-            >
-              {buttonLabel}
-            </Button>
-
-            <div className="flex items-center justify-between px-1">
-              <div className="text-xs text-gray-400">
-                Available:{" "}
-                <span className="text-white font-semibold">
-                  {address && auctionState?.paymentTokenBalance
-                    ? formatEth(auctionState.paymentTokenBalance, 4)
-                    : "0"}
-                </span>{" "}
-                DONUT-ETH LP
+          <div className="bg-white border-4 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-black text-black">
+                YOUR LP: {address && auctionState?.paymentTokenBalance
+                  ? formatEth(auctionState.paymentTokenBalance, 4)
+                  : "0"}
               </div>
               <a
                 href="https://app.uniswap.org/explore/pools/base/0xD1DbB2E56533C55C3A637D13C53aeEf65c5D5703"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-pink-400 hover:text-pink-300 font-semibold transition-colors"
+                className="text-xs font-black text-pink-600 hover:text-pink-700 transition-colors"
               >
-                Get LP →
+                GET LP →
               </a>
             </div>
+          </div>
 
-            {/* Profit/Loss Warning Message */}
-            {blazeProfitLoss && (
-              <div className={cn(
-                "text-center text-sm font-semibold px-2 py-1.5 rounded",
-                blazeProfitLoss.isProfitable ? "text-green-400" : "text-red-400"
-              )}>
-                {blazeProfitLoss.isProfitable ? (
-                  <>
-                    💰 Profitable blaze! You'll receive ${blazeProfitLoss.wethValueInUsd.toFixed(2)} in WETH for ${blazeProfitLoss.lpValueInUsd.toFixed(2)} in LP
-                    ({blazeProfitLoss.profitLoss >= 0 ? '+' : ''}${blazeProfitLoss.profitLoss.toFixed(2)})
-                  </>
-                ) : (
-                  <>
-                    ⚠️ Unprofitable blaze! You'll receive ${blazeProfitLoss.wethValueInUsd.toFixed(2)} in WETH for ${blazeProfitLoss.lpValueInUsd.toFixed(2)} in LP
-                    (${blazeProfitLoss.profitLoss.toFixed(2)})
-                  </>
-                )}
-              </div>
-            )}
+          <div className="bg-lime-300 border-4 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="text-xs font-black text-black/80 space-y-1">
+              <p>💡 This burns LP tokens to reduce supply and increase DONUT value!</p>
+              <p>🔥 Treasury uses 15% of all feeds to buy & burn LP</p>
+            </div>
           </div>
         </div>
       </div>

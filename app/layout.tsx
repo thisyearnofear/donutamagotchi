@@ -10,10 +10,10 @@ const miniAppEmbed = {
   version: "1",
   imageUrl: heroImageUrl,
   button: {
-    title: "We Glaze The World",
+    title: "Play Donutamagotchi",
     action: {
       type: "launch_miniapp" as const,
-      name: "GlazeCorp",
+      name: "Donutamagotchi",
       url: appDomain,
       splashImageUrl,
       splashBackgroundColor: "#FEE7EC",
@@ -22,11 +22,11 @@ const miniAppEmbed = {
 };
 
 export const metadata: Metadata = {
-  title: "We Glaze The World",
-  description: "Claim the glaze factory and earn donuts on Base.",
+  title: "Donutamagotchi",
+  description: "Care for your virtual donut pet and earn $DONUT tokens on Base",
   openGraph: {
-    title: "GlazeCorp",
-    description: "Race the hive to control the donut mine and keep the glaze flowing.",
+    title: "Donutamagotchi",
+    description: "Feed your donut pet, earn tokens, and compete to be the best caretaker!",
     url: appDomain,
     images: [
       {

@@ -7,35 +7,24 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 type AddToFarcasterDialogProps = {
-  /**
-   * Whether to show the dialog automatically on first visit
-   * Uses localStorage to track if user has seen it
-   */
   showOnFirstVisit?: boolean;
-  /**
-   * Key for localStorage to track if dialog has been shown
-   */
   storageKey?: string;
 };
 
 export function AddToFarcasterDialog({
   showOnFirstVisit = true,
-  storageKey = "glazecorp-add-miniapp-prompt-shown",
+  storageKey = "donutamagotchi-add-miniapp-prompt-shown",
 }: AddToFarcasterDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [status, setStatus] = useState<"idle" | "adding" | "success" | "error">(
-    "idle"
-  );
+  const [status, setStatus] = useState<"idle" | "adding" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  // Check if we should show the dialog on mount
   useEffect(() => {
     if (!showOnFirstVisit) return;
 
     try {
       const hasSeenPrompt = localStorage.getItem(storageKey);
       if (!hasSeenPrompt) {
-        // Show dialog after a short delay for better UX
         const timer = setTimeout(() => {
           setIsOpen(true);
           localStorage.setItem(storageKey, "true");
@@ -44,7 +33,6 @@ export function AddToFarcasterDialog({
         return () => clearTimeout(timer);
       }
     } catch (error) {
-      // localStorage might not be available
       console.warn("Could not access localStorage:", error);
     }
   }, [showOnFirstVisit, storageKey]);
@@ -54,14 +42,9 @@ export function AddToFarcasterDialog({
       setStatus("adding");
       setErrorMessage("");
 
-      // Call the addMiniApp SDK action
-      // If successful, returns { notificationDetails?: ... }
-      // If rejected by user, throws RejectedByUser error
       await sdk.actions.addMiniApp();
 
-      // If we get here, the app was successfully added
       setStatus("success");
-      // Close dialog after success animation
       setTimeout(() => {
         setIsOpen(false);
         setStatus("idle");
@@ -69,30 +52,24 @@ export function AddToFarcasterDialog({
     } catch (error) {
       console.error("Failed to add Mini App:", error);
 
-      // Check if user cancelled (this is expected behavior)
       const errorName = error instanceof Error ? error.name : "";
       if (errorName === "AddMiniApp.RejectedByUser") {
-        // User cancelled - just reset to idle without showing error
         setStatus("idle");
         return;
       }
 
       setStatus("error");
 
-      const errorMsg =
-        error instanceof Error ? error.message : "Failed to add app";
+      const errorMsg = error instanceof Error ? error.message : "Failed to add app";
 
       if (errorName === "AddMiniApp.InvalidDomainManifest" || errorMsg.includes("domain")) {
         setErrorMessage("App must be on production domain with valid manifest");
       } else if (errorMsg.includes("not supported")) {
-        setErrorMessage(
-          "This feature is not available in your current environment"
-        );
+        setErrorMessage("This feature is not available in your current environment");
       } else {
         setErrorMessage("Unable to add app. Please try again.");
       }
 
-      // Reset error state after 5 seconds
       setTimeout(() => {
         setStatus("idle");
         setErrorMessage("");
@@ -101,7 +78,7 @@ export function AddToFarcasterDialog({
   }, []);
 
   const handleClose = useCallback(() => {
-    if (status === "adding") return; // Don't allow closing while adding
+    if (status === "adding") return;
     setIsOpen(false);
     setStatus("idle");
     setErrorMessage("");
@@ -113,88 +90,81 @@ export function AddToFarcasterDialog({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm animate-in fade-in-0"
+        className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm animate-in fade-in-0"
         onClick={handleClose}
       />
 
       {/* Dialog */}
-      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2">
-        <div className="relative mx-4 rounded-2xl border border-zinc-800 bg-black p-6 shadow-2xl">
+      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 animate-in fade-in-0 zoom-in-95">
+        <div className="relative mx-4 rounded-2xl border-4 border-black bg-gradient-to-b from-yellow-300 to-yellow-400 p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
           {/* Close button */}
           <button
             onClick={handleClose}
             disabled={status === "adding"}
-            className="absolute right-4 top-4 rounded-lg p-1 text-gray-400 transition-colors hover:bg-zinc-800 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className="absolute right-3 top-3 rounded-lg border-2 border-black bg-white p-1 text-black transition-all hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
             aria-label="Close"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
 
           {/* Icon */}
           <div className="mb-4 flex justify-center">
-            <div className="rounded-2xl bg-gradient-to-br from-pink-500 to-pink-600 p-4">
-              <img
-                src="/media/icon.png"
-                alt="GlazeCorp"
-                className="h-16 w-16"
-              />
+            <div className="rounded-2xl border-4 border-black bg-pink-400 p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <div className="text-5xl">🍩</div>
             </div>
           </div>
 
           {/* Content */}
           <div className="mb-6 text-center">
-            <h2 className="mb-2 text-2xl font-bold text-white">
-              Add GlazeCorp
+            <h2 className="mb-2 text-3xl font-black text-black">
+              ADD TO FARCASTER
             </h2>
-            <p className="text-sm text-gray-400">
-              Install this Mini App to your Farcaster profile for quick access.
-              Keep the glaze flowing wherever you go!
+            <p className="text-sm font-bold text-black/70">
+              Install Donutamagotchi to your profile for quick access. Keep your pet happy wherever you go!
             </p>
           </div>
 
           {/* Error message */}
           {status === "error" && errorMessage && (
-            <div className="mb-4 rounded-lg border border-red-800 bg-red-950/50 p-3 text-center">
-              <p className="text-sm text-red-400">{errorMessage}</p>
+            <div className="mb-4 rounded-lg border-4 border-black bg-red-300 p-3 text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <p className="text-sm font-black text-black">{errorMessage}</p>
             </div>
           )}
 
           {/* Actions */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             <Button
               onClick={handleAddToFarcaster}
               disabled={status === "adding" || status === "success"}
               className={cn(
-                "w-full gap-2 rounded-xl py-6 text-base font-bold transition-all",
-                status === "idle" &&
-                  "bg-pink-500 hover:bg-pink-400 text-black",
-                status === "success" &&
-                  "bg-green-600 hover:bg-green-600 text-white",
-                status === "error" && "bg-red-600 hover:bg-red-600 text-white"
+                "w-full gap-2 rounded-xl border-4 border-black py-6 text-lg font-black transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]",
+                status === "idle" && "bg-gradient-to-b from-pink-400 to-pink-600 text-black",
+                status === "success" && "bg-gradient-to-b from-green-400 to-green-600 text-black",
+                status === "error" && "bg-gradient-to-b from-red-400 to-red-600 text-white"
               )}
             >
               {status === "adding" && (
                 <>
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  <span>Adding to Farcaster...</span>
+                  <div className="h-5 w-5 animate-spin rounded-full border-4 border-current border-t-transparent" />
+                  <span>ADDING...</span>
                 </>
               )}
               {status === "success" && (
                 <>
                   <Check className="h-5 w-5" />
-                  <span>Added Successfully!</span>
+                  <span>SUCCESS! 🎉</span>
                 </>
               )}
               {status === "error" && (
                 <>
                   <AlertCircle className="h-5 w-5" />
-                  <span>Try Again</span>
+                  <span>TRY AGAIN</span>
                 </>
               )}
               {status === "idle" && (
                 <>
                   <Plus className="h-5 w-5" />
-                  <span>Add to Farcaster</span>
+                  <span>ADD TO FARCASTER</span>
                 </>
               )}
             </Button>
@@ -202,26 +172,25 @@ export function AddToFarcasterDialog({
             <Button
               onClick={handleClose}
               disabled={status === "adding"}
-              variant="ghost"
-              className="w-full text-gray-400 hover:text-white hover:bg-zinc-800"
+              className="w-full rounded-xl border-4 border-black bg-white py-4 text-sm font-black text-black/60 hover:bg-gray-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]"
             >
-              Maybe Later
+              MAYBE LATER
             </Button>
           </div>
 
           {/* Benefits list */}
-          <div className="mt-6 space-y-2 border-t border-zinc-800 pt-4">
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <div className="h-1.5 w-1.5 rounded-full bg-pink-500" />
-              <span>Quick access from your Farcaster apps</span>
+          <div className="mt-6 space-y-2 border-t-4 border-black border-dashed pt-4">
+            <div className="flex items-center gap-2 text-sm font-bold text-black/80">
+              <div className="text-lg">✨</div>
+              <span>Quick access from Farcaster</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <div className="h-1.5 w-1.5 rounded-full bg-pink-500" />
-              <span>Receive notifications about glaze activity</span>
+            <div className="flex items-center gap-2 text-sm font-bold text-black/80">
+              <div className="text-lg">🔔</div>
+              <span>Get notified about your pet</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <div className="h-1.5 w-1.5 rounded-full bg-pink-500" />
-              <span>Stay connected to the glazery</span>
+            <div className="flex items-center gap-2 text-sm font-bold text-black/80">
+              <div className="text-lg">🎮</div>
+              <span>Never miss feeding time</span>
             </div>
           </div>
         </div>
@@ -230,9 +199,6 @@ export function AddToFarcasterDialog({
   );
 }
 
-/**
- * Hook to manually trigger the Add to Farcaster dialog
- */
 export function useAddToFarcasterDialog() {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -243,8 +209,6 @@ export function useAddToFarcasterDialog() {
     isOpen,
     open,
     close,
-    Dialog: () => (
-      <AddToFarcasterDialog showOnFirstVisit={false} />
-    ),
+    Dialog: () => <AddToFarcasterDialog showOnFirstVisit={false} />,
   };
 }
