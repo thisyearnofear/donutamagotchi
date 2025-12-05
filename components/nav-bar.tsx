@@ -16,10 +16,11 @@ export function NavBar() {
         paddingTop: "8px",
       }}
     >
-      <div className="flex justify-start items-center max-w-[520px] mx-auto px-2 gap-1 min-w-min">
+      <div className="flex justify-center items-center max-w-[520px] mx-auto px-2 gap-1 min-w-min">
         <NavButton href="/" active={pathname === "/"} emoji="🍩" label="PET" />
         <NavButton href="/donuts" active={pathname === "/donuts"} emoji="🌍" label="EXPLORE" />
         <NavButton href="/hall-of-fame" active={pathname === "/hall-of-fame"} emoji="🏆" label="FAME" />
+        <NavButton href="/shop" active={pathname === "/shop"} emoji="🎨" label="SHOP" />
         <NavButton href="/blazery" active={pathname === "/blazery"} emoji="🔥" label="OVEN" />
         <NavButton href="/about" active={pathname === "/about"} emoji="❓" label="INFO" />
       </div>

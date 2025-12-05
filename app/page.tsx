@@ -20,10 +20,9 @@ import { useAccountData } from "@/hooks/useAccountData";
 import { useTraits } from "@/hooks/useTraits";
 import { NavBar } from "@/components/nav-bar";
 import { DonutPet } from "@/components/donut-pet";
-import { PetStats } from "@/components/pet-stats";
-import { TraitsDisplay } from "@/components/traits-display";
-import { BreedingViability } from "@/components/breeding-viability";
-import { LifecycleDisplay } from "@/components/lifecycle-display";
+import { CollapsibleStats } from "@/components/collapsible-stats";
+import { CollapsibleAdvanced } from "@/components/collapsible-advanced";
+import { InteractionPanel } from "@/components/interaction-panel";
 import { AddToFarcasterDialog } from "@/components/add-to-farcaster-dialog";
 
 type MiniAppContext = {
@@ -571,8 +570,8 @@ export default function HomePage() {
             />
           </div>
 
-          {/* Stats */}
-          <PetStats
+          {/* Collapsible Stats */}
+          <CollapsibleStats
             happiness={petState.happiness}
             health={petState.health}
             energy={glazedDisplay}
@@ -583,74 +582,26 @@ export default function HomePage() {
             isDying={petState.state === "dead"}
           />
 
-          {/* Traits Display */}
-          <TraitsDisplay traits={traits} />
-
-          {/* Breeding Viability & Care Routine */}
+          {/* Collapsible Advanced Features (Traits, Lifecycle, Breeding) */}
           {hasMiner && (
-            <BreedingViability
+            <CollapsibleAdvanced
               traits={traits}
               lastInteractionTime={lastInteractionTime}
               lastFedTime={minerState?.startTime ? Number(minerState.startTime) * 1000 : Date.now()}
+              createdAtSeconds={minerState?.startTime ? Number(minerState.startTime) : 0}
+              hasMiner={hasMiner}
+              minerState={minerState}
             />
           )}
 
-          {/* Lifecycle Display */}
-          {hasMiner && minerState && (
-            <LifecycleDisplay createdAtSeconds={Number(minerState.startTime)} />
-          )}
-
-          {/* Message Input */}
-          <div className="space-y-1">
-            <div className="bg-white border-4 border-black rounded-xl p-1.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <input
-                type="text"
-                value={customMessage}
-                onChange={handleMessageChange}
-                placeholder="Say something nice..."
-                maxLength={100}
-                className="w-full bg-transparent text-black placeholder-black/40 text-xs font-bold focus:outline-none disabled:opacity-40"
-                disabled={isGlazeDisabled}
-              />
-            </div>
-            
-            {/* Pet Response */}
-            {petResponse && (
-              <div className="bg-pink-300 border-4 border-black rounded-xl p-1.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] animate-in slide-in-from-top-2">
-                <p className="text-center text-xs font-black text-black">
-                  {petResponse}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="grid grid-cols-3 gap-2">
-            <Button
-              className="h-12 rounded-xl bg-gradient-to-b from-blue-400 to-blue-600 border-4 border-black text-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all text-xs"
-              onClick={() => handleGesture("spin")}
-              disabled={isGlazeDisabled}
-              title="Play"
-            >
-              🎪
-            </Button>
-            <Button
-              className="h-12 rounded-xl bg-gradient-to-b from-green-400 to-green-600 border-4 border-black text-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all text-xs"
-              onClick={() => handleGesture("wiggle")}
-              disabled={isGlazeDisabled}
-              title="Pet"
-            >
-              🤚
-            </Button>
-            <Button
-              className="h-12 rounded-xl bg-gradient-to-b from-yellow-400 to-yellow-600 border-4 border-black text-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all text-xs"
-              onClick={() => handleGesture("jump")}
-              disabled={isGlazeDisabled}
-              title="Poke"
-            >
-              👆
-            </Button>
-          </div>
+          {/* Collapsible Interaction Panel */}
+          <InteractionPanel
+            customMessage={customMessage}
+            onMessageChange={handleMessageChange}
+            petResponse={petResponse}
+            isDisabled={isGlazeDisabled}
+            onGesture={handleGesture}
+          />
 
           {/* Feed Button */}
           <Button

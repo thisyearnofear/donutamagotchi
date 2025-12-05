@@ -100,25 +100,33 @@ export default function AboutPage() {
             {activeTab === "basics" && (
               <div className="space-y-3">
                 <InfoCard emoji="🍩" title="WHAT IS THIS?">
-                  <p className="text-center">Virtual pet game where you care for a donut by feeding it with ETH!</p>
+                  <p className="text-center">Virtual pet game layered on $DONUT mining. Care for your donut to earn $DONUT while competing in Dutch auction!</p>
                 </InfoCard>
 
-                <InfoCard emoji="🎯" title="HOW IT WORKS">
+                <InfoCard emoji="🎯" title="CORE MECHANICS">
                   <ul className="text-center space-y-1">
                     <li>• ONE owner at a time</li>
                     <li>• Feed with ETH to own</li>
+                    <li>• Earn $DONUT while you own</li>
                     <li>• Price doubles after feed</li>
-                    <li>• Decays to 0 in 1 hour</li>
-                    <li>• Earn DONUT while owning</li>
+                    <li>• Price decays over 1 hour</li>
+                  </ul>
+                </InfoCard>
+
+                <InfoCard emoji="🧬" title="YOUR DONUT">
+                  <ul className="text-center space-y-1">
+                    <li>🎭 <strong>Personality:</strong> Friendly, Energetic, Lazy, Stubborn</li>
+                    <li>🎨 <strong>Color:</strong> Unique hue (deterministic)</li>
+                    <li>📈 <strong>Generation:</strong> Breeding coming soon</li>
                   </ul>
                 </InfoCard>
 
                 <InfoCard emoji="📊" title="PET STATS">
                   <ul className="text-center space-y-1">
-                    <li><strong>Health:</strong> Time until decay</li>
-                    <li><strong>Happy:</strong> Earning rate</li>
-                    <li><strong>Energy:</strong> Donuts earned</li>
-                    <li><strong>Age:</strong> Time as owner</li>
+                    <li><strong>Health:</strong> Decays -0.5% every 30 min</li>
+                    <li><strong>Happiness:</strong> Decays -1% every 30 min</li>
+                    <li><strong>Cleanliness:</strong> Decays -2% every 30 min</li>
+                    <li><strong>Age:</strong> Affects earning rate</li>
                   </ul>
                 </InfoCard>
 
@@ -126,7 +134,7 @@ export default function AboutPage() {
                   <div className="text-center space-y-1">
                     <div>😊 Happy • 🤩 Excited</div>
                     <div>😟 Hungry • 😴 Sleeping</div>
-                    <div>💀 Dead</div>
+                    <div>😑 Bored • 💀 Dead</div>
                   </div>
                 </InfoCard>
               </div>
@@ -134,7 +142,7 @@ export default function AboutPage() {
 
             {activeTab === "money" && (
               <div className="space-y-3">
-                <InfoCard emoji="💸" title="REVENUE SPLIT">
+                <InfoCard emoji="💸" title="FEED SPLIT (ETH)">
                   <ul className="text-center space-y-1">
                     <li>• 80% → Previous owner</li>
                     <li>• 15% → Treasury (buyback)</li>
@@ -142,7 +150,7 @@ export default function AboutPage() {
                   </ul>
                 </InfoCard>
 
-                <InfoCard emoji="✨" title="DONUT TOKENS">
+                <InfoCard emoji="✨" title="$DONUT EARNINGS">
                   <ul className="text-center space-y-1">
                     <li>• Starts at 4 DONUT/sec</li>
                     <li>• Halves every 30 days</li>
@@ -151,12 +159,21 @@ export default function AboutPage() {
                   </ul>
                 </InfoCard>
 
-                <InfoCard emoji="🔥" title="SHOP (BUYBACK)">
+                <InfoCard emoji="🔥" title="OVEN (BUYBACK)">
                   <ul className="text-center space-y-1">
                     <li>• Burns LP tokens</li>
-                    <li>• Reduces supply</li>
-                    <li>• Increases DONUT value</li>
+                    <li>• Reduces DONUT supply</li>
+                    <li>• Increases token value</li>
                     <li>• Treasury funded by feeds</li>
+                  </ul>
+                </InfoCard>
+
+                <InfoCard emoji="🎮" title="$DONUTAMAGOTCHI (SOON)">
+                  <ul className="text-center space-y-1">
+                    <li>• Engagement token (future)</li>
+                    <li>• Cosmetics & customization</li>
+                    <li>• Breeding & trait unlocks</li>
+                    <li>• NOT for core mechanics</li>
                   </ul>
                 </InfoCard>
               </div>
@@ -164,12 +181,21 @@ export default function AboutPage() {
 
             {activeTab === "strategy" && (
               <div className="space-y-3">
-                <InfoCard emoji="💡" title="WINNING TIPS">
+                <InfoCard emoji="📈" title="LIFECYCLE">
                   <ul className="text-center space-y-1">
-                    <li>• Buy when price is low</li>
-                    <li>• Hold to earn DONUTs</li>
-                    <li>• Profit when next person buys</li>
-                    <li>• Watch the decay timer!</li>
+                    <li>🔄 <strong>Birth (0d):</strong> 50% earnings</li>
+                    <li>📈 <strong>Growth (1-30d):</strong> Ramp to 100%</li>
+                    <li>⭐ <strong>Prime (30-90d):</strong> Full earnings</li>
+                    <li>🌅 <strong>Twilight (90d+):</strong> Can retire</li>
+                  </ul>
+                </InfoCard>
+
+                <InfoCard emoji="💡" title="CARE ROUTINE">
+                  <ul className="text-center space-y-1">
+                    <li>🍩 Feed every 4 hours</li>
+                    <li>🎮 Play every 6 hours</li>
+                    <li>🤚 Pet every 2 hours</li>
+                    <li>Target: 5-6 interactions/day</li>
                   </ul>
                 </InfoCard>
 
@@ -185,18 +211,18 @@ export default function AboutPage() {
                 <InfoCard emoji="⚠️" title="RISKS">
                   <ul className="text-center space-y-1">
                     <li>• Price decays over time</li>
-                    <li>• May not sell if too high</li>
+                    <li>• Neglected donuts get stolen</li>
                     <li>• Competition is fierce</li>
-                    <li>• Time your entry!</li>
+                    <li>• Stats decay without care</li>
                   </ul>
                 </InfoCard>
 
                 <InfoCard emoji="🎯" title="PRO MOVES">
                   <ul className="text-center space-y-1">
                     <li>• Feed during high activity</li>
-                    <li>• Monitor decay closely</li>
+                    <li>• Monitor decay timer</li>
                     <li>• Accumulate DONUTs</li>
-                    <li>• Use Shop for LP burns</li>
+                    <li>• Build pet traits to Prime</li>
                   </ul>
                 </InfoCard>
               </div>
