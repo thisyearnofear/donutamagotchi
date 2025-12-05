@@ -87,6 +87,8 @@ export default function HomePage() {
   const [ethUsdPrice, setEthUsdPrice] = useState<number>(3500);
   const [glazeResult, setGlazeResult] = useState<"success" | "failure" | null>(null);
   const [petResponse, setPetResponse] = useState<string>("");
+  const [gesture, setGesture] = useState<"bounce" | "wiggle" | "jump" | "spin" | "nod" | null>(null);
+  const [lastInteractionTime, setLastInteractionTime] = useState<number>(Date.now());
   const glazeResultTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const petResponseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -143,7 +145,7 @@ export default function HomePage() {
     };
   }, []);
 
-  const getPetResponse = useCallback((message: string, state: "idle" | "happy" | "excited" | "hungry" | "sleeping" | "dead") => {
+  const getPetResponse = useCallback((message: string, state: "idle" | "happy" | "excited" | "hungry" | "sleeping" | "dead" | "bored" | "petting") => {
     const msg = message.toLowerCase();
     
     // Positive keywords
@@ -172,7 +174,13 @@ export default function HomePage() {
       return "😴 Zzz... *snoring*";
     }
     
-    if (state === "excited" || state === "happy") {
+    if (state === "bored") {
+      if (hasPositive) return "😑 Thanks, I guess...";
+      if (hasFood) return "😑 Not really hungry...";
+      return "😑 *yawn*";
+    }
+    
+    if (state === "excited" || state === "happy" || state === "petting") {
       if (hasPositive) return "😊 Aww thanks! You're the best!";
       if (hasFood) return "🤩 More donuts? YES!";
       if (hasGreeting) return "😊 Hey there friend!";
@@ -343,9 +351,26 @@ export default function HomePage() {
     retry: false,
   });
 
+  const handlePetting = useCallback(() => {
+    setGesture("nod");
+    setLastInteractionTime(Date.now());
+  }, []);
+
+  const handleShake = useCallback(() => {
+    setGesture("wiggle");
+    setLastInteractionTime(Date.now());
+  }, []);
+
+  const handleGesture = useCallback((gesture: "bounce" | "wiggle" | "jump" | "spin" | "nod") => {
+    setGesture(gesture);
+    setLastInteractionTime(Date.now());
+  }, []);
+
   const handleGlaze = useCallback(async () => {
     if (!minerState) return;
     resetGlazeResult();
+    setLastInteractionTime(Date.now());
+    setGesture("bounce");
     try {
       let targetAddress = address;
       if (!targetAddress) {
@@ -459,18 +484,23 @@ export default function HomePage() {
       ? Math.min(100, (Number(minerState.price) / (Number(minerState.initPrice) * 2)) * 100)
       : 0;
 
-    let state: "idle" | "happy" | "excited" | "hungry" | "sleeping" | "dead" = "idle";
+    // Boredom: no interaction for 5+ minutes
+    const timeSinceInteraction = (Date.now() - lastInteractionTime) / 1000;
+    const isBored = timeSinceInteraction > 300 && happiness < 60;
+
+    let state: "idle" | "happy" | "excited" | "hungry" | "sleeping" | "dead" | "bored" | "petting" = "idle";
     
     if (health < 5) state = "dead";
     else if (health < 30) state = "hungry";
     else if (isWriting || isConfirming) state = "excited";
     else if (glazeResult === "success") state = "excited";
+    else if (isBored) state = "bored";
     else if (happiness > 70) state = "happy";
     else if (glazeElapsedSeconds < 60) state = "excited";
     else if (!hasMiner) state = "sleeping";
     
     return { state, happiness, health };
-  }, [minerState, isWriting, isConfirming, glazeResult, glazeElapsedSeconds, hasMiner]);
+  }, [minerState, isWriting, isConfirming, glazeResult, glazeElapsedSeconds, hasMiner, lastInteractionTime]);
 
   const buttonLabel = useMemo(() => {
     if (!minerState) return "LOADING...";
@@ -513,12 +543,18 @@ export default function HomePage() {
           </div>
 
           {/* Pet Display */}
-          <div className="bg-cyan-300 border-4 border-black rounded-2xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div 
+            className="bg-cyan-300 border-4 border-black rounded-2xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-shadow"
+            onClick={handlePetting}
+            onDoubleClick={() => handleGesture("jump")}
+          >
             <DonutPet
               state={petState.state}
               happiness={petState.happiness}
               health={petState.health}
               isAnimating={isWriting || isConfirming}
+              gesture={gesture}
+              onGestureComplete={() => setGesture(null)}
             />
           </div>
 
@@ -552,6 +588,34 @@ export default function HomePage() {
                 </p>
               </div>
             )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="grid grid-cols-3 gap-2">
+            <Button
+              className="h-12 rounded-xl bg-gradient-to-b from-blue-400 to-blue-600 border-4 border-black text-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all text-xs"
+              onClick={() => handleGesture("spin")}
+              disabled={isGlazeDisabled}
+              title="Play"
+            >
+              🎪
+            </Button>
+            <Button
+              className="h-12 rounded-xl bg-gradient-to-b from-green-400 to-green-600 border-4 border-black text-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all text-xs"
+              onClick={() => handleGesture("wiggle")}
+              disabled={isGlazeDisabled}
+              title="Pet"
+            >
+              🤚
+            </Button>
+            <Button
+              className="h-12 rounded-xl bg-gradient-to-b from-yellow-400 to-yellow-600 border-4 border-black text-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all text-xs"
+              onClick={() => handleGesture("jump")}
+              disabled={isGlazeDisabled}
+              title="Poke"
+            >
+              👆
+            </Button>
           </div>
 
           {/* Feed Button */}
