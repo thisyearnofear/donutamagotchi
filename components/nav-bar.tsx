@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import type { UrlObject } from "url";
 
 export function NavBar() {
   const pathname = usePathname();
@@ -30,14 +31,14 @@ function NavButton({
   emoji, 
   label 
 }: { 
-  href: string; 
+  href: string | UrlObject; 
   active: boolean; 
   emoji: string; 
   label: string;
 }) {
   return (
     <Link
-      href={href}
+      href={href as any}
       className={cn(
         "flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-lg border-2 transition-all",
         active
