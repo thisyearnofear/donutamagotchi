@@ -16,7 +16,7 @@ export function NavBar() {
       }}
     >
       <div className="flex justify-around items-center max-w-[520px] mx-auto px-4">
-        <NavButton href="/blazery" active={pathname === "/blazery"} emoji="🔥" label="SHOP" />
+        <NavButton href="/blazery" active={pathname === "/blazery"} emoji="🔥" label="OVEN" />
         <NavButton href="/" active={pathname === "/"} emoji="🍩" label="PET" />
         <NavButton href="/about" active={pathname === "/about"} emoji="❓" label="INFO" />
       </div>

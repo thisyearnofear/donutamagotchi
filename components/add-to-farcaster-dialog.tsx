@@ -117,10 +117,10 @@ export function AddToFarcasterDialog({
           {/* Content */}
           <div className="mb-6 text-center">
             <h2 className="mb-2 text-3xl font-black text-black">
-              ADD TO FARCASTER
+              TAKE ME WITH YOU! 
             </h2>
             <p className="text-sm font-bold text-black/70">
-              Install Donutamagotchi to your profile for quick access. Keep your pet happy wherever you go!
+              Donut miss me and my shenanigans.
             </p>
           </div>
 
@@ -180,15 +180,15 @@ export function AddToFarcasterDialog({
 
           {/* Benefits list */}
           <div className="mt-6 space-y-2 border-t-4 border-black border-dashed pt-4">
-            <div className="flex items-center gap-2 text-sm font-bold text-black/80">
-              <div className="text-lg">✨</div>
+            <div className="flex items-center justify-center gap-2 text-sm font-bold text-black/80">
+              <div className="text-lg">🚀</div>
               <span>Quick access from Farcaster</span>
             </div>
-            <div className="flex items-center gap-2 text-sm font-bold text-black/80">
+            <div className="flex items-center justify-center gap-2 text-sm font-bold text-black/80">
               <div className="text-lg">🔔</div>
               <span>Get notified about your pet</span>
             </div>
-            <div className="flex items-center gap-2 text-sm font-bold text-black/80">
+            <div className="flex items-center justify-center gap-2 text-sm font-bold text-black/80">
               <div className="text-lg">🎮</div>
               <span>Never miss feeding time</span>
             </div>

@@ -143,7 +143,7 @@ export default function HomePage() {
     };
   }, []);
 
-  const getPetResponse = useCallback((message: string, state: typeof petState.state) => {
+  const getPetResponse = useCallback((message: string, state: "idle" | "happy" | "excited" | "hungry" | "sleeping" | "dead") => {
     const msg = message.toLowerCase();
     
     // Positive keywords
@@ -218,7 +218,7 @@ export default function HomePage() {
     } else {
       setPetResponse("");
     }
-  }, [getPetResponse, petState.state]);
+  }, [getPetResponse]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -495,25 +495,25 @@ export default function HomePage() {
     <main className="flex h-screen w-screen justify-center overflow-hidden bg-gradient-to-b from-purple-900 via-pink-900 to-orange-900 font-mono text-white">
       <AddToFarcasterDialog showOnFirstVisit={true} />
       <div
-        className="relative flex h-full w-full max-w-[520px] flex-1 flex-col overflow-hidden px-4 pb-4"
+        className="relative flex h-full w-full max-w-[520px] flex-1 flex-col overflow-hidden px-3 pb-3"
         style={{
-          paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)",
+          paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)",
         }}
       >
-        <div className="flex flex-1 flex-col overflow-y-auto space-y-3">
+        <div className="flex flex-1 flex-col overflow-y-auto space-y-2">
           {/* Header */}
-          <div className="bg-yellow-300 border-4 border-black rounded-2xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <h1 className="text-3xl font-black text-center text-black tracking-tight">
+          <div className="bg-yellow-300 border-4 border-black rounded-2xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <h1 className="text-2xl font-black text-center text-black tracking-tight">
               DONUTAMAGOTCHI
             </h1>
-            <p className="text-center text-xs text-black/70 font-bold mt-1">
+            <p className="text-center text-[10px] text-black/70 font-bold mt-0.5">
               OWNER: {ownerName}
             </p>
           </div>
 
           {/* Pet Display */}
-          <div className="bg-cyan-300 border-4 border-black rounded-2xl p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="bg-cyan-300 border-4 border-black rounded-2xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <DonutPet
               state={petState.state}
               happiness={petState.happiness}
@@ -531,23 +531,23 @@ export default function HomePage() {
           />
 
           {/* Message Input */}
-          <div className="space-y-2">
-            <div className="bg-white border-4 border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="space-y-1">
+            <div className="bg-white border-4 border-black rounded-xl p-1.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <input
                 type="text"
                 value={customMessage}
                 onChange={handleMessageChange}
                 placeholder="Say something nice..."
                 maxLength={100}
-                className="w-full bg-transparent text-black placeholder-black/40 text-sm font-bold focus:outline-none disabled:opacity-40"
+                className="w-full bg-transparent text-black placeholder-black/40 text-xs font-bold focus:outline-none disabled:opacity-40"
                 disabled={isGlazeDisabled}
               />
             </div>
             
             {/* Pet Response */}
             {petResponse && (
-              <div className="bg-pink-300 border-4 border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] animate-in slide-in-from-top-2">
-                <p className="text-center text-sm font-black text-black">
+              <div className="bg-pink-300 border-4 border-black rounded-xl p-1.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] animate-in slide-in-from-top-2">
+                <p className="text-center text-xs font-black text-black">
                   {petResponse}
                 </p>
               </div>
@@ -556,35 +556,35 @@ export default function HomePage() {
 
           {/* Feed Button */}
           <Button
-            className="w-full h-16 rounded-2xl bg-gradient-to-b from-pink-400 to-pink-600 border-4 border-black text-black text-xl font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+            className="w-full h-14 rounded-2xl bg-gradient-to-b from-pink-400 to-pink-600 border-4 border-black text-black text-lg font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
             onClick={handleGlaze}
             disabled={isGlazeDisabled}
           >
-            <div className="flex flex-col items-center">
-              <span>{buttonLabel}</span>
-              <span className="text-xs font-bold">{feedCost} ({feedCostUsd})</span>
+            <div className="flex flex-col items-center gap-0.5">
+              <span className="text-base">{buttonLabel}</span>
+              <span className="text-[10px] font-bold">{feedCost} ({feedCostUsd})</span>
             </div>
           </Button>
 
           {/* Wallet Info */}
           {address && (
-            <div className="bg-lime-300 border-4 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="bg-lime-300 border-4 border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <div className="grid grid-cols-3 gap-1 text-center">
                 <div>
-                  <div className="text-[10px] font-black text-black/60">DONUTS</div>
-                  <div className="text-sm font-black text-black">
+                  <div className="text-[8px] font-black text-black/60">DONUTS</div>
+                  <div className="text-xs font-black text-black">
                     {minerState ? formatTokenAmount(minerState.donutBalance, DONUT_DECIMALS, 0) : "0"}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] font-black text-black/60">ETH</div>
-                  <div className="text-sm font-black text-black">
+                  <div className="text-[8px] font-black text-black/60">ETH</div>
+                  <div className="text-xs font-black text-black">
                     {minerState ? formatEth(minerState.ethBalance, 3) : "0"}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] font-black text-black/60">WETH</div>
-                  <div className="text-sm font-black text-black">
+                  <div className="text-[8px] font-black text-black/60">WETH</div>
+                  <div className="text-xs font-black text-black">
                     {minerState ? formatEth(minerState.wethBalance, 3) : "0"}
                   </div>
                 </div>
