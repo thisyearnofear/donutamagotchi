@@ -10,15 +10,17 @@ export function NavBar() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t-4 border-yellow-300"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t-4 border-yellow-300 overflow-x-auto"
       style={{
         paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)",
         paddingTop: "8px",
       }}
     >
-      <div className="flex justify-around items-center max-w-[520px] mx-auto px-4">
-        <NavButton href="/blazery" active={pathname === "/blazery"} emoji="🔥" label="OVEN" />
+      <div className="flex justify-start items-center max-w-[520px] mx-auto px-2 gap-1 min-w-min">
         <NavButton href="/" active={pathname === "/"} emoji="🍩" label="PET" />
+        <NavButton href="/donuts" active={pathname === "/donuts"} emoji="🌍" label="EXPLORE" />
+        <NavButton href="/hall-of-fame" active={pathname === "/hall-of-fame"} emoji="🏆" label="FAME" />
+        <NavButton href="/blazery" active={pathname === "/blazery"} emoji="🔥" label="OVEN" />
         <NavButton href="/about" active={pathname === "/about"} emoji="❓" label="INFO" />
       </div>
     </nav>

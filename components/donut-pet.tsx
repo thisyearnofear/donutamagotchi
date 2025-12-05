@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { Traits, getColorHex, getPersonalityTraits } from "@/lib/traits";
 
 type PetState = "idle" | "happy" | "excited" | "hungry" | "sleeping" | "dead" | "bored" | "petting";
 type PetGesture = "bounce" | "wiggle" | "jump" | "spin" | "nod" | null;
@@ -12,9 +13,10 @@ interface DonutPetProps {
   isAnimating: boolean;
   gesture?: PetGesture;
   onGestureComplete?: () => void;
+  traits?: Traits | null;
 }
 
-export function DonutPet({ state, happiness, health, isAnimating, gesture, onGestureComplete }: DonutPetProps) {
+export function DonutPet({ state, happiness, health, isAnimating, gesture, onGestureComplete, traits }: DonutPetProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef(0);
   const gestureFrameRef = useRef(0);
@@ -42,15 +44,18 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
       const centerY = canvas.height / 2;
       const baseRadius = 80;
 
+      // Get personality-based animation speed
+      const personalitySpeed = traits ? getPersonalityTraits(traits.personality).animationSpeed : 1;
+
       // State-dependent movement
       let offsetY = 0;
       let offsetX = 0;
       let rotation = 0;
       let scale = 1;
 
-      // Idle breathing
+      // Idle breathing (speed affected by personality)
       if (state !== "dead" && !gesture) {
-        const breathe = Math.sin(frameRef.current * 0.05) * 5;
+        const breathe = Math.sin(frameRef.current * 0.05 * personalitySpeed) * 5;
         offsetY = breathe;
       }
 
@@ -107,10 +112,10 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
       ctx.rotate(rotation);
       ctx.scale(scale, scale);
 
-      // Draw donut body
+      // Draw donut body with trait-based coloring
       ctx.beginPath();
       ctx.arc(0, 0, radius, 0, Math.PI * 2);
-      ctx.fillStyle = getDonutColor(state, health);
+      ctx.fillStyle = getDonutColor(state, health, traits);
       ctx.fill();
       ctx.strokeStyle = "#8b4513";
       ctx.lineWidth = 4;
@@ -123,10 +128,10 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
       ctx.fill();
 
       // Draw frosting
-      drawFrosting(ctx, 0, -radius * 0.3, radius * 1.2, state);
+      drawFrosting(ctx, 0, -radius * 0.3, radius * 1.2, state, traits);
 
-      // Draw face
-      drawFace(ctx, 0, 0, state, frameRef.current);
+      // Draw face with trait-based eyes
+      drawFace(ctx, 0, 0, state, frameRef.current, traits);
 
       // Draw particles for excited/petting state
       if ((state === "excited" || state === "petting") && isAnimating) {
@@ -145,7 +150,7 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
 
     animate();
     return () => cancelAnimationFrame(animationId);
-  }, [state, health, isAnimating, gesture]);
+  }, [state, health, isAnimating, gesture, traits]);
 
   return (
     <canvas
@@ -157,15 +162,25 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
   );
 }
 
-function getDonutColor(state: PetState, health: number): string {
+function getDonutColor(state: PetState, health: number, traits?: Traits | null): string {
   if (state === "dead") return "#666";
   if (state === "bored") return "#e8c4a0";
   if (health < 30) return "#d4a574";
+  
+  // Use trait-based coloring if available
+  if (traits) {
+    const baseColor = getColorHex(traits.coloring);
+    // Apply grooming effect: higher grooming = more saturated color
+    const groomingFactor = traits.grooming / 100;
+    // This is a simplified effect; in a real implementation you might use HSL adjustment
+    return baseColor;
+  }
+  
   return "#f4a460";
 }
 
-function drawFrosting(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, state: PetState) {
-  const frostingColor = state === "dead" ? "#888" : "#ec4899";
+function drawFrosting(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, state: PetState, traits?: Traits | null) {
+  const frostingColor = state === "dead" ? "#888" : traits?.personality === "Friendly" ? "#FFB6C1" : "#ec4899";
   
   ctx.beginPath();
   for (let i = 0; i < 8; i++) {
@@ -196,9 +211,12 @@ function drawFrosting(ctx: CanvasRenderingContext2D, x: number, y: number, width
   }
 }
 
-function drawFace(ctx: CanvasRenderingContext2D, x: number, y: number, state: PetState, frame: number) {
+function drawFace(ctx: CanvasRenderingContext2D, x: number, y: number, state: PetState, frame: number, traits?: Traits | null) {
   const eyeY = y + 10;
   const eyeSpacing = 25;
+
+  // Determine eye shape based on personality
+  const eyeShape = traits?.personality === "Stubborn" ? "round" : traits?.personality === "Lazy" ? "small" : "normal";
 
   // Eyes
   if (state === "sleeping") {
@@ -236,18 +254,49 @@ function drawFace(ctx: CanvasRenderingContext2D, x: number, y: number, state: Pe
     ctx.fillRect(x - eyeSpacing - 4, eyeY - 2, 8, 4);
     ctx.fillRect(x + eyeSpacing - 4, eyeY - 2, 8, 4);
   } else {
-    // Open eyes with possible look direction
+    // Open eyes with personality-based shapes
     const blink = Math.floor(frame / 120) % 20 === 0;
-    const eyeHeight = blink ? 2 : 12;
+    let eyeWidth = 16;
+    let eyeHeight = blink ? 2 : 12;
     
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(x - eyeSpacing - 8, eyeY - eyeHeight / 2, 16, eyeHeight);
-    ctx.fillRect(x + eyeSpacing - 8, eyeY - eyeHeight / 2, 16, eyeHeight);
-    
-    if (!blink) {
+    // Personality affects eye appearance
+    if (eyeShape === "round" && !blink) {
+      // Stubborn: round eyes
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(x - eyeSpacing, eyeY, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x + eyeSpacing, eyeY, 8, 0, Math.PI * 2);
+      ctx.fill();
+      
       ctx.fillStyle = "#000";
-      ctx.fillRect(x - eyeSpacing - 4, eyeY - 4, 8, 8);
-      ctx.fillRect(x + eyeSpacing - 4, eyeY - 4, 8, 8);
+      ctx.beginPath();
+      ctx.arc(x - eyeSpacing, eyeY, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x + eyeSpacing, eyeY, 4, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (eyeShape === "small" && !blink) {
+      // Lazy: smaller eyes
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(x - eyeSpacing - 6, eyeY - eyeHeight / 2, 12, eyeHeight);
+      ctx.fillRect(x + eyeSpacing - 6, eyeY - eyeHeight / 2, 12, eyeHeight);
+      
+      ctx.fillStyle = "#000";
+      ctx.fillRect(x - eyeSpacing - 2, eyeY - 2, 4, 4);
+      ctx.fillRect(x + eyeSpacing - 2, eyeY - 2, 4, 4);
+    } else {
+      // Normal/default eyes
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(x - eyeSpacing - 8, eyeY - eyeHeight / 2, 16, eyeHeight);
+      ctx.fillRect(x + eyeSpacing - 8, eyeY - eyeHeight / 2, 16, eyeHeight);
+      
+      if (!blink) {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(x - eyeSpacing - 4, eyeY - 4, 8, 8);
+        ctx.fillRect(x + eyeSpacing - 4, eyeY - 4, 8, 8);
+      }
     }
   }
 

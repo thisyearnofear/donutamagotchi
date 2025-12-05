@@ -5,14 +5,60 @@ interface PetStatsProps {
   health: number;
   energy: string;
   age: string;
+  grooming?: number;
+  energyLevel?: number;
+  satisfaction?: number;
+  isDying?: boolean;
 }
 
-export function PetStats({ happiness, health, energy, age }: PetStatsProps) {
+export function PetStats({ 
+  happiness, 
+  health, 
+  energy, 
+  age,
+  grooming = 50,
+  energyLevel = 50,
+  satisfaction = 50,
+  isDying = false
+}: PetStatsProps) {
+  // Determine critical status
+  const isCriticalHealth = health < 10;
+  const isCriticalHappiness = happiness < 10;
+  const isWarningHealth = health < 30;
+  const isWarningHappiness = happiness < 30;
+
   return (
-    <div className="bg-white border-4 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-3">
+    <div className={`border-4 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-3 ${
+      isDying ? "bg-red-200 animate-pulse" : "bg-white"
+    }`}>
+      {/* Critical Alerts */}
+      {(isCriticalHealth || isCriticalHappiness) && (
+        <div className="bg-red-500 border-2 border-black rounded-lg p-2 text-center">
+          <div className="text-xs font-black text-white">
+            ⚠️ {isCriticalHealth ? "HEALTH CRITICAL!" : "VERY UNHAPPY!"} ⚠️
+          </div>
+        </div>
+      )}
+
+      {/* Warning Alerts */}
+      {(isWarningHealth || isWarningHappiness) && !isCriticalHealth && !isCriticalHappiness && (
+        <div className="bg-yellow-400 border-2 border-black rounded-lg p-1.5 text-center">
+          <div className="text-[10px] font-black text-black">
+            {isWarningHealth ? "Your donut needs food!" : "Your donut is sad..."}
+          </div>
+        </div>
+      )}
+
       <PixelStatBar label="HEALTH" value={health} emoji="❤️" color="red" />
       <PixelStatBar label="HAPPY" value={happiness} emoji="😊" color="yellow" />
       
+      {/* Development stats (shown conditionally) */}
+      <div className="pt-1 border-t-2 border-black border-dashed space-y-2">
+        <PixelStatBar label="GROOMING" value={grooming} emoji="✨" color="yellow" size="small" />
+        <PixelStatBar label="ENERGY" value={energyLevel} emoji="⚡" color="yellow" size="small" />
+        <PixelStatBar label="SATISFIED" value={satisfaction} emoji="😋" color="yellow" size="small" />
+      </div>
+
       <div className="grid grid-cols-2 gap-3 pt-2 border-t-4 border-black border-dashed">
         <StatDisplay label="ENERGY" value={energy} emoji="⚡" />
         <StatDisplay label="AGE" value={age} emoji="⏱️" />
@@ -25,35 +71,44 @@ function PixelStatBar({
   label, 
   value, 
   emoji, 
-  color 
+  color,
+  size = "normal"
 }: { 
   label: string; 
   value: number; 
   emoji: string; 
   color: "red" | "yellow";
+  size?: "normal" | "small";
 }) {
   const percentage = Math.max(0, Math.min(100, value));
   const blocks = Math.round(percentage / 10);
+  const blockCount = size === "small" ? 5 : 10;
+  const scaledBlocks = Math.round((percentage / 100) * blockCount);
   
   const blockColor = color === "red"
     ? percentage > 60 ? "bg-green-500" : percentage > 30 ? "bg-yellow-500" : "bg-red-500"
     : percentage > 60 ? "bg-yellow-400" : percentage > 30 ? "bg-orange-400" : "bg-gray-400";
 
+  const textSize = size === "small" ? "text-[10px]" : "text-xs";
+  const barHeight = size === "small" ? "h-2" : "h-4";
+  const labelGap = size === "small" ? "gap-0.5" : "gap-1";
+  const barGap = size === "small" ? "gap-0.5" : "gap-1";
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-black text-black flex items-center gap-1">
+      <div className="flex items-center justify-between mb-0.5">
+        <span className={`${textSize} font-black text-black flex items-center ${labelGap}`}>
           <span>{emoji}</span>
           <span>{label}</span>
         </span>
-        <span className="text-xs font-black text-black">{Math.round(percentage)}%</span>
+        <span className={`${textSize} font-black text-black`}>{Math.round(percentage)}%</span>
       </div>
-      <div className="flex gap-1">
-        {Array.from({ length: 10 }).map((_, i) => (
+      <div className={`flex ${barGap}`}>
+        {Array.from({ length: blockCount }).map((_, i) => (
           <div
             key={i}
-            className={`h-4 flex-1 border-2 border-black ${
-              i < blocks ? blockColor : "bg-gray-200"
+            className={`${barHeight} flex-1 border-2 border-black ${
+              i < scaledBlocks ? blockColor : "bg-gray-200"
             }`}
           />
         ))}

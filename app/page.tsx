@@ -17,9 +17,13 @@ import { Button } from "@/components/ui/button";
 import { CONTRACT_ADDRESSES, MULTICALL_ABI } from "@/lib/contracts";
 import { getEthPrice } from "@/lib/utils";
 import { useAccountData } from "@/hooks/useAccountData";
+import { useTraits } from "@/hooks/useTraits";
 import { NavBar } from "@/components/nav-bar";
 import { DonutPet } from "@/components/donut-pet";
 import { PetStats } from "@/components/pet-stats";
+import { TraitsDisplay } from "@/components/traits-display";
+import { BreedingViability } from "@/components/breeding-viability";
+import { LifecycleDisplay } from "@/components/lifecycle-display";
 import { AddToFarcasterDialog } from "@/components/add-to-farcaster-dialog";
 
 type MiniAppContext = {
@@ -321,6 +325,14 @@ export default function HomePage() {
   const minerAddress = minerState?.miner ?? zeroAddress;
   const hasMiner = minerAddress !== zeroAddress;
 
+  // Get traits for the miner (includes decay calculations)
+  const { traits } = useTraits({
+    minerAddress: hasMiner ? minerAddress : zeroAddress,
+    lastInteractionTime,
+    lastFedTime: minerState?.startTime ? Number(minerState.startTime) * 1000 : Date.now(),
+    currentTime: Date.now(),
+  });
+
   const { data: neynarUser } = useQuery<{
     user: {
       fid: number | null;
@@ -555,6 +567,7 @@ export default function HomePage() {
               isAnimating={isWriting || isConfirming}
               gesture={gesture}
               onGestureComplete={() => setGesture(null)}
+              traits={traits}
             />
           </div>
 
@@ -564,7 +577,28 @@ export default function HomePage() {
             health={petState.health}
             energy={glazedDisplay}
             age={glazeTimeDisplay}
+            grooming={traits?.grooming ?? 50}
+            energyLevel={traits?.energy ?? 50}
+            satisfaction={traits?.satisfaction ?? 50}
+            isDying={petState.state === "dead"}
           />
+
+          {/* Traits Display */}
+          <TraitsDisplay traits={traits} />
+
+          {/* Breeding Viability & Care Routine */}
+          {hasMiner && (
+            <BreedingViability
+              traits={traits}
+              lastInteractionTime={lastInteractionTime}
+              lastFedTime={minerState?.startTime ? Number(minerState.startTime) * 1000 : Date.now()}
+            />
+          )}
+
+          {/* Lifecycle Display */}
+          {hasMiner && minerState && (
+            <LifecycleDisplay createdAtSeconds={Number(minerState.startTime)} />
+          )}
 
           {/* Message Input */}
           <div className="space-y-1">
