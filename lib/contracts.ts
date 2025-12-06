@@ -1,8 +1,14 @@
 export const CONTRACT_ADDRESSES = {
+  // Core $DONUT protocol
   donut: "0xAE4a37d554C6D6F3E398546d8566B25052e0169C",
   miner: "0xF69614F4Ee8D4D3879dd53d5A039eB3114C794F6",
   multicall: "0x3ec144554b484C6798A683E34c8e8E222293f323",
   provider: "0xba366c82815983ff130c23ced78bd95e1f2c18ea",
+  
+  // $DONUTAMAGOTCHI ecosystem (deploy addresses TBD)
+  donutamagotchiToken: process.env.NEXT_PUBLIC_DONUTAMAGOTCHI_TOKEN || "0x0000000000000000000000000000000000000000",
+  donutBreeding: process.env.NEXT_PUBLIC_DONUT_BREEDING || "0x0000000000000000000000000000000000000000",
+  donutSanctuary: process.env.NEXT_PUBLIC_DONUT_SANCTUARY || "0x0000000000000000000000000000000000000000",
 } as const;
 
 export const MULTICALL_ABI = [
@@ -213,5 +219,211 @@ export const MULTICALL_ABI = [
     ],
     stateMutability: "view",
     type: "function",
+  },
+] as const;
+
+export const BREEDING_ABI = [
+  {
+    name: "breed",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "parentAMiner", type: "address" },
+      { name: "parentBMiner", type: "address" },
+      { name: "geneticData", type: "string" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "getOffspringByParent",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "parentMiner", type: "address" }],
+    outputs: [{ name: "", type: "uint256[]" }],
+  },
+  {
+    name: "getOffspringByOwner",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ name: "", type: "uint256[]" }],
+  },
+  {
+    name: "getMaxGenerationForMiner",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "minerAddress", type: "address" }],
+    outputs: [{ name: "", type: "uint8" }],
+  },
+  {
+    name: "getOffspring",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        components: [
+          { name: "parentAMiner", type: "address" },
+          { name: "parentBMiner", type: "address" },
+          { name: "owner", type: "address" },
+          { name: "createdAt", type: "uint256" },
+          { name: "generation", type: "uint8" },
+          { name: "geneticData", type: "string" },
+        ],
+      },
+    ],
+  },
+  {
+    name: "getBreedingCooldown",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "parentMiner", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "getFamily",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [
+      { name: "parentA", type: "address" },
+      { name: "parentB", type: "address" },
+      { name: "parentAGen", type: "uint8" },
+      { name: "parentBGen", type: "uint8" },
+      { name: "childGen", type: "uint8" },
+    ],
+  },
+  {
+    name: "OffspringCreated",
+    type: "event",
+    inputs: [
+      { name: "tokenId", type: "uint256", indexed: true },
+      { name: "parentAMiner", type: "address", indexed: true },
+      { name: "parentBMiner", type: "address", indexed: true },
+      { name: "owner", type: "address", indexed: false },
+      { name: "generation", type: "uint8", indexed: false },
+      { name: "geneticData", type: "string", indexed: false },
+    ],
+  },
+] as const;
+
+export const DONUTAMAGOTCHI_TOKEN_ABI = [
+  {
+    name: "mintPlayToEarn",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "amount", type: "uint256" },
+      { name: "reason", type: "string" },
+    ],
+  },
+  {
+    name: "stake",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "amount", type: "uint256" }],
+  },
+  {
+    name: "unstake",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "amount", type: "uint256" }],
+  },
+  {
+    name: "claimStakingReward",
+    type: "function",
+    stateMutability: "nonpayable",
+  },
+  {
+    name: "balanceOf",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "stakedBalance",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "calculateStakingReward",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "canVote",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    name: "totalSupply",
+    type: "function",
+    stateMutability: "view",
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "approve",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    name: "transfer",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    name: "allowance",
+    type: "function",
+    stateMutability: "view",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "TokensMinted",
+    type: "event",
+    inputs: [
+      { name: "to", type: "address", indexed: true },
+      { name: "amount", type: "uint256", indexed: false },
+      { name: "reason", type: "string", indexed: true },
+    ],
+  },
+  {
+    name: "TokensStaked",
+    type: "event",
+    inputs: [
+      { name: "user", type: "address", indexed: true },
+      { name: "amount", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    name: "StakingRewardClaimed",
+    type: "event",
+    inputs: [
+      { name: "user", type: "address", indexed: true },
+      { name: "amount", type: "uint256", indexed: false },
+    ],
   },
 ] as const;

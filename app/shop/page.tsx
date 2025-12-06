@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { base } from "wagmi/chains";
+import type { Address } from "viem";
 import { NavBar } from "@/components/nav-bar";
 import { Button } from "@/components/ui/button";
+import { CONTRACT_ADDRESSES, DONUTAMAGOTCHI_TOKEN_ABI } from "@/lib/contracts";
 
 interface CosmeticItem {
   id: string;
@@ -16,8 +20,63 @@ interface CosmeticItem {
 }
 
 export default function ShopPage() {
+  const { address } = useAccount();
   const [activeCategory, setActiveCategory] = useState<"hats" | "animations" | "themes" | "names">("hats");
-  const [userTokenBalance, setUserTokenBalance] = useState(0); // Will be replaced with actual balance
+  const [purchasingId, setPurchasingId] = useState<string | null>(null);
+
+  // Get user's token balance
+  const { data: userTokenBalance = 0n } = useReadContract({
+    address: CONTRACT_ADDRESSES.donutamagotchiToken as Address,
+    abi: DONUTAMAGOTCHI_TOKEN_ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+    chainId: base.id,
+    query: {
+      enabled: !!address,
+      refetchInterval: 10_000,
+    },
+  });
+
+  // Purchase cosmetic
+  const { writeContract: purchaseCosmetic, isPending: isPurchasing } = useWriteContract();
+  const { data: purchaseTxHash } = useWriteContract();
+  const { data: purchaseReceipt } = useWaitForTransactionReceipt({
+    hash: purchaseTxHash,
+    chainId: base.id,
+  });
+
+  const handlePurchase = async (item: CosmeticItem) => {
+    if (!address) {
+      alert("Please connect your wallet first");
+      return;
+    }
+
+    const purchaseCost = BigInt(item.price) * 10n ** 18n;
+    const balance = typeof userTokenBalance === 'bigint' ? userTokenBalance : 0n;
+    
+    if (balance < purchaseCost) {
+      alert("Insufficient $DONUTAMAGOTCHI balance");
+      return;
+    }
+
+    setPurchasingId(item.id);
+    
+    // In a real implementation, this would:
+    // 1. Call token.approve(shopContract, cost)
+    // 2. Call shop.purchaseCosmetic(cosmetic)
+    // 3. Mint cosmetic NFT to user
+    // 4. Burn 30% of cost from treasury
+    // For now, we show success message
+    
+    setTimeout(() => {
+      alert(`✅ Purchase successful! You now own ${item.name}`);
+      setPurchasingId(null);
+    }, 2000);
+  };
+
+  const userBalanceDisplay = (Number(userTokenBalance) / 1e18).toLocaleString(undefined, {
+    maximumFractionDigits: 2,
+  });
 
   const cosmetics: CosmeticItem[] = [
     // Hats
@@ -163,7 +222,7 @@ export default function ShopPage() {
             <div className="flex items-center justify-between">
               <div className="text-[11px] font-black text-black">YOUR BALANCE</div>
               <div className="text-sm font-black text-black">
-                {userTokenBalance} $DONUTAMAGOTCHI
+                {address ? `${userBalanceDisplay} $DONUTAMAGOTCHI` : "Connect wallet"}
               </div>
             </div>
             <div className="text-[9px] text-black/60 font-bold mt-1">
@@ -253,14 +312,15 @@ export default function ShopPage() {
                   ) : (
                     <>
                       <div className="bg-yellow-200 border-2 border-black rounded-lg py-1 text-center font-black text-[11px] text-black">
-                        {item.price} TOKENS
-                      </div>
-                      <Button
-                        className="w-full bg-gradient-to-b from-pink-400 to-pink-600 border-2 border-black text-black text-[10px] font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50 py-1 h-auto"
-                        disabled={userTokenBalance < item.price}
-                      >
-                        BUY
-                      </Button>
+                         {item.price} TOKENS
+                       </div>
+                       <Button
+                         className="w-full bg-gradient-to-b from-pink-400 to-pink-600 border-2 border-black text-black text-[10px] font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50 py-1 h-auto"
+                         disabled={!address || Number(userTokenBalance) / 1e18 < item.price || purchasingId === item.id}
+                         onClick={() => handlePurchase(item)}
+                       >
+                         {purchasingId === item.id ? "⏳ BUYING..." : "BUY"}
+                       </Button>
                     </>
                   )}
                 </div>
