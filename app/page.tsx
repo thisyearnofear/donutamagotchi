@@ -609,6 +609,7 @@ export default function HomePage() {
               gesture={gesture}
               onGestureComplete={() => setGesture(null)}
               traits={traits}
+              createdAtSeconds={minerState?.startTime ? Number(minerState.startTime) : undefined}
             />
           </div>
 

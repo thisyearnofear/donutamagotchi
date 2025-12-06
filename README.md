@@ -14,10 +14,11 @@ Donutamagotchi enhances the $DONUT mining protocol with:
 ## 🎯 Core Features
 
 ### Pet Personality System (Phase 1) ✅
-- **Friendly, Energetic, Lazy, Stubborn** - affects animation speed and responses
+- **Friendly, Energetic, Lazy, Stubborn** - affects animation speed, responses, and visual appearance
 - **6 Color Options** - Pink, Blue, Purple, Yellow, Orange, Green
 - **Trait Development** - Grooming, Energy, Satisfaction improve through interactions
 - **Social Score** - 0-100 rating for potential breeding
+- **Physics-Based Animation** - Spring easing, squash/stretch, natural movement responding to interactions
 
 ### Natural Stat Decay (Phase 1.5) ✅
 - **Health** (-0.5% per 30 min): Decreases unless fed recently
@@ -27,11 +28,13 @@ Donutamagotchi enhances the $DONUT mining protocol with:
 
 ### Lifecycle Stages (Phase 2) ✅
 ```
-BIRTH (0-1 day)    - 50% DPS, weak but learning
-GROWTH (1-30 days) - Scaling DPS from 50% → 100%
-PRIME (30-90 days) - 100% DPS, ready to breed ⭐
-TWILIGHT (90+ days)- Aging gracefully, retirement eligible
+BIRTH (0-1 day)    - 50% DPS, weak but learning, 70% size
+GROWTH (1-30 days) - Scaling DPS from 50% → 100%, grows to 85% size
+PRIME (30-90 days) - 100% DPS, ready to breed ⭐, full 100% size
+TWILIGHT (90+ days)- Aging gracefully, retirement eligible, full size
 ```
+- **Visual Evolution**: Pet visibly grows as you care for it through lifecycle stages
+- **Personality-Based Appearance**: Sprinkles, frosting, and colors vary by personality type
 
 ### Breeding System (Phase 3) 🚀
 - Coming soon: Breed two Prime donuts to create offspring

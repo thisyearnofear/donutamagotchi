@@ -1,7 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { Traits, getColorHex, getPersonalityTraits } from "@/lib/traits";
+import { useEffect, useRef, useMemo } from "react";
+import { Traits, getColorHex, getPersonalityTraits, getLifecycleInfo } from "@/lib/traits";
+import {
+  simulateSpring,
+  applyGravity,
+  handleGroundCollision,
+  easeOutBounce,
+  calculateSquashStretch,
+  calculateWiggle,
+  calculateBreathing,
+  calculateHeadShake,
+} from "@/lib/physics";
 
 type PetState = "idle" | "happy" | "excited" | "hungry" | "sleeping" | "dead" | "bored" | "petting";
 type PetGesture = "bounce" | "wiggle" | "jump" | "spin" | "nod" | null;
@@ -14,13 +24,23 @@ interface DonutPetProps {
   gesture?: PetGesture;
   onGestureComplete?: () => void;
   traits?: Traits | null;
+  createdAtSeconds?: number;
 }
 
-export function DonutPet({ state, happiness, health, isAnimating, gesture, onGestureComplete, traits }: DonutPetProps) {
+export function DonutPet({ state, happiness, health, isAnimating, gesture, onGestureComplete, traits, createdAtSeconds }: DonutPetProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef(0);
   const gestureFrameRef = useRef(0);
   const gestureCompleteRef = useRef(onGestureComplete);
+  
+  // Physics state for jump/bounce
+  const jumpStateRef = useRef({ y: 0, vy: 0 });
+
+  // Calculate lifecycle for visual evolution
+  const lifecycleInfo = useMemo(() => {
+    if (!createdAtSeconds) return null;
+    return getLifecycleInfo(createdAtSeconds, Date.now());
+  }, [createdAtSeconds]);
 
   useEffect(() => {
     gestureCompleteRef.current = onGestureComplete;
@@ -59,46 +79,72 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
         offsetY = breathe;
       }
 
-      // Gesture animations
+      // Physics-based gesture animations
       if (gesture) {
         const gestureProgress = gestureFrameRef.current;
-        const gestureDuration = 30;
+        const gestureDuration = gesture === "jump" ? 50 : gesture === "bounce" ? 40 : 30;
+        const progress = Math.min(gestureProgress / gestureDuration, 1);
 
         switch (gesture) {
           case "bounce":
-            offsetY = Math.abs(Math.sin(gestureProgress * Math.PI / gestureDuration)) * -30;
+            // Spring-based bounce with overshoot
+            const bounceEase = easeOutBounce(progress);
+            offsetY = -bounceEase * 40;
+            // Squash on landing
+            const { scaleX: bsx, scaleY: bsy } = calculateSquashStretch(bounceEase);
+            scale = 1;
             if (gestureProgress > gestureDuration) {
               gestureFrameRef.current = 0;
               gestureCompleteRef.current?.();
             }
             break;
           case "wiggle":
-            offsetX = Math.sin(gestureProgress * Math.PI * 2 / gestureDuration) * 15;
+            // Oscillating wiggle with damping
+            const wiggleDamping = 1 - progress * 0.3;
+            offsetX = calculateWiggle(gestureProgress, 0.25, 15) * wiggleDamping;
             if (gestureProgress > gestureDuration) {
               gestureFrameRef.current = 0;
               gestureCompleteRef.current?.();
             }
             break;
           case "jump":
-            const jumpProgress = (gestureProgress / 40);
-            if (jumpProgress <= 1) {
-              offsetY = -Math.sin(jumpProgress * Math.PI) * 60;
+            // Physics-based jump with gravity
+            const jumpDuration = 50;
+            const jumpPhase = gestureProgress / jumpDuration;
+            
+            if (jumpPhase <= 1) {
+              // Parabolic arc with easing
+              offsetY = -easeOutBounce(jumpPhase) * 80;
+              // Squash/stretch during jump
+              const { scaleX: jsx, scaleY: jsy } = calculateSquashStretch(jumpPhase);
+              // Apply slight scale deformation
+              if (jumpPhase < 0.3) {
+                scale = 0.95; // Compress at start
+              } else if (jumpPhase < 0.7) {
+                scale = 1.05; // Stretch at peak
+              } else {
+                scale = 0.98; // Land compression
+              }
             } else {
               gestureFrameRef.current = 0;
               gestureCompleteRef.current?.();
             }
             break;
           case "spin":
-            rotation = (gestureProgress / 20) * Math.PI * 2;
-            if (gestureProgress > 20) {
+            // Smooth rotation with easing
+            const spinEase = progress < 0.5 
+              ? 2 * progress * progress 
+              : -1 + (4 - 2 * progress) * progress;
+            rotation = spinEase * Math.PI * 2;
+            if (gestureProgress > gestureDuration) {
               gestureFrameRef.current = 0;
               gestureCompleteRef.current?.();
             }
             break;
           case "nod":
-            const nodAmount = Math.abs(Math.sin(gestureProgress * Math.PI * 2 / 15)) * 0.3;
-            rotation = nodAmount;
-            if (gestureProgress > 30) {
+            // Head shake with natural motion
+            rotation = calculateHeadShake(progress, 1);
+            if (gestureProgress > gestureDuration) {
               gestureFrameRef.current = 0;
               gestureCompleteRef.current?.();
             }
@@ -112,23 +158,27 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
       ctx.rotate(rotation);
       ctx.scale(scale, scale);
 
+      // Lifecycle-based donut size (smaller when young)
+      const sizeMultiplier = lifecycleInfo?.stage === "birth" ? 0.7 : lifecycleInfo?.stage === "growth" ? 0.85 : 1;
+      const actualRadius = radius * sizeMultiplier;
+      
       // Draw donut body with trait-based coloring
       ctx.beginPath();
-      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.arc(0, 0, actualRadius, 0, Math.PI * 2);
       ctx.fillStyle = getDonutColor(state, health, traits);
       ctx.fill();
       ctx.strokeStyle = "#8b4513";
       ctx.lineWidth = 4;
       ctx.stroke();
 
-      // Draw donut hole
+      // Draw donut hole (scales with size)
       ctx.beginPath();
-      ctx.arc(0, 0, radius * 0.35, 0, Math.PI * 2);
+      ctx.arc(0, 0, actualRadius * 0.35, 0, Math.PI * 2);
       ctx.fillStyle = "#000";
       ctx.fill();
 
-      // Draw frosting
-      drawFrosting(ctx, 0, -radius * 0.3, radius * 1.2, state, traits);
+      // Draw frosting with lifecycle info
+      drawFrosting(ctx, 0, -actualRadius * 0.3, actualRadius * 1.2, state, traits, lifecycleInfo);
 
       // Draw face with trait-based eyes
       drawFace(ctx, 0, 0, state, frameRef.current, traits);
@@ -150,7 +200,7 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
 
     animate();
     return () => cancelAnimationFrame(animationId);
-  }, [state, health, isAnimating, gesture, traits]);
+  }, [state, health, isAnimating, gesture, traits, lifecycleInfo]);
 
   return (
     <canvas
@@ -179,14 +229,18 @@ function getDonutColor(state: PetState, health: number, traits?: Traits | null):
   return "#f4a460";
 }
 
-function drawFrosting(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, state: PetState, traits?: Traits | null) {
+function drawFrosting(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, state: PetState, traits?: Traits | null, lifecycleInfo?: any) {
   const frostingColor = state === "dead" ? "#888" : traits?.personality === "Friendly" ? "#FFB6C1" : "#ec4899";
+  
+  // Wave height varies by lifecycle stage (babies have less frosting)
+  const waveHeightMultiplier = lifecycleInfo?.stage === "birth" ? 0.5 : lifecycleInfo?.stage === "growth" ? 0.75 : 1;
+  const waveHeight = 15 * waveHeightMultiplier;
   
   ctx.beginPath();
   for (let i = 0; i < 8; i++) {
     const angle = (i / 8) * Math.PI * 2;
     const waveX = x + Math.cos(angle) * (width / 2);
-    const waveY = y + Math.sin(angle) * 15;
+    const waveY = y + Math.sin(angle) * waveHeight;
     if (i === 0) ctx.moveTo(waveX, waveY);
     else ctx.lineTo(waveX, waveY);
   }
@@ -194,11 +248,14 @@ function drawFrosting(ctx: CanvasRenderingContext2D, x: number, y: number, width
   ctx.fillStyle = frostingColor;
   ctx.fill();
 
-  // Sprinkles
+  // Sprinkles with personality-based distribution
   if (state !== "dead") {
+    // More sprinkles for happy/energetic, fewer for lazy
+    const sprinkleCount = traits?.personality === "Energetic" ? 16 : traits?.personality === "Lazy" ? 8 : 12;
     const colors = ["#ff6b9d", "#ffd93d", "#6bcf7f", "#4ecdc4"];
-    for (let i = 0; i < 12; i++) {
-      const angle = (i / 12) * Math.PI * 2 + Math.random() * 0.3;
+    
+    for (let i = 0; i < sprinkleCount; i++) {
+      const angle = (i / sprinkleCount) * Math.PI * 2 + Math.random() * 0.3;
       const dist = 30 + Math.random() * 20;
       ctx.fillStyle = colors[i % colors.length];
       ctx.fillRect(
