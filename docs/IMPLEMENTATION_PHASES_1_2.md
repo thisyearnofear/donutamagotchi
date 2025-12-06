@@ -167,18 +167,19 @@ Twilight: 1.0 (still productive)
 
 ### Updated NavBar (`components/nav-bar.tsx`)
 
-**New Navigation Structure**
+**Navigation Structure (Mobile-Optimized)**
 ```
-🍩 PET      - Main pet care (/)
-🌍 EXPLORE  - Donut Explorer (/donuts)
-🏆 FAME     - Hall of Fame (/hall-of-fame)
-🔥 OVEN     - Blazery Pool (/blazery)
-❓ INFO     - About (/about)
+🍩 PET      - Main pet care + status indicator + care guide (/)
+🌍 EXPLORE  - Discover donuts, find breeding partners (/donuts)
+💕 BREED    - Breeding board + partner matching (/breeding)
+🎨 SHOP     - Cosmetics shop (/shop)
+👑 FAME     - Hall of Fame + Badges + Leaderboards (/hall-of-fame)
 ```
 
-- Horizontal scrolling for mobile
-- Active state highlighting
-- Centered in viewport
+- 5 buttons fit perfectly at max-width 520px (no scroll needed)
+- Active state highlighting with pink background
+- Status indicator on PET page shows feeding urgency
+- Care guide collapsible widget explains daily routine
 
 ### Global Donut Explorer (`app/donuts/page.tsx`)
 
