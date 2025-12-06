@@ -84,11 +84,11 @@ TWILIGHT (90+ days)- Aging gracefully, retirement eligible
 
 ## 🗺️ Navigation
 
-- **🍩 PET** - Main pet care interface
-- **🌍 EXPLORE** - Discover other donuts (coming soon)
-- **🏆 FAME** - Hall of Fame for retired legends (coming soon)
-- **🔥 OVEN** - Blazery pool interface
-- **❓ INFO** - About page
+- **🍩 PET** - Main pet care interface + status indicator + quick guide
+- **🌍 EXPLORE** - Discover other donuts (filter by PRIME for breeding partners)
+- **💕 BREED** - Find breeding partners, initiate breeding
+- **🎨 SHOP** - Purchase cosmetics with $DONUTAMAGOTCHI tokens
+- **👑 FAME** - Hall of Fame (retired/legendary donuts) + badges + leaderboards
 
 ## 🏗️ Built With
 
@@ -131,7 +131,9 @@ NEYNAR_API_KEY=...
 - **Development Bars** - Grooming, energy, satisfaction tracking
 - **Breeding Readiness** - Success rate and care routine timers
 - **Lifecycle Display** - Age, stage, DPS multiplier, progress bars
-- **Multi-page Navigation** - PET, EXPLORE, FAME, OVEN, INFO
+- **Multi-page Navigation** - PET, EXPLORE, BREED, SHOP, FAME (mobile-optimized 5-button nav)
+- **Status Indicators** - Health status (healthy/needs care/critical/dying) with feed urgency
+- **Care Guide** - Collapsible quick reference for daily routine and milestones
 
 ## 📝 Smart Contracts (Unchanged)
 
