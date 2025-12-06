@@ -28,6 +28,7 @@ import { PetStatusIndicator } from "@/components/pet-status-indicator";
 import { StatCard } from "@/components/stat-card";
 import { EarningDisplay } from "@/components/earning-display";
 import { BreedingBadge } from "@/components/breeding-badge";
+import { CareGuide } from "@/components/care-guide";
 
 type MiniAppContext = {
   user?: {
@@ -677,6 +678,9 @@ export default function HomePage() {
             isDisabled={isGlazeDisabled}
             onGesture={handleGesture}
           />
+
+          {/* Quick Guide */}
+          {hasMiner && <CareGuide />}
 
           {/* Feed Button */}
           <Button
