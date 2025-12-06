@@ -25,6 +25,10 @@ const miniAppEmbed = {
 export const metadata: Metadata = {
   title: "Donutamagotchi",
   description: "Raise your donut pet with unique traits, breed offspring, and build a generational legacy. Earn $DONUT tokens while you play.",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
   openGraph: {
     title: "Donutamagotchi",
     description: "A next-gen tamagotchi game with breeding, traits, and real blockchain earnings on Base.",
