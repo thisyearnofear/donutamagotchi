@@ -72,14 +72,9 @@ We are **not** replacing or competing with the protocol—we are **enhancing it*
 - **Donutamagotchi**: Pet lifecycle, breeding, traits, sanctuary system
 - **Differentiation**: True tamagotchi gameplay, not just theming
 
-### vs Original Tamagotchi
-- **Classic**: Time-based care, death/consequences
-- **Donutamagotchi**: + Breeding system, trait inheritance, community interaction, tokenized engagement
-- **Modern Take**: Digital pet game + blockchain composability
-
 ---
 
-## Phase 1: Foundation (Weeks 1-3)
+## Phase 1: Foundation
 
 **Goal:** Add personality and progression to the existing donut
 
@@ -91,12 +86,6 @@ We are **not** replacing or competing with the protocol—we are **enhancing it*
 - **Base Earning Potential**: ±5% DPS variance (cosmetic, no P2W)
 - **Social Score**: 0-100 (increases via interactions with other donuts)
 
-**Implementation:**
-- Traits generated on miner creation (pseudo-random from `miner` address)
-- Stored off-chain but verifiable (hash + contract address)
-- Visual updates to DonutPet canvas (color variations, expression styles)
-- No contract changes needed
-
 ### Trait Development
 
 **How Traits Evolve Through Play:**
@@ -104,26 +93,6 @@ We are **not** replacing or competing with the protocol—we are **enhancing it*
 - **Energy** (Playing): Changes animation speed/intensity
 - **Satisfaction** (Feeding): Shifts expression, increases idle happiness
 - **Sociability** (Cross-donut interactions): Unlocks special poses/reactions
-
-**Mechanics:**
-- Track interactions via `lastInteractionTime` (existing)
-- Add trait state object: `{ grooming: 0-100, energy: 0-100, ... }`
-- Visual changes update in real-time as you play
-- No storage needed (client-side + indexable events)
-
-### Visual Improvements
-
-**Donut Appearance Changes:**
-- Color shifts based on personality + grooming
-- Eyes change shape per personality type
-- Animations speed up/slow down per energy level
-- New idle poses based on trait combinations
-
-**Pet Response Customization:**
-- Lazy donut = slower, grumpy responses
-- Energetic donut = bouncy, enthusiastic responses
-- Friendly donut = heart particles, warm messages
-- Stubborn donut = resistant to petting, needs feeding instead
 
 ### $DONUTAMAGOTCHI Token Launch
 
@@ -140,8 +109,6 @@ We are **not** replacing or competing with the protocol—we are **enhancing it*
 - 20% to treasury/cosmetics shop
 - 10% to liquidity/staking rewards
 
-**Smart Contract:** Simple ERC20 on Base, minting tied to game events
-
 ### Global Donut Explorer
 
 **New Page:** `/donuts` - View all active miners
@@ -151,41 +118,14 @@ We are **not** replacing or competing with the protocol—we are **enhancing it*
 - Click to view full stats: owner, earnings, trait breakdown, health/happiness
 - **You earn +10 $DONUTAMAGOTCHI tokens** when you view a donut
 - **You earn +5 tokens** when you interact with someone else's donut (click it to poke)
-- Search by owner name / Farcaster username
-- Filter by trait type, earning rate, age range
-
-**Why It Works:**
-- Drives discovery (seeing others' pets makes you want one)
-- Creates FOMO ("that donut's cooler than mine")
-- Rewards social engagement (viewing = earnings)
-- No contract changes needed (just GraphQL queries)
-
-### Hall of Fame
-
-**New Page:** `/hall-of-fame` - Retired and legendary donuts
-
-**Features:**
-- All retired donuts (lifecycle ended)
-- Donuts that reached max health/happiness
-- Donuts that were bred (lineage tracker)
-- Stats frozen at retirement: final earnings, age, trait summary
-- Can view but not interact
-- Search by owner/creation date
-
-**Why It Works:**
-- Honors player investment without breaking economics
-- Provides goal/aspiration (want my donut in Hall of Fame)
-- Creates narrative (see other players' achievements)
 
 ---
 
-## Phase 1.5: Decay System (Weeks 3-4)
+## Phase 2: Decay System
 
 **Goal:** Create natural care rhythm and urgency through stat decay
 
 ### Decay-Based Needs
-
-**Problem:** Current system relies on price decay (external economic event). Better approach: natural stat degradation encourages regular check-ins.
 
 **Implementation:**
 - **Health Decay**: -0.5% every 30 minutes (halted if fed recently)
@@ -201,12 +141,6 @@ Ideal pet care routine (casual):
 └─ Total: ~5-6 interactions per day
 ```
 
-**Why This Matters:**
-- Creates natural urgency without external events
-- Encourages daily habits (vs one-time engagement)
-- Makes breeding viable without feeding (high cleanliness = higher breed success)
-- Aligns with original tamagotchi (require regular care or pet dies)
-
 ### Breeding Success Rates
 
 **Stat-Based Breeding Viability:**
@@ -217,23 +151,9 @@ Breeding Success = (health + cleanliness) / 2
 └─ >70%: Healthy offspring (bonus trait variation chances)
 ```
 
-This incentivizes **quality** breeding over quantity.
-
-### Interaction Decay Tracking
-
-**Implementation Notes:**
-- Track `lastInteractedAt` timestamp (already have this)
-- Calculate current stats client-side: `currentStat = baseStat - (minutesElapsed * decayRate)`
-- Visual indicator: health/happiness bars animate down in real-time
-- Threshold alerts at 30%, 10%, 0% (visual + audio cue)
-
-**No Contract Changes Needed**
-- All calculated from `lastInteractedAt` + `lastFedAt` timestamps
-- Subgraph can index timestamps for historical queries
-
 ---
 
-## Phase 2: Lifecycle (Weeks 4-5)
+## Phase 3: Lifecycle
 
 **Goal:** Give donuts natural growth cycles and retirement options
 
@@ -264,20 +184,7 @@ TWILIGHT (Days 90+)
 ├─ Cannot breed anymore
 ├─ Can be retired or left to die
 └─ Graceful endgame phase
-
-RETIRED (Optional)
-├─ Leaves active rotation
-├─ Cannot be stolen or fed
-├─ Generates +0.1 $DONUTAMAGOTCHI/day forever
-├─ Can visit (view-only)
-└─ Contributes to breeding pool (offspring inherit genetics)
 ```
-
-**Implementation:**
-- Add `createdAt` timestamp to miner state (block time)
-- Calculate age client-side: `(now - createdAt) / 86400`
-- Scale DPS display and breeding eligibility based on age
-- No contract changes (all calculated from existing data)
 
 ### Sanctuary System
 
@@ -288,51 +195,9 @@ RETIRED (Optional)
 - Generates passive $DONUTAMAGOTCHI (small, forever)
 - Appears in Sanctuary + Hall of Fame
 
-**Mechanics:**
-- New contract: `DonutamagotchiSanctuary.sol` (ERC721 for retired donuts)
-- Mints NFT representing retired donut with frozen stats
-- Owner can visit, view, interact (emotional connection)
-- Offspring inherit genetics from retired donuts (keeps legacy alive)
-
-**Why This Matters:**
-- **Solves casual player problem**: Don't lose everything when stolen, can retire with honor
-- **Creates narrative closure**: Natural death → legacy, not sudden loss
-- **Supports breeding**: Retired donuts' genetics circulate through offspring
-- **Respects investment**: Player effort is immortalized
-
-### Death & Legendary Status
-
-**Alternative: Let It Die**
-- If donut is stolen and not fed by new owner, health → 0
-- Dies after 72 hours of neglect (new owner doesn't feed)
-- Becomes "Legendary" in Hall of Fame (more prestigious than retirement)
-- Greater bragging rights ("survived 120 days actively")
-
-**Mechanics:**
-- Track `lastFedAt` timestamp
-- If `now - lastFedAt > 72 hours`, mark as dead
-- Legendary donuts get special badge + ranking boost
-
-**Why Both Options Matter:**
-- Respects classic tamagotchi (can die from neglect)
-- But also respects players who lose (can retire gracefully)
-- Creates two paths to immortality: legendary or honored
-
-### Companion Features
-
-**Pet Age Display**
-- Stats UI shows: "Age: 45 days (Prime)"
-- Visual indicators: growth bar, maturity badge
-- Milestone messages: "Your donut is now a Prime Earner!"
-
-**Lifecycle Events**
-- Pop-up notifications: "Your donut has matured!"
-- Encourages check-ins at each stage
-- Drives engagement spikes (want to celebrate milestones)
-
 ---
 
-## Phase 3: Breeding (Weeks 6-8)
+## Phase 4: Breeding
 
 **Goal:** Enable players to create next generation, build bloodlines, extend ecosystem
 
@@ -340,63 +205,16 @@ RETIRED (Optional)
 
 **Requirements:**
 - Both donuts must be Prime age (30-90 days)
-- Both must be owned by wallet addresses (or guild consensus if pooled)
+- Both must be owned by wallet addresses
 - Breeding costs: 1000 $DONUTAMAGOTCHI (burned to reduce supply)
-- Breeds can happen 1x per donut per 7 days (prevents farming)
-- Offspring takes 1 day to "incubate" (suspense/engagement)
-
-**Offspring Creation:**
-```
-Parent A (Energetic, Pink, High-Grooming)
-+
-Parent B (Friendly, Blue, High-Social)
-=
-Child (Balanced personality, Purple hue, both traits inherited)
-```
+- Breeds can happen 1x per donut per 7 days
+- Offspring takes 1 day to "incubate"
 
 **Trait Inheritance:**
 - Personality: 70% chance inherit one parent's + 30% mutation
 - Color: Blend of both (genetic crossover)
 - Earning Potential: Average of both (no advantage, cosmetic)
 - Gen Counter: Gen(child) = max(Gen(A), Gen(B)) + 1
-
-**Implementation:**
-- New contract: `DonutBreeding.sol` (tracks offspring data)
-- Offspring NFT minted to owner, represents new donut
-- Links to parent addresses (immutable genealogy)
-- Stored on-chain for verifiability
-
-### Breeding Mechanics Contract
-
-**Smart Contract Addition (Minimal):**
-```solidity
-contract DonutBreeding {
-  struct Offspring {
-    uint256 parentA;
-    uint256 parentB;
-    address owner;
-    uint256 createdAt;
-    uint8 generation;
-  }
-
-  mapping(uint256 => Offspring) public offspring;
-  
-  function breed(
-    address parentAMiner,
-    address parentBMiner,
-    string calldata metadata
-  ) external {
-    // Verify both parents exist and are Prime age
-    // Transfer 1000 $DONUTAMAGOTCHI from msg.sender
-    // Mint new offspring NFT
-  }
-}
-```
-
-**No Changes to Core $DONUT Contract**
-- Existing mining contract unchanged
-- New offspring compete as separate miners
-- Treasury benefits from breeding fee demand
 
 ### Pedigree Tracking
 
@@ -406,138 +224,49 @@ contract DonutBreeding {
 - Rarity based on lineage: "3rd generation of the Alpha line"
 - Breeding achievements: "Produced 10 offspring"
 
-**Leaderboard Extensions:**
-- Sort by bloodline rarity
-- "Most prolific breeders"
-- "Longest unbroken pedigree"
-- Creates status/achievement system
-
-### Cosmetic Breeding Outcomes
-
-**Rare Trait Combinations (Cosmetic Only):**
-- Breeding can create ultra-rare hues (1 in 1000 chance)
-- Unique animation unlocks (special pose for rare combos)
-- Legendary bloodline badges (if parents are legendary)
-- Cosmetic NFTs minted for ultra-rare offspring
-
-**Why Cosmetic-Only:**
-- No P2W (rare traits = better earning potential ❌)
-- No pressure to whale (bragging rights, not economics)
-- Supports cosmetics market (players want rare cosmetics)
-
-### Breeding Matchmaking (Social)
-
-**New Feature:** Breeding Bulletin Board
-- Browse available donuts seeking breeding partners
-- Filter by: personality, generation, earning rate, trait combo
-- Send breeding requests (owner must approve)
-- Track breeding agreements off-chain (social feature, not contract)
-
-**Why It Works:**
-- Cross-player interaction (need someone else's donut)
-- Social discovery (see other players' donuts)
-- Negotiation mechanics (agree on offspring ownership split)
-- Creates community memes ("breeding meta")
-
 ---
 
-## Phase 4: Community & Leaderboards (Weeks 9-12)
+## Phase 5: Community & Leaderboards
 
 **Goal:** Build social features that increase daily engagement and stickiness
 
-### Leaderboard Overhaul
-
-**New Ranking Systems:**
+### Leaderboard Systems
 
 1. **Earnings Leaderboard**
    - Lifetime $DONUT earned
    - Current week earnings
-   - Filter: by donut generation, age, personality
 
 2. **Trait Rarity Leaderboard**
    - Ultra-rare trait combos
    - Highest social score
    - Best grooming level
-   - Unique cosmetics collected
 
 3. **Bloodline Leaderboard**
    - Most offspring produced
    - Longest unbroken pedigree
-   - Most legendary ancestors
-   - Largest family tree
 
 4. **Player Achievement Leaderboard**
    - Total donuts retired
    - Total donuts bred
    - Days of consecutive care-taking
-   - Rarest cosmetics owned
-
-### Pet Discovery & Recommendations
-
-**"Donut of the Day"**
-- Randomly feature a player's donut
-- Featured donut + owner get +50 $DONUTAMAGOTCHI
-- All viewers who interact get +10 tokens
-- Drives engagement for new/casual players
-
-**"Suggested Breeding Partners"**
-- Algorithm recommends compatible donuts
-- Based on: personality balance, rarity, generation level
-- Players can swipe through (Tinder-style)
-- Creates organic social connections
-
-**"Hall of Fame Spotlight"**
-- Feature retired/legendary donuts
-- Owner gets prestige badges
-- Drives aspiration for new players
-
-### Guild System (Optional Enhancement)
-
-**If Implementing (Post-Phase 4):**
-- Guilds collectively care for shared donut (similar to King Glazer)
-- Guild vote on breeding partners
-- Shared offspring = shared ownership
-- Pooled cosmetics treasury
-
-**Note:** This is optional. Core game works solo + breeding.
 
 ### Cosmetics & Customization
 
-**Pet Customization Shop**
-
-Earn through gameplay, spend on cosmetics:
+**Pet Customization Shop:**
 
 **Hats & Accessories** (50-200 tokens)
 - Wizard hat, crown, sunglasses, etc.
-- Change donut visual appearance
-- Persist across state changes
 
 **Animations & Emotes** (100-300 tokens)
 - New gestures (dab, wave, dance)
 - Unique idle animations
-- Personality-specific poses
 
 **Themes & Skins** (200-500 tokens)
 - Holiday variants (Halloween pumpkin donut, Christmas candy cane)
 - Seasonal events (summer splash, winter frost)
-- Mythical themes (dragon donut, space donut)
 
 **Pet Name & Bio** (200 tokens, one-time)
 - On-chain naming (immutable, unique)
-- Creates identity
-- Appears in leaderboards/explorer
-
-**Sanctuary Upgrades** (500+ tokens)
-- Luxury retirement homes
-- Statues for legendary donuts
-- Memorial plaques
-- Cosmetic-only enhancements
-
-**Cosmetics Burning**
-- 30% of cosmetics revenue burned ($DONUTAMAGOTCHI)
-- Reduces circulating supply
-- Benefits holders long-term
-- Creates deflationary pressure
 
 ### Social Interactions
 
@@ -545,40 +274,7 @@ Earn through gameplay, spend on cosmetics:
 - View other donuts in real-time
 - Interact: pet, poke, compliment
 - Leave comments on pet pages
-- Follow favorite donuts (get notifications of milestones)
-
-**Achievements & Badges**
-- "First Donut": Mint your first donut
-- "Prime Time": Reach Prime age
-- "Legendary": Reach 100+ days alive
-- "Breeder": Produce 5 offspring
-- "Collector": Own 10 cosmetics
-- "Social Butterfly": Visit 50 different donuts
-- "Hall of Famer": Retire a donut
-
-### Notification System (New)
-
-**Browser/Mobile Push Notifications:**
-
-**Trigger Rules (Sparse - Max 1-2 per day):**
-- **Stat Alert** (when stat drops below 20%): "Your donut is {hungry|sad|dirty}!"
-- **Breeding Ready** (when mature + health+cleanliness >70%): "Your donut is ready to breed!"
-- **Breeding Offer** (when another player requests): "Someone wants to breed with your donut!"
-- **Social** (when another player views): "Someone visited your donut!" (batched, max 1/hour)
-- **Milestone** (maturation, Hall of Fame): "Your donut reached Prime age!"
-
-**Implementation:**
-- Web Notifications API for browser
-- Optional: Firebase Cloud Messaging for mobile
-- Opt-out available in settings
-- Never spam (max 1-2 notifications per 12 hours)
-
-**Why This Matters:**
-- Drives re-engagement without being annoying
-- Highlights key moments (breeding, milestones)
-- Creates FOMO safely (social notifications are optional)
-
-
+- Follow favorite donuts
 
 ---
 
@@ -591,20 +287,17 @@ Earn through gameplay, spend on cosmetics:
 **Allocation:**
 ```
 70% (700M) - Play-to-Earn Rewards
-├─ Daily login: +10/day = 3.65B tokens/year (capped at 700M over time)
+├─ Daily login: +10/day
 ├─ Interactions: +5-25 per action
 ├─ Breeding: +25 per successful breed
-└─ Social: +10 per viewing/following
 
 20% (200M) - Treasury & Cosmetics Shop
 ├─ Cosmetics inventory budget
 ├─ Community events & giveaways
-└─ Development fund
 
 10% (100M) - Liquidity & Staking Rewards
-├─ Initial DEX liquidity (Base, Uniswap V3)
-├─ Staking rewards for governance (5% APY)
-└─ Burns from cosmetic usage (deflationary)
+├─ Initial DEX liquidity
+├─ Staking rewards for governance
 ```
 
 ### Revenue Model (Sustainable)
@@ -614,704 +307,37 @@ Earn through gameplay, spend on cosmetics:
 2. Player buys cosmetic (e.g., 200 tokens)
 3. 30% burned (60 tokens removed from circulation)
 4. 70% to treasury (140 tokens)
-5. Treasury used for: rewards, liquidity support, operations
 
 **Breeding Fees:**
 1. Breeding costs 1000 $DONUTAMAGOTCHI
 2. 100% burned (reduces supply)
-3. Incentivizes long-term holding (supply scarcity)
-4. Creates natural demand sink
-
-**Staking Rewards:**
-1. Stake 10M+ $DONUTAMAGOTCHI to vote on cosmetics
-2. Earn 5% APY on staked amount
-3. Treasury mints rewards (capped, sustainable)
-4. Aligns long-term holders with ecosystem health
-
-### Use Cases (Non-P2W)
-
-| Token Use | Cost | Benefit | Availability |
-|-----------|------|---------|--------------|
-| Trait Customization | 50-500 | Visual uniqueness | All players |
-| Breeding | 1000 | Create offspring | Prime age+ |
-| Naming | 200 | Permanent identity | All players |
-| Animation Unlock | 100-300 | New gestures | All players |
-| Sanctuary Upgrade | 500+ | Legacy display | Retired donuts |
-| Governance Vote | Stake 10M | Shape cosmetics | Long-term holders |
-| Breeding Boost | 200 | Increased trait odds | Prime age+ |
-
-### Price Dynamics & Sustainability
-
-**Why $DONUTAMAGOTCHI Won't Hyperinflate:**
-1. Burning mechanism (cosmetics, breeding)
-2. Daily cap on minting (~2-5M max)
-3. No external funding/presale (fair launch only)
-4. Earning rate decreases with adoption
-5. Staking rewards capped at 5% APY
-
-**Price Floor Support:**
-- Cosmetics always cost fixed $DONUTAMAGOTCHI
-- Breeding always burns 1000 (real demand)
-- Sanctuary access requires holding
-- Staking generates yield (HODLing incentive)
 
 ---
 
-## How We Serve the $DONUT Ecosystem
+## Future Enhancements
 
-### Direct Value Contributions
+### Phase 6: Advanced Social Features
+- Guild system for collective donut care
+- Breeding competitions and tournaments
+- Community events and seasonal celebrations
+- Donut shows and beauty contests
 
-**1. Mining Activity Acceleration**
-- Trait-based engagement → daily feeding
-- Breeding creates fresh donuts → new mining tiers
-- Each donut generation feeds $DONUT circular economy
-- Treasury profits from 15% of each feed transaction
+### Phase 7: Mobile & Push Notifications
+- Mobile app with push notifications
+- Care reminder systems
+- Offline progress tracking
+- Cross-platform synchronization
 
-**2. Liquidity Support**
-- Cosmetics revenue can fund $DONUT-WETH LP maintenance
-- Early protocols often need treasury support for liquidity
-- Our economics can contribute without extracting value
-
-**3. Network Effects**
-- New player onboarding ("let me try tamagotchi") → education on $DONUT
-- Cross-breeding drives player interaction → community growth
-- Leaderboards drive competitiveness → more feeds
-- More ecosystem participants = more protocol fees
-
-**4. Protocol Development Signaling**
-- We demonstrate demand for engagement features
-- Show viable casual player monetization (without breaking economics)
-- Prove tamagotchi mechanics work on top of Dutch auctions
-- Can inform future $DONUT improvements
-
-### Partnership Opportunities
-
-**Builder Code Integration:**
-- Our frontend operates as builder code (5% of feeds)
-- Revenue supports cosmetics/events
-- Demonstrates builder code viability
-
-**Blazery Synergy:**
-- Cosmetics revenue feeds treasury
-- Treasury supports $DONUT-WETH LP
-- LP buyback & burn benefits long-term holders
-
-**Cross-Promotion:**
-- King Glazer & Donutamagotchi co-exist peacefully
-- Different use cases (DeFi vs casual play)
-- Can drive traffic to each other
+### Phase 8: Advanced AI Integration
+- AI-generated personality profiles
+- Dynamic story generation for donut adventures
+- Voice interaction capabilities
+- Personalized recommendation engine
 
 ---
 
-## Technical Implementation Notes
+## Long-term Vision
 
-### Minimal Smart Contracts
+The goal: Make $DONUT not just a token, but a pet you care about.
 
-**Only New Contracts Needed:**
-
-1. **DonutamagotchiToken (ERC20)**
-   - Standard token on Base
-   - Minting tied to game events (oracle/backend)
-   - Simple, audited, low risk
-
-2. **DonutBreeding (ERC721)**
-   - Tracks offspring metadata
-   - Links to parent miners
-   - Immutable genealogy
-
-3. **DonutSanctuary (ERC721)**
-   - Retired donut NFTs
-   - Frozen stats + achievements
-   - View-only interactions
-
-**No Changes to $DONUT Contracts**
-- Complete backward compatibility
-- Use existing getMiner() calls
-- Benefit from protocol improvements automatically
-
-### Frontend & Indexing
-
-**Subgraph Updates:**
-- Index `DonutBreeding` events (pedigree)
-- Track `DonutSanctuary` (retirements)
-- Calculate age/generation client-side
-- Maintain trait state off-chain (client cache)
-
-**New Pages:**
-- `/donuts` - Global explorer
-- `/hall-of-fame` - Retired/legendary
-- `/breeding` - Matchmaking board
-- `/profile/[donut]` - Pet details
-- `/leaderboards` - Multi-ranking system
-
-**Client-Side Trait System:**
-- Generate traits deterministically from miner address
-- Calculate visual appearance in canvas
-- Store trait state locally (can rebuild anytime)
-- No persistent storage needed
-
-### Performance & Scaling
-
-**Optimizations:**
-- Lazy load leaderboards (pagination)
-- Cache explorer queries (30s)
-- Client-side trait rendering (no server load)
-- Breed contracts use lazy minting (scalable)
-
-**Cost Considerations:**
-- Breeding contracts: ~200k gas per breed (player pays)
-- Token minting: Backend batches transactions
-- No continuous on-chain state updates
-- Sanctuary NFT: Standard ERC721 (cheap minting)
-
----
-
-## Risks & Mitigations
-
-### Token Dilution Risk
-**Problem:** Too many $DONUTAMAGOTCHI = price death spiral
-**Mitigation:** 
-- Hard cap on daily minting (2-5M max)
-- Burning mechanisms (cosmetics, breeding)
-- Staking rewards (incentivizes long-term holding)
-- Monitor & adjust seasonally
-
-### P2W Perception Risk
-**Problem:** Players feel cosmetics are "pay-to-win"
-**Mitigation:**
-- Cosmetics are purely visual (no stats impact)
-- All cosmetics earnable through play
-- Expensive cosmetics achievable in 2-4 weeks of play
-- Clear messaging: "cosmetic only"
-
-### Smart Contract Risk
-**Problem:** New contracts have bugs
-**Mitigation:**
-- Simple, audited contracts (minimal code)
-- No protocol-breaking changes (isolated contracts)
-- Gradual rollout (breeding phase last)
-- OpenZeppelin standards (battle-tested)
-
-### Adoption Risk
-**Problem:** Players don't care about traits/breeding
-**Mitigation:**
-- Phase 1 focuses on visual feedback (immediate gratification)
-- Leaderboards drive competition (proven engagement)
-- Cosmetics create social status (strong incentive)
-- Start small, scale with demand
-
----
-
-## Competitive Advantages
-
-| Feature | Us | King Glazer | Generic Frontend |
-|---------|--|----|---|
-| Personal Pet | ✅ | ❌ Pool | ❌ Stateless |
-| Trait System | ✅ | ❌ | ❌ |
-| Breeding | ✅ | ❌ | ❌ |
-| Lifecycle | ✅ | ❌ Infinite | ❌ |
-| Cosmetics | ✅ | ❌ | ❌ |
-| Social Leaderboards | ✅ | Partial (strategy) | ❌ |
-| Storytelling | ✅ Bloodlines | ❌ | ❌ |
-
----
-
-## Phase 5: LLM Flavor Text (Month 4+, Optional)
-
-**Goal:** Add unique personality through AI-generated flavor text
-
-**Features (Post-Launch Enhancement):**
-- **Breeding Announcements**: LLM generates unique offspring announcements
-  - "A spirited pup with mom's curiosity and dad's appetite was born!"
-  - Generated via Ollama (local inference, ~$0.001 per generation)
-- **Pet Journal**: Weekly recap of pet's week (flavor text only)
-- **Hall of Fame Profiles**: Unique personality summaries
-- **Breeding Comments**: When breeding, parents "react" to offspring
-
-**Why Phase 5:**
-- Not core gameplay (nice-to-have)
-- Better done post-launch with user data
-- Ollama setup requires infrastructure
-- Depends on community size justifying inference costs
-
-**Technical Approach:**
-- Use Ollama (self-hosted, free inference)
-- Generate async (don't block gameplay)
-- Cache flavor text (don't regenerate same pet daily)
-- Optional feature (toggle in settings)
-
----
-
-## Technical Architecture
-
-### Event-Driven Design (Adopted from Aptogotchi)
-
-**Every interaction emits blockchain event:**
-```
-Pet Fed → ChainEvent(petAddress, "feed", timestamp, hash(message))
-Pet Played → ChainEvent(petAddress, "play", timestamp)
-Pet Bred → ChainEvent(parentA, parentB, offspring, traits)
-Stat Update → ChainEvent(petAddress, "statChange", newValues)
-```
-
-**Subgraph Indexing:**
-- Indexes all events for leaderboards, history, pedigree
-- Enables complex queries: "Show all offspring of this donut"
-- Real-time subscriptions for live stat updates
-- Historical queries: "How many times was this donut bred?"
-
-**Benefits:**
-- No on-chain storage (cheaper than Aptogotchi's approach)
-- Client-side state calculation with indexed verification
-- Scales to thousands of concurrent players
-
-### State Management Pattern (Adopted from Petty)
-
-**Current Approach:** React useState
-**Enhanced Approach:** Nanostores (lightweight alternative)
-
-```typescript
-// Single source of truth for pet state
-const petStateStore = atom({
-  health: 100,
-  happiness: 80,
-  cleanliness: 60,
-  lastInteractedAt: timestamp,
-  lastFedAt: timestamp,
-})
-
-// Access anywhere without prop drilling
-export const usePetState = () => useStore(petStateStore)
-```
-
-**Benefits:**
-- Multiple components access same state (canvas, stats bar, leaderboard)
-- No re-render overhead on frequent updates
-- Easier to implement decay system (one calc, multiple renders)
-
-**Migration Timeline:** Phase 2 (optional, can do later)
-
-### Canvas Animation Pipeline
-
-**Improvements from Learning Projects:**
-
-1. **GSAP Integration (from Petty)**
-   - Smoother gesture transitions
-   - Easing functions for natural motion
-   - Better performance than manual tweens
-
-2. **Frame-Based Decay (from AI-Tamago pattern)**
-   - Animate stat bars filling/emptying in real-time
-   - Visual feedback for decay without constant redraws
-
-3. **State-Driven Rendering**
-   - Pet appearance updates when stats change (color shifts)
-   - Animations queue based on state transitions
-   - No race conditions (single animation system)
-
-### Database & Indexing
-
-**What Lives Where:**
-
-| Data | Storage | Why |
-|------|---------|-----|
-| Pet traits | Generated from miner address | Deterministic, no storage needed |
-| Pet stats | Client-side + Subgraph | Calculated from lastInteractedAt |
-| Events | Blockchain | Immutable, verifiable, indexed |
-| Leaderboards | Subgraph queries | Complex filtering, real-time |
-| Pedigree/breeding | Subgraph | Historical tracking |
-| Cosmetics owned | $DONUTAMAGOTCHI contract | ERC20 balance |
-
-**No Centralized Database Needed**
-- Everything derives from events or is client-side
-- Subgraph is the source of truth for complex queries
-- Reduces backend complexity, improves censorship resistance
-
----
-
-## Timeline & Milestones
-
-| Phase | Status | Deliverables | Build Status |
-|-------|--------|------------------|---------|
-| **Phase 1: Traits System** | ✅ COMPLETE | Personality/color generation, trait development, visual customization | Passing |
-| **Phase 1.5: Decay System** | ✅ COMPLETE | Stat decay (-0.5% to -2%), critical alerts, care routine tracking | Passing |
-| **Phase 2: Lifecycle** | ✅ COMPLETE | Age system, 4 maturation stages, DPS scaling, progress bars | Passing |
-| **Phase 3: Breeding** | ✅ COMPLETE | Smart contract, trait inheritance, pedigree, matchmaking board | Passing |
-| **Phase 4: Social** | ✅ COMPLETE | Leaderboards, cosmetics shop, notifications, achievements | Passing |
-| **Phase 4.5: UI/UX Refinement** | ✅ COMPLETE | Content-first design, featured sections, micro-interactions | Passing |
-| **Phase 4.6: Kawaii Enhancements** | ✅ COMPLETE | Exaggerated expressions, particle effects, hybrid approach | Passing |
-| **Phase A: Integration Readiness** | ✅ COMPLETE | Mock data consolidation, canonical types, contract hooks | Passing |
-| **Phase B: Core Mechanics Display** | ✅ COMPLETE | Token earnings visibility, retirement badges, breeding cooldown ready | Passing |
-| **Phase C: Hook Infrastructure** | ✅ COMPLETE | Earnings utilities, refactored components, contract integration points | Passing |
-| **Phase E: Testing & Validation** | ⏳ PENDING | Integration testing with deployed contracts | Next |
-| **Phase 5: LLM Flavor** | ⏳ DEFERRED | Personality text, breeding announcements, journals | Future enhancement |
-
-### Phase Completion Details
-
-**Phase 4.6: Kawaii Enhancements** ✅ COMPLETE
-- [x] Exaggerated eye expressions (wide when happy, droopy when sad, half-closed when bored)
-- [x] Dynamic mouth expressions (smile, frown, surprised O-shape, open)
-- [x] Physics-based particle system (hearts, sparkles, stars)
-- [x] Particle lifecycle management (spawn, gravity, friction, fade)
-- [x] Emotion-driven visual responses (happiness triggers particles)
-- [x] Expression calculation functions (calculateEyeExpression, calculateMouthExpression)
-- [x] Particle update functions (spawnParticles, updateParticle)
-- [x] Clean separation: physics.ts (logic) ↔ DonutPet.tsx (rendering)
-- [x] Zero performance regression
-- [x] Full TypeScript type coverage
-
-**Phase 1: Foundation** ✅ COMPLETE
-- [x] Deterministic trait generation (4 personality × 6 colors)
-- [x] Trait development (grooming, energy, satisfaction)
-- [x] Visual customization (colors, eye shapes, animation speeds)
-- [x] Personality-based responses
-
-**Phase 1.5: Decay System** ✅ COMPLETE
-- [x] Natural stat degradation mechanics
-- [x] Critical/warning visual alerts
-- [x] Care routine timer (feed/play/pet)
-- [x] Breeding viability tiers (5 levels)
-- [x] Enhanced stat bar displays
-
-**Phase 2: Lifecycle** ✅ COMPLETE
-- [x] Age calculation from creation timestamp
-- [x] 4 lifecycle stages (Birth → Growth → Prime → Twilight)
-- [x] DPS multiplier scaling (50% → 100%)
-- [x] Progress bars to next stage
-- [x] Stage-specific emoji and descriptions
-- [x] Hall of Fame page (live data placeholders)
-- [x] Donut Explorer page (live data placeholders)
-
-**Phase 3: Breeding** ✅ COMPLETE
-- [x] DonutBreeding.sol smart contract (ERC721, ~500 LOC)
-  - Offspring creation with genetic data encoding
-  - Trait inheritance algorithm (70% inherit + 30% mutation)
-  - Generation tracking (offspring = max(parentGen) + 1)
-  - 7-day breeding cooldown per parent (prevents farming)
-  - 1000 token burn cost (deflationary mechanism)
-  - Pedigree queries: offspring by parent/owner
-  - Family tree lookup (parents + generations)
-- [x] Breeding mechanics UI + logic
-  - Token approval flow for breeding cost
-  - Parent verification and cooldown checks
-  - Offspring NFT minting
-- [x] Breeding board/matchmaking page (`/breeding`)
-  - Filter by personality type
-  - Sort by generation/age/viability
-  - Breeding request flow
-  - Viability scoring (health + cleanliness)
-- [x] Pedigree tracking + family tree viewer
-  - Track all offspring by parent miner
-  - Query generation lineage
-  - Display family relationships
-
-**Phase 4: Community & Social** ✅ COMPLETE
-- [x] Leaderboard system (`/leaderboards`)
-  - Earnings leaderboard (lifetime $DONUT)
-  - Age leaderboard (days alive)
-  - Bloodline leaderboard (family size + generations)
-  - Achievements leaderboard (badges unlocked)
-  - Real-time ranking with medal badges
-- [x] Cosmetics shop backend + purchase logic (`/shop`)
-  - 4 categories: Hats, Animations, Themes, Names
-  - 20+ cosmetic items with rarity tiers
-  - Token balance integration (read contract)
-  - Purchase flow (simulated backend call)
-  - 30% burn mechanism
-- [x] Notification system (`useNotifications` hook)
-  - Browser push notification API
-  - 12-hour cooldown between notification types
-  - Pre-built: stat alerts, breeding ready, breeding requests, milestones, social visits
-  - Permission request flow + opt-out
-- [x] Achievements + badges system (`/achievements`)
-  - 18+ achievement badges
-  - 4 categories: gameplay, breeding, social, cosmetics
-  - Progress tracking + completion %
-  - Locked badge hints
-  - Unlock state persistence
-
-### Success Metrics (Final Status)
-- ✅ **Build**: Production ready (0 errors, 0 warnings)
-- ✅ **Performance**: O(1) trait computation, minimal bundle impact
-- ✅ **Type Safety**: 100% TypeScript coverage
-- ✅ **Frontend Features**: All 13 pages implemented + working
-- ✅ **Smart Contracts**: 3 new contracts, ~1,350 LOC, auditable
-- ✅ **Hooks**: useTraits, useBreeding, useNotifications fully typed
-- ⏳ **Smart Contract Deployment**: Deferred (ready for mainnet anytime)
-- ⏳ **Backend Oracle**: Deferred (template provided in token contract)
-
----
-
-## Phase 4.5: UI/UX Refinement - Content-First Design (✅ COMPLETE)
-
-**Goal:** Transform from control-heavy interface to content-first discovery experience, reducing cognitive load while maintaining tamagotchi's engaging, playful feel.
-
-**Status:** ✅ FULLY IMPLEMENTED - All discovery pages refactored with content-first pattern and micro-interactions
-
-### Problem Statement
-
-User feedback: Pages felt "overwhelming" and "cluttered"
-
-**Root Cause:** Control-first design pattern
-- 7 filter/sort buttons visible above content (explore, breeding)
-- Empty state until user configures filters
-- Multiple competing interactive elements (tabs, buttons, panels)
-- Inconsistent patterns across pages
-
-### Solution: Content-First with Optional Controls
-
-**Core Principle:** Show interesting content immediately, hide controls on demand (like tamagotchi shows pet first, menus second).
-
-**Pattern (all discovery pages):**
-```
-1. HEADER (always visible)
-2. FEATURED CONTENT (curated, 4-6 items)
-   - Trending partners, featured cosmetics, etc
-   - Immediate dopamine hit, "show me something fun"
-3. "VIEW ALL" LINK (user controls depth)
-   - Opens full list with pagination or infinite scroll
-4. CONTROLS (collapsed accordion)
-   - Filters, sort, advanced search on demand only
-```
-
-**Specific Implementations:**
-
-#### `/explore` - Donut Explorer
-- **Before:** 7 buttons (4 lifecycle filters + 3 sorts) above 20+ donuts
-- **After:** 
-  - "⭐ TRENDING PARTNERS" section (4-6 PRIME donuts, sorted by popularity)
-  - Search bar (always visible for quick lookup)
-  - "View all {n} partners..." link (user controls list size)
-  - 🔍 FILTERS & SORT (collapsed accordion below)
-- **Benefit:** Opens to "here are good breeding partners", not "please configure filters"
-
-#### `/breeding` - Breeding Board
-- **Before:** Personality filter (4 buttons) + sort (3 buttons) required before seeing partners
-- **After:**
-  - "💕 RECOMMENDED PARTNERS" (compatible + trending, 4-6 items)
-  - Search bar (find specific owner/donut)
-  - Requirements & Cost (collapsed info section)
-  - 🎯 FILTERS & SORT (collapsed accordion, optional)
-- **Benefit:** User sees options immediately, filters enable power use
-
-#### `/shop` - Cosmetics Shop (✅ COMPLETED)
-- **Before:** Category buttons force selection before seeing items
-- **After:**
-   - "✨ FEATURED COSMETICS" (4 spotlight items per category)
-   - Category tabs (updated with micro-interactions)
-   - "View all {n}" toggle reveals remaining items
-   - 🛍️ BROWSE BY CATEGORY (tabs for quick switching)
-- **Implementation:**
-   - `FeaturedSection` shows first 4 items with featured styling
-   - Toggle shows remaining items without page reload
-   - Category change resets featured view (better UX)
-   - Smooth animations on featured section appear
-- **Benefit:** Impulse discovery, categories become optional refinement
-
-#### `/hall-of-fame` - Achievements (✅ COMPLETED)
-- **Before:** 4 tab buttons (Retired/Legendary/Badges/Leaderboards) leading empty tabs
-- **After:**
-   - "🏆 HALL OF FAME HIGHLIGHTS" (4 featured donuts, sorted by age)
-   - "View all {n}" toggle reveals remaining donuts
-   - Tabs reset featured view when switching (consistent UX)
-   - Sort buttons (Age, Earnings, Recent)
-   - Full leaderboards, achievements, tabs preserved
-- **Implementation:**
-   - `FeaturedSection` shows top 4 donuts (featured styling)
-   - Sorting applied to featured + all views
-   - Tab switches reset `showAllDonuts` flag (fresh featured view)
-   - Smooth transitions on all interactions
-- **Benefit:** Celebrate wins immediately, detailed browsing on demand
-
-#### `/` - Home (Already optimized)
-- ✅ Pet centered (content first)
-- ✅ Stats visible (immediate info)
-- ✅ FEED button huge (primary action)
-- ✅ Controls below (interactions, breeding, guide all collapsible)
-
-### Technical Implementation
-
-**Reuse existing components:**
-- ✅ `AccordionContext` - keeps single-panel-open behavior
-- ✅ `CollapsibleSection` - for info panels
-- ✅ `ExploreFilters` / `BreedingFilters` - now collapsed by default
-
-**New additions:**
-- Create `FeaturedSection` component (curated content display)
-- Update pages to show featured content first, full list on "View All"
-- Add "trending" / "recommended" sorting algorithm (can start with random for MVP)
-
-### Design Principles
-
-1. **Content > Controls** - Show what's possible before asking how to filter
-2. **Playfulness > Minimalism** - Tamagotchi is fun and interactive, embrace that
-3. **Quick Sessions** - 2-minute check-ins should reach action (breed/buy/view) without friction
-4. **Progressive Disclosure** - Basic view → Power user features (filters, sort, advanced search)
-
-### User Experience Improvements
-
-| Before | After | Impact |
-|--------|-------|--------|
-| Empty page + 7 buttons | Content + hidden filters | ✅ Reduced cognitive load |
-| "Which filter do I need?" | "Here are suggestions" | ✅ Removed decision fatigue |
-| 3+ interactions to breed | 1-2 interactions to breed | ✅ Faster action loops |
-| Same pattern everywhere? No | Same pattern everywhere | ✅ Consistent mental model |
-| Feels like config tool | Feels like discovery game | ✅ Matches tamagotchi vibe |
-
-### Alignment with Vision
-
-- ✅ **Tamagotchi feel**: Shows delightful content first, complex options available but hidden
-- ✅ **Farcaster native**: Content shareable immediately (trending partners, legendary donuts) without friction
-- ✅ **Layer on $DONUT**: Discovery/breeding becomes bonus layer, not primary focus
-- ✅ **Engagement**: Return to see "trending now", not to re-configure filters
-- ✅ **Approachable**: New players see options without feeling lost
-
-### Pages Refactored (Content-First)
-
-| Page | Featured Section | Sorting | "View All" | Micro-Interactions |
-|------|------------------|---------|------------|-------------------|
-| `/explore` | ✅ 4 TRENDING PARTNERS | ✅ Earnings/Age/Health | ✅ Toggle | ✅ Button press, animations |
-| `/breeding` | ✅ 3 RECOMMENDED PARTNERS | ✅ Viability/Gen/Age | ✅ Toggle | ✅ Button press, animations |
-| `/shop` | ✅ 4 FEATURED COSMETICS | ✅ Category tabs | ✅ Toggle per category | ✅ Tab press, featured fade-in |
-| `/hall-of-fame` | ✅ 4 FEATURED DONUTS | ✅ Age/Earnings/Recent | ✅ Toggle per tab | ✅ Tab press, featured fade-in |
-
-### Micro-Interactions Implemented
-
-**Featured Sections:**
-- `animate-in fade-in-50 slide-in-from-top-2 duration-300` - Smooth entrance
-- View All button: hover color + scale + press feedback
-
-**Category/Tab Buttons:**
-- `transition-all duration-200` - Smooth state changes
-- `active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]` - Pressed effect
-- Inactive: `hover:shadow` for lift effect
-- Active: `scale-95` for press-down appearance
-
-**Overall Polish:**
-- Consistent patterns across all 4 pages
-- 200ms transition duration (snappy but not jarring)
-- Shadow depth for visual hierarchy
-- Scale transforms for tactile feedback
-
----
-
-## Pre-Deployment Phases: A, B, C ✅ COMPLETE
-
-### Phase A: Integration Readiness ✅
-**Goal:** Foundation for seamless contract deployment with zero UI changes
-
-**Consolidated Mock Data** (`lib/mockData.ts`)
-- Single source of truth for 50+ mock data entries
-- Easy switchover: swap one file when contracts deploy
-- Covers: donuts, partners, cosmetics, leaderboards, achievements
-
-**Canonical Type Definitions** (`lib/types.ts`)
-- 20+ interfaces defining all data types
-- DonutCard, BreedingPartner, RetiredDonut, LeaderboardEntry
-- TokenBalance, DailyEarnings, RetirementEligibility
-- ContractResult wrapper for unified error handling
-
-**Contract Integration Layer** (`hooks/useContractData.ts`)
-- Wagmi hooks: useTokenBalance, useBreedingCooldown, useMaxGeneration, useRetirementInfo
-- Fallback to mock data in dev mode (USE_MOCK_DATA env var)
-- 5-minute cache TTL for performance
-- Single configuration point for contract addresses
-- Ready for: token balance, breeding cooldown, retirement eligibility, generational data
-
-### Phase B: Core Mechanics Display ✅
-**Goal:** Show key gameplay metrics without new components (enhancement only)
-
-**B.1 - Token Earning Visibility**
-- Session earnings tracker (earnings since page load)
-- Daily earning rate projection (from DPS × 86400 seconds)
-- Tokens until next cosmetic milestone (progress toward 50-token purchases)
-- Golden background section in PetStats component
-- Visible when session has activity (no clutter on new sessions)
-
-**B.2 - Retirement Eligibility Badge**
-- Badge appears when pet is 90+ days old
-- Retirement tiers: CHERISHED (90d), HONORED (100d), LEGENDARY (120d)
-- Purple-pink gradient styling with Hall of Fame icon
-- Integrated into age display section
-
-**B.3 - Breeding Viability & Cooldown**
-- BreedingReadiness component accepts optional cooldownRemaining prop
-- Cooldown formatting (e.g., "3d 5h remaining")
-- Displays in requirements list when breeding is on cooldown
-- Integration ready for useBreedingCooldown hook when contracts deploy
-
-### Phase C: Hook Infrastructure ✅
-**Goal:** Consolidate calculations into reusable utilities (pure functions, no bloat)
-
-**Earnings Utilities** (`lib/earnings.ts`)
-- Pure functions, no hooks (avoids bloat)
-- `calculateSessionEarnings()` - Difference between initial and current glazed tokens
-- `calculateDailyRate()` - DPS × 86400 seconds (needs ≥60s of data)
-- `calculateTokensUntilNextMilestone()` - Progress toward cosmetic purchases
-- `getRetirementTier()` - Returns tier string based on age
-- `isRetirementEligible()` - Boolean check for 90+ days
-
-**Component Integration**
-- Home page refactored to use earnings utilities (removed inline calculations)
-- PetStats uses retirement utilities for eligibility logic
-- BreedingReadiness uses retirement tier utility
-- Cleaner, more maintainable, testable code
-
-**Design Results**
-- ✅ No bloat: Pure functions instead of wrapper hooks
-- ✅ DRY: Single source of truth for all calculations
-- ✅ Modular: Easy to test independently, reuse across components
-- ✅ Organized: Clear lib/utilities → component flow
-
-### Contract Integration Points (Ready for Phase E)
-
-**Token Earnings:**
-- Use minerState.nextDps (already available from Multicall contract)
-- Use minerState.glazed (current token balance, already available)
-- Use ageInDays (calculated from minerState.startTime)
-- Replace: call useReadContract instead of hard-coded formulas
-
-**Retirement Eligibility:**
-- Call `/api/sanctuary/check-eligibility` endpoint when contracts deploy
-- Use useRetirementInfo hook with minerAddress + ageInDays
-- Fallback to calculated eligibility (90+ days)
-- Enable when DonutSanctuary.sol is deployed
-
-**Breeding Cooldown:**
-- Call useBreedingCooldown hook with minerAddress
-- Display cooldown in BreedingReadiness component (already updated)
-- Enable when DonutBreeding.sol is deployed
-
-**Leaderboard Data:**
-- Replace mockLeaderboard* exports with subgraph queries
-- Component structure ready, just wire up data source
-- Same component code, different data source
-
-### Pre-Deployment Checklist
-- [x] Mock data consolidated
-- [x] Types defined
-- [x] Contract hooks ready
-- [x] Earnings calculations extracted
-- [x] Integration points documented
-- [x] UI components enhanced
-- [x] Build passing, no warnings
-- [ ] Deploy contracts to Base
-- [ ] Update API route for sanctuary eligibility
-- [ ] Wire up subgraph queries for leaderboards
-- [ ] Integration testing with real contracts
-
----
-
-## Conclusion
-
-**Donutamagotchi** is not a competitor to $DONUT—it's a **gateway drug**.
-
-We take casual players who love tamagotchi and turn them into $DONUT enthusiasts through:
-- **Personal attachment** (your unique donut, your traits)
-- **Generational gameplay** (breeding lineages, lasting legacy)
-- **Community engagement** (leaderboards, cosmetics, social play)
-- **Sustainable economics** ($DONUTAMAGOTCHI supports itself + feeds treasury)
-
-We maintain 100% compatibility with existing infrastructure while adding the engagement layer that protocols need to break through to mainstream audiences.
-
-**The goal:** Make $DONUT not just a token, but a pet you care about.
+We aim to transform $DONUT from a DeFi experiment into a beloved digital pet ecosystem where players form genuine emotional connections with their donuts. This creates sustainable engagement that supports both the $DONUT and $DONUTAMAGOTCHI economies while providing unique entertainment value to the Base ecosystem.
