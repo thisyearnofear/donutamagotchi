@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount } from "wagmi";
 import { base } from "wagmi/chains";
 import type { Address } from "viem";
 
@@ -32,6 +32,7 @@ export interface OffspringData {
 export function useBreeding(minerAddress?: Address) {
   const [breeding, setBreeding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { address } = useAccount();
 
   // Get breeding cooldown for this miner
   const { data: cooldownData, refetch: refetchCooldown } = useReadContract({
@@ -121,9 +122,9 @@ export function useBreeding(minerAddress?: Address) {
 
   // Perform breeding
   const handleBreed = useCallback(
-    async (parentAMiner: Address, parentBMiner: Address, geneticData: string) => {
-      if (!minerAddress) {
-        setError("Miner address required");
+    async (parentAMiner: Address, parentBMiner: Address) => {
+      if (!minerAddress || !address) {
+        setError("Miner address and wallet connection required");
         return;
       }
 
@@ -131,11 +132,27 @@ export function useBreeding(minerAddress?: Address) {
         setError(null);
         setBreeding(true);
 
+        // 1. Get Signature from API
+        const response = await fetch("/api/breeding/sign", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            parentAMiner,
+            parentBMiner,
+            userAddress: address
+          })
+        });
+
+        if (!response.ok) throw new Error("Failed to get breeding signature");
+
+        const { signature, geneticData } = await response.json();
+
+        // 2. Submit Transaction
         performBreeding({
           address: CONTRACT_ADDRESSES.donutBreeding as Address,
           abi: BREEDING_ABI,
           functionName: "breed",
-          args: [parentAMiner, parentBMiner, geneticData],
+          args: [parentAMiner, parentBMiner, geneticData, signature],
           chainId: base.id,
         });
       } catch (err) {
@@ -143,7 +160,7 @@ export function useBreeding(minerAddress?: Address) {
         setBreeding(false);
       }
     },
-    [minerAddress, performBreeding]
+    [minerAddress, address, performBreeding]
   );
 
   // Get breeding status for a miner

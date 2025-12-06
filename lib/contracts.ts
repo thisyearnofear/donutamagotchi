@@ -4,7 +4,7 @@ export const CONTRACT_ADDRESSES = {
   miner: "0xF69614F4Ee8D4D3879dd53d5A039eB3114C794F6",
   multicall: "0x3ec144554b484C6798A683E34c8e8E222293f323",
   provider: "0xba366c82815983ff130c23ced78bd95e1f2c18ea",
-  
+
   // $DONUTAMAGOTCHI ecosystem (deploy addresses TBD)
   donutamagotchiToken: process.env.NEXT_PUBLIC_DONUTAMAGOTCHI_TOKEN || "0x0000000000000000000000000000000000000000",
   donutBreeding: process.env.NEXT_PUBLIC_DONUT_BREEDING || "0x0000000000000000000000000000000000000000",
@@ -231,6 +231,7 @@ export const BREEDING_ABI = [
       { name: "parentAMiner", type: "address" },
       { name: "parentBMiner", type: "address" },
       { name: "geneticData", type: "string" },
+      { name: "signature", type: "bytes" },
     ],
     outputs: [{ name: "", type: "uint256" }],
   },
@@ -306,6 +307,13 @@ export const BREEDING_ABI = [
       { name: "generation", type: "uint8", indexed: false },
       { name: "geneticData", type: "string", indexed: false },
     ],
+  },
+  {
+    name: "nonces",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
   },
 ] as const;
 
@@ -422,8 +430,75 @@ export const DONUTAMAGOTCHI_TOKEN_ABI = [
     name: "StakingRewardClaimed",
     type: "event",
     inputs: [
-      { name: "user", type: "address", indexed: true },
       { name: "amount", type: "uint256", indexed: false },
     ],
+  },
+] as const;
+
+export const SANCTUARY_ABI = [
+  {
+    name: "retireDonut",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "minerAddress", type: "address" },
+      { name: "createdAtTimestamp", type: "uint256" },
+      { name: "totalEarningsDonut", type: "uint256" },
+      { name: "totalEarningsWeth", type: "uint256" },
+      { name: "finalGeneration", type: "uint8" },
+      { name: "offspringCount", type: "uint32" },
+      { name: "memorialText", type: "string" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "claimIncome",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+  },
+  {
+    name: "calculatePassiveIncome",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "getRetirementsByOwner",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ name: "", type: "uint256[]" }],
+  },
+  {
+    name: "getRetiredDonut",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        components: [
+          { name: "minerAddress", type: "address" },
+          { name: "retiredBy", type: "address" },
+          { name: "createdAtTimestamp", type: "uint256" },
+          { name: "retiredAtTimestamp", type: "uint256" },
+          { name: "totalEarningsDonut", type: "uint256" },
+          { name: "totalEarningsWeth", type: "uint256" },
+          { name: "finalGeneration", type: "uint8" },
+          { name: "offspringCount", type: "uint32" },
+          { name: "memorialText", type: "string" },
+        ],
+      },
+    ],
+  },
+  {
+    name: "getPrestigeTier",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [{ name: "", type: "string" }],
   },
 ] as const;

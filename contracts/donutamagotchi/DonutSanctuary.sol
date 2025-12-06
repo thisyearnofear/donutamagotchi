@@ -4,6 +4,11 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+interface IDONUTAMAGOTCHIToken is IERC20 {
+    function mintPlayToEarn(address to, uint256 amount, string calldata reason) external;
+}
 
 /**
  * @title DonutSanctuary
@@ -45,6 +50,8 @@ contract DonutSanctuary is ERC721, ERC721URIStorage, Ownable {
     uint256 private nextTokenId = 1;
     mapping(uint256 => RetiredDonut) public retiredDonuts;
     mapping(address => uint256) public minerAddressToNFT;  // miner -> NFT token ID for quick lookup
+    IDONUTAMAGOTCHIToken public donutamagotchiToken;
+    mapping(uint256 => uint256) public lastClaimTime;
     
     uint256 public totalRetired = 0;
     mapping(address => uint256[]) public retirementsByUser; // User -> all their retired donuts
@@ -64,9 +71,17 @@ contract DonutSanctuary is ERC721, ERC721URIStorage, Ownable {
         uint256 amount,
         uint256 timestamp
     );
+    event IncomeClaimed(
+        uint256 indexed tokenId,
+        address indexed owner,
+        uint256 amount
+    );
 
     // ============ Constructor ============
-    constructor() ERC721("Donutamagotchi Sanctuary", "DSANC") Ownable(msg.sender) {}
+    constructor(address _donutamagotchiToken) ERC721("Donutamagotchi Sanctuary", "DSANC") Ownable(msg.sender) {
+        require(_donutamagotchiToken != address(0), "Invalid token address");
+        donutamagotchiToken = IDONUTAMAGOTCHIToken(_donutamagotchiToken);
+    }
 
     // ============ Retirement Logic ============
     /**
@@ -173,10 +188,34 @@ contract DonutSanctuary is ERC721, ERC721URIStorage, Ownable {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
         RetiredDonut memory retired = retiredDonuts[tokenId];
         
-        uint256 secondsSinceRetirement = block.timestamp - retired.retiredAtTimestamp;
-        uint256 daysSinceRetirement = secondsSinceRetirement / 1 days;
+        uint256 startTime = lastClaimTime[tokenId] > retired.retiredAtTimestamp 
+            ? lastClaimTime[tokenId] 
+            : retired.retiredAtTimestamp;
+            
+        if (block.timestamp <= startTime) return 0;
+
+        uint256 secondsSinceLastClaim = block.timestamp - startTime;
+        uint256 daysSinceLastClaim = secondsSinceLastClaim / 1 days;
         
-        return daysSinceRetirement * DAILY_PASSIVE_INCOME;
+        return daysSinceLastClaim * DAILY_PASSIVE_INCOME;
+    }
+
+    /**
+     * @dev Claim accumulated passive income
+     */
+    function claimIncome(uint256 tokenId) external {
+        require(_ownerOf(tokenId) == msg.sender, "Only owner can claim");
+        
+        uint256 pending = this.calculatePassiveIncome(tokenId);
+        require(pending > 0, "No income to claim");
+        
+        // Update state before external call
+        lastClaimTime[tokenId] = block.timestamp;
+        
+        // Mint reward
+        donutamagotchiToken.mintPlayToEarn(msg.sender, pending, "retirement_passive_income");
+        
+        emit IncomeClaimed(tokenId, msg.sender, pending);
     }
 
     /**

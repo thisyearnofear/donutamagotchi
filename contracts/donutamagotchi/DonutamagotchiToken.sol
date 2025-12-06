@@ -38,7 +38,7 @@ contract DonutamagotchiToken is ERC20, ERC20Burnable, Ownable {
     uint256 constant LIQUIDITY_CAP = 100_000_000e18;    // 10%
 
     // ============ State ============
-    address public minter;
+    mapping(address => bool) public isMinter;
     address public cosmneticsVault;
     address public treasuryAddress;
     
@@ -57,7 +57,7 @@ contract DonutamagotchiToken is ERC20, ERC20Burnable, Ownable {
     mapping(address => uint256) public lastStakingReward;
 
     // ============ Events ============
-    event MinterUpdated(address indexed newMinter);
+    event MinterStatusUpdated(address indexed minter, bool status);
     event VaultUpdated(address indexed newVault);
     event TokensMinted(address indexed to, uint256 amount, string indexed reason);
     event TokensStaked(address indexed user, uint256 amount);
@@ -74,7 +74,7 @@ contract DonutamagotchiToken is ERC20, ERC20Burnable, Ownable {
         require(_cosmneticsVault != address(0), "Invalid cosmetics vault");
         require(_treasuryAddress != address(0), "Invalid treasury");
         
-        minter = _minter;
+        isMinter[_minter] = true;
         cosmneticsVault = _cosmneticsVault;
         treasuryAddress = _treasuryAddress;
     }
@@ -96,7 +96,7 @@ contract DonutamagotchiToken is ERC20, ERC20Burnable, Ownable {
         uint256 amount,
         string calldata reason
     ) external {
-        require(msg.sender == minter, "Only minter can call");
+        require(isMinter[msg.sender], "Only minter can call");
         require(to != address(0), "Invalid recipient");
         
         // Check daily cap
@@ -228,12 +228,12 @@ contract DonutamagotchiToken is ERC20, ERC20Burnable, Ownable {
 
     // ============ Admin Functions ============
     /**
-     * @dev Update minter address (if moving oracle)
+     * @dev Update minter status (enable/disable)
      */
-    function setMinter(address newMinter) external onlyOwner {
-        require(newMinter != address(0), "Invalid address");
-        minter = newMinter;
-        emit MinterUpdated(newMinter);
+    function setMinterStatus(address minter, bool status) external onlyOwner {
+        require(minter != address(0), "Invalid address");
+        isMinter[minter] = status;
+        emit MinterStatusUpdated(minter, status);
     }
 
     /**

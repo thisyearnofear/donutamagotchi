@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 /**
  * @title DonutBreeding
@@ -25,6 +27,8 @@ interface IDONUTAMAGOTCHIToken is IERC20 {
 }
 
 contract DonutBreeding is ERC721, ERC721URIStorage, Ownable {
+    using ECDSA for bytes32;
+    using MessageHashUtils for bytes32;
     // ============ Constants ============
     uint256 constant BREEDING_COST = 1000e18; // 1000 $DONUTAMAGOTCHI tokens
     
@@ -39,7 +43,10 @@ contract DonutBreeding is ERC721, ERC721URIStorage, Ownable {
     }
 
     // ============ State ============
+    // ============ State ============
     IDONUTAMAGOTCHIToken public donutamagotchiToken;
+    address public signerOracle;
+    mapping(address => uint256) public nonces;
     
     uint256 private nextTokenId = 1;
     mapping(uint256 => Offspring) public offspring;
@@ -65,9 +72,11 @@ contract DonutBreeding is ERC721, ERC721URIStorage, Ownable {
     );
 
     // ============ Constructor ============
-    constructor(address _donutamagotchiToken) ERC721("Donutamagotchi Offspring", "DOFF") Ownable(msg.sender) {
+    constructor(address _donutamagotchiToken, address _signerOracle) ERC721("Donutamagotchi Offspring", "DOFF") Ownable(msg.sender) {
         require(_donutamagotchiToken != address(0), "Invalid token address");
+        require(_signerOracle != address(0), "Invalid signer oracle");
         donutamagotchiToken = IDONUTAMAGOTCHIToken(_donutamagotchiToken);
+        signerOracle = _signerOracle;
     }
 
     // ============ Core Breeding Logic ============
@@ -85,8 +94,23 @@ contract DonutBreeding is ERC721, ERC721URIStorage, Ownable {
     function breed(
         address parentAMiner,
         address parentBMiner,
-        string calldata geneticData
+        string calldata geneticData,
+        bytes calldata signature
     ) external returns (uint256) {
+        // Verify signature
+        bytes32 structHash = keccak256(abi.encodePacked(
+            parentAMiner,
+            parentBMiner,
+            keccak256(bytes(geneticData)),
+            msg.sender,
+            nonces[msg.sender]
+        ));
+        
+        bytes32 ethSignedHash = MessageHashUtils.toEthSignedMessageHash(structHash);
+        require(ECDSA.recover(ethSignedHash, signature) == signerOracle, "Invalid signature");
+
+        // Increment nonce
+        nonces[msg.sender]++;
         require(parentAMiner != parentBMiner, "Parents must be different");
         require(parentAMiner != address(0) && parentBMiner != address(0), "Invalid parent address");
         require(bytes(geneticData).length > 0, "Genetic data required");
@@ -234,6 +258,14 @@ contract DonutBreeding is ERC721, ERC721URIStorage, Ownable {
     function setTokenURI(uint256 tokenId, string memory uri) external onlyOwner {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
         _setTokenURI(tokenId, uri);
+    }
+
+    /**
+     * @dev Update signer oracle address
+     */
+    function setSignerOracle(address _signerOracle) external onlyOwner {
+        require(_signerOracle != address(0), "Invalid address");
+        signerOracle = _signerOracle;
     }
 
     function tokenURI(uint256 tokenId)
