@@ -194,3 +194,178 @@ export function calculateHeadShake(progress: number, direction: number = 1): num
 export function applyFriction(velocity: number, friction: number = 0.95): number {
   return velocity * friction;
 }
+
+/**
+ * Eye expression state based on pet emotional state
+ * Used for exaggerated eye animations
+ */
+export interface EyeExpression {
+  width: number;      // Eye width (scaled 0-1)
+  height: number;     // Eye height (scaled 0-1)
+  pupilOffset: number; // Pupil vertical offset (-1 to 1)
+  rotation: number;   // Eye rotation in radians
+}
+
+/**
+ * Calculate exaggerated eye expression based on emotional state
+ * Wider eyes = happy/excited, droopy = sad/hungry
+ * 
+ * @param state Pet emotional state
+ * @param frame Current frame for blinking
+ * @returns Eye expression parameters
+ */
+export function calculateEyeExpression(state: string, frame: number): EyeExpression {
+  const blinkPhase = Math.floor(frame / 120) % 20; // Blink every ~120 frames
+  const isBlink = blinkPhase === 0;
+  
+  // Base eye dimensions (will be scaled based on state)
+  let widthScale = 1;
+  let heightScale = 1;
+  let pupilOffset = 0;
+  let rotation = 0;
+  
+  switch (state) {
+    case "happy":
+    case "excited":
+    case "petting":
+      // Wider, rounder eyes - happy expression
+      widthScale = 1.3;
+      heightScale = 1.2;
+      // Gentle upward curve (smile lines)
+      pupilOffset = 0.2;
+      break;
+    case "hungry":
+    case "dead":
+      // Droopy, sad eyes
+      widthScale = 1.1;
+      heightScale = 0.7;
+      pupilOffset = -0.4; // Drooping down
+      rotation = 0.15; // Slight angle down
+      break;
+    case "bored":
+      // Half-closed, sleepy
+      heightScale = 0.4;
+      pupilOffset = 0.3;
+      break;
+    case "sleeping":
+      heightScale = 0;
+      break;
+    default:
+      // Neutral/idle
+      widthScale = 1;
+      heightScale = 1;
+  }
+  
+  // Apply blink (close eyes briefly)
+  if (isBlink) heightScale *= 0.1;
+  
+  return {
+    width: widthScale,
+    height: Math.max(0.05, heightScale), // Minimum 5% height for blink
+    pupilOffset,
+    rotation,
+  };
+}
+
+/**
+ * Calculate mouth expression shape
+ * Happy arc vs sad downward curve
+ */
+export interface MouthExpression {
+  type: "smile" | "frown" | "flat" | "surprised" | "open";
+  intensity: number; // 0-1, how pronounced
+}
+
+/**
+ * Mouth expression based on emotional state
+ * @param state Pet emotional state
+ * @param frame For subtle animations
+ * @returns Mouth expression parameters
+ */
+export function calculateMouthExpression(state: string, frame: number): MouthExpression {
+  // Subtle pulsing on certain states
+  const pulse = Math.sin(frame * 0.05) * 0.2 + 0.8;
+  
+  switch (state) {
+    case "happy":
+    case "petting":
+      return { type: "smile", intensity: 1 };
+    case "excited":
+      return { type: "surprised", intensity: pulse }; // Slightly varying
+    case "hungry":
+    case "dead":
+      return { type: "frown", intensity: 1 };
+    case "bored":
+      return { type: "flat", intensity: 0.5 };
+    case "sleeping":
+      return { type: "open", intensity: 0.3 };
+    default:
+      return { type: "flat", intensity: 0.5 };
+  }
+}
+
+/**
+ * Particle system state for floating effects
+ * Used for hearts, sparkles on happy/excited states
+ */
+export interface Particle {
+  x: number;           // Relative X position
+  y: number;           // Relative Y position
+  vx: number;          // Velocity X
+  vy: number;          // Velocity Y
+  life: number;        // 0-1 (1 = fresh, 0 = dead)
+  type: "heart" | "sparkle" | "star";
+}
+
+/**
+ * Simulate particle physics (gravity, fade)
+ * @param particle Particle to update
+ * @param gravity Downward acceleration
+ * @param friction Air resistance
+ * @returns Updated particle
+ */
+export function updateParticle(
+  particle: Particle,
+  gravity: number = 0.15,
+  friction: number = 0.98,
+): Particle {
+  return {
+    ...particle,
+    x: particle.x + particle.vx,
+    y: particle.y + particle.vy + gravity,
+    vy: particle.vy * friction,
+    vx: particle.vx * friction,
+    life: particle.life - 0.02, // Fade over time
+  };
+}
+
+/**
+ * Generate new particles for excited/happy bursts
+ * Uses physics-based random spread
+ * @param count How many particles to spawn
+ * @param frame For deterministic randomness
+ * @param speed Initial velocity spread
+ * @returns Array of new particles
+ */
+export function spawnParticles(
+  count: number,
+  frame: number,
+  speed: number = 3,
+): Particle[] {
+  const particles: Particle[] = [];
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + (frame % 60) / 60;
+    const r = speed * (0.7 + Math.random() * 0.3);
+    const type: "heart" | "sparkle" | "star" = i % 3 === 0 ? "heart" : i % 3 === 1 ? "sparkle" : "star";
+    
+    particles.push({
+      x: 0,
+      y: 0,
+      vx: Math.cos(angle) * r,
+      vy: Math.sin(angle) * r - 1, // Upward bias
+      life: 1,
+      type,
+    });
+  }
+  return particles;
+}

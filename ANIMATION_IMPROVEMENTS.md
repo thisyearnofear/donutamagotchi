@@ -132,15 +132,68 @@ DonutPet.tsx (animation orchestrator)
 - Physics primitives for weight simulation
 - Ready for multi-body animation
 
+## Kawaii Enhancements (Phase 4.6) ✅ COMPLETE
+
+**Goal:** Add exaggerated expressions & particle effects while maintaining minimalist UI
+
+### Exaggerated Eye Expressions
+- **Happy/Excited**: 1.3x wider, 1.2x taller eyes, pupils lifted (+0.2 offset)
+- **Hungry**: 1.1x wider, 0.7x height (droopy), pupils down (-0.4)
+- **Bored**: Normal width, 0.4x height (half-closed)
+- **Sleeping**: Closed (horizontal lines)
+- **Blinking**: Every 120 frames, smooth animation
+
+### Dynamic Mouth Expressions
+- **Smile**: Happy/content (arc upward)
+- **Frown**: Hungry/sad (arc downward)
+- **Surprised**: Excited/amazed (O-shape, pulsing)
+- **Flat**: Neutral/bored (straight line)
+- **Open**: Sleeping (slight opening)
+- **Intensity**: 0-1 scaling based on emotion
+
+### Physics-Based Particle System
+- **Types**: Hearts (❤️ pink), Sparkles (⭐ yellow), Stars (✨ green)
+- **Spawning**: 4 particles every 15 frames when happy/excited/petting
+- **Physics**: Upward bias (-1 vy) + gravity (0.15) + friction (0.98)
+- **Lifetime**: 50 frames with linear fade (life: 1 → 0)
+- **Performance**: Max 50 particles, efficient pooling
+- **Memory**: Zero leaks, cleaned every frame
+
+### Implementation Details
+- **calculateEyeExpression(state, frame)** → Eye dimensions & pupil offset
+- **calculateMouthExpression(state, frame)** → Mouth type & intensity
+- **spawnParticles(count, frame, speed)** → New particle burst
+- **updateParticle(particle)** → Apply physics (gravity/friction/fade)
+- All functions in `lib/physics.ts` (DRY consolidation)
+- Rendering in `components/donut-pet.tsx` (clean separation)
+
+### Visual Progression
+```
+Pet State       Eyes               Mouth              Particles
+Happy           1.3x wide/tall    Smile, intensity1  ❤️ hearts
+Excited         1.3x wide/tall    Surprised, pulse   ⭐ sparkles
+Hungry          Droopy -0.4       Frown, intensity1  None
+Bored           Half-closed 0.4x  Flat, intensity0.5 None
+Dead            X eyes (fixed)    Frown, intensity1  None
+Sleeping        Closed            Open, intensity0.3 None
+```
+
+### Design Rationale
+- **Hybrid approach**: Character carries cuteness (expressions/particles), UI stays stark (black borders, grid, bold colors)
+- **Distinctive brand**: Unique blend of minimalist UI + expressive character
+- **Emotional attachment**: Visible reactions increase player connection
+- **Performance**: Reuses existing physics foundation, zero frame rate impact
+- **Scalability**: "Kawaii dial" adjustable via physics parameters
+
 ## Extending Further (Future)
 
 This foundation enables:
-1. **Environmental interaction**: Physics response to cursor proximity
-2. **Particle effects**: Use physics engine for particle spawning/movement
-3. **Multi-part animation**: Attach "limbs" with spring constraints
-4. **Mood-based animation**: Idle breathing speed varies by happiness/energy
-5. **Wear/tear**: Visual degradation as health declines (add scratches, dents)
-6. **Gravity-based falling**: Dust particles, food falling, environmental physics
+1. **Sound design**: 8-bit beeps on interaction (Web Audio API)
+2. **Visual polish**: Bloom/glow, color pulses, screen shake
+3. **Enhanced blinking**: Personality-driven blink rates
+4. **Mouth movement**: Jiggles during breathing, opens on jump
+5. **Environmental interaction**: Physics response to cursor proximity
+6. **Multi-part animation**: Attach "limbs" with spring constraints
 
 ---
 

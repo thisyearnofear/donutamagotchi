@@ -11,6 +11,11 @@ import {
   calculateWiggle,
   calculateBreathing,
   calculateHeadShake,
+  calculateEyeExpression,
+  calculateMouthExpression,
+  spawnParticles,
+  updateParticle,
+  type Particle,
 } from "@/lib/physics";
 
 type PetState = "idle" | "happy" | "excited" | "hungry" | "sleeping" | "dead" | "bored" | "petting";
@@ -35,6 +40,10 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
   
   // Physics state for jump/bounce
   const jumpStateRef = useRef({ y: 0, vy: 0 });
+  
+  // Particle system for happy/excited states
+  const particlesRef = useRef<Particle[]>([]);
+  const lastParticleSpawnRef = useRef(0);
 
   // Calculate lifecycle for visual evolution
   const lifecycleInfo = useMemo(() => {
@@ -180,13 +189,29 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
       // Draw frosting with lifecycle info
       drawFrosting(ctx, 0, -actualRadius * 0.3, actualRadius * 1.2, state, traits, lifecycleInfo);
 
-      // Draw face with trait-based eyes
-      drawFace(ctx, 0, 0, state, frameRef.current, traits);
-
-      // Draw particles for excited/petting state
-      if ((state === "excited" || state === "petting") && isAnimating) {
-        drawParticles(ctx, 0, 0, frameRef.current);
+      // Update and draw particles (emotion-driven effects)
+      if ((state === "excited" || state === "happy" || state === "petting") && isAnimating) {
+        // Spawn new particles every 15 frames
+        if (frameRef.current - lastParticleSpawnRef.current > 15) {
+          particlesRef.current.push(...spawnParticles(4, frameRef.current, 2.5));
+          lastParticleSpawnRef.current = frameRef.current;
+        }
+      } else if (state === "bored") {
+        // Don't spawn particles when bored
+        particlesRef.current = [];
+        lastParticleSpawnRef.current = frameRef.current;
       }
+      
+      // Update all particles
+      particlesRef.current = particlesRef.current
+        .map(p => updateParticle(p))
+        .filter(p => p.life > 0);
+      
+      // Draw particles
+      drawParticlesEnhanced(ctx, 0, 0, particlesRef.current);
+
+      // Draw face with expression-based eyes and mouth
+      drawFaceEnhanced(ctx, 0, 0, state, frameRef.current, traits);
 
       // Draw bored indicators
       if (state === "bored") {
@@ -268,26 +293,22 @@ function drawFrosting(ctx: CanvasRenderingContext2D, x: number, y: number, width
   }
 }
 
-function drawFace(ctx: CanvasRenderingContext2D, x: number, y: number, state: PetState, frame: number, traits?: Traits | null) {
+/**
+ * Enhanced face drawing with exaggerated expression animations
+ * Uses calculateEyeExpression and calculateMouthExpression for state-driven visuals
+ */
+function drawFaceEnhanced(ctx: CanvasRenderingContext2D, x: number, y: number, state: PetState, frame: number, traits?: Traits | null) {
   const eyeY = y + 10;
   const eyeSpacing = 25;
+  const baseEyeWidth = 16;
+  const baseEyeHeight = 12;
 
-  // Determine eye shape based on personality
-  const eyeShape = traits?.personality === "Stubborn" ? "round" : traits?.personality === "Lazy" ? "small" : "normal";
+  // Get expression state from physics engine
+  const eyeExpr = calculateEyeExpression(state, frame);
+  const mouthExpr = calculateMouthExpression(state, frame);
 
-  // Eyes
-  if (state === "sleeping") {
-    // Closed eyes (Z's for sleeping)
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(x - eyeSpacing - 8, eyeY);
-    ctx.lineTo(x - eyeSpacing + 8, eyeY);
-    ctx.moveTo(x + eyeSpacing - 8, eyeY);
-    ctx.lineTo(x + eyeSpacing + 8, eyeY);
-    ctx.stroke();
-  } else if (state === "dead") {
-    // X eyes
+  // Special case: dead pets get X eyes (classic)
+  if (state === "dead") {
     ctx.strokeStyle = "#000";
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -300,104 +321,186 @@ function drawFace(ctx: CanvasRenderingContext2D, x: number, y: number, state: Pe
     ctx.moveTo(x + eyeSpacing + 6, eyeY - 6);
     ctx.lineTo(x + eyeSpacing - 6, eyeY + 6);
     ctx.stroke();
-  } else if (state === "bored") {
-    // Half-closed eyes
-    const eyeHeight = 6;
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(x - eyeSpacing - 8, eyeY - eyeHeight / 2, 16, eyeHeight);
-    ctx.fillRect(x + eyeSpacing - 8, eyeY - eyeHeight / 2, 16, eyeHeight);
-    
-    ctx.fillStyle = "#000";
-    ctx.fillRect(x - eyeSpacing - 4, eyeY - 2, 8, 4);
-    ctx.fillRect(x + eyeSpacing - 4, eyeY - 2, 8, 4);
+  } else if (state === "sleeping") {
+    // Sleeping: straight lines
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x - eyeSpacing - 8, eyeY);
+    ctx.lineTo(x - eyeSpacing + 8, eyeY);
+    ctx.moveTo(x + eyeSpacing - 8, eyeY);
+    ctx.lineTo(x + eyeSpacing + 8, eyeY);
+    ctx.stroke();
   } else {
-    // Open eyes with personality-based shapes
-    const blink = Math.floor(frame / 120) % 20 === 0;
-    let eyeWidth = 16;
-    let eyeHeight = blink ? 2 : 12;
-    
-    // Personality affects eye appearance
-    if (eyeShape === "round" && !blink) {
-      // Stubborn: round eyes
+    // Draw eyes with exaggerated expression
+    const eyeWidth = baseEyeWidth * eyeExpr.width;
+    const eyeHeight = baseEyeHeight * eyeExpr.height;
+    const pupilY = eyeY + eyeExpr.pupilOffset * 4; // Pupil can move up/down
+
+    // Personality-based eye shape
+    const eyeShape = traits?.personality === "Stubborn" ? "round" : traits?.personality === "Lazy" ? "small" : "normal";
+
+    // Draw eye whites and pupils (exaggerated for emotion)
+    if (eyeShape === "round" && eyeHeight > 0.1) {
+      // Round eyes (Stubborn personality)
+      const radius = eyeWidth / 2;
       ctx.fillStyle = "#fff";
       ctx.beginPath();
-      ctx.arc(x - eyeSpacing, eyeY, 8, 0, Math.PI * 2);
+      ctx.arc(x - eyeSpacing, eyeY, radius * 0.9, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(x + eyeSpacing, eyeY, 8, 0, Math.PI * 2);
+      ctx.arc(x + eyeSpacing, eyeY, radius * 0.9, 0, Math.PI * 2);
       ctx.fill();
-      
+
+      // Pupils (offset for expression)
       ctx.fillStyle = "#000";
       ctx.beginPath();
-      ctx.arc(x - eyeSpacing, eyeY, 4, 0, Math.PI * 2);
+      ctx.arc(x - eyeSpacing, pupilY, radius * 0.4, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(x + eyeSpacing, eyeY, 4, 0, Math.PI * 2);
+      ctx.arc(x + eyeSpacing, pupilY, radius * 0.4, 0, Math.PI * 2);
       ctx.fill();
-    } else if (eyeShape === "small" && !blink) {
-      // Lazy: smaller eyes
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(x - eyeSpacing - 6, eyeY - eyeHeight / 2, 12, eyeHeight);
-      ctx.fillRect(x + eyeSpacing - 6, eyeY - eyeHeight / 2, 12, eyeHeight);
-      
-      ctx.fillStyle = "#000";
-      ctx.fillRect(x - eyeSpacing - 2, eyeY - 2, 4, 4);
-      ctx.fillRect(x + eyeSpacing - 2, eyeY - 2, 4, 4);
     } else {
-      // Normal/default eyes
+      // Rectangular eyes (default/Lazy)
       ctx.fillStyle = "#fff";
-      ctx.fillRect(x - eyeSpacing - 8, eyeY - eyeHeight / 2, 16, eyeHeight);
-      ctx.fillRect(x + eyeSpacing - 8, eyeY - eyeHeight / 2, 16, eyeHeight);
-      
-      if (!blink) {
+      ctx.fillRect(x - eyeSpacing - eyeWidth / 2, eyeY - eyeHeight / 2, eyeWidth, eyeHeight);
+      ctx.fillRect(x + eyeSpacing - eyeWidth / 2, eyeY - eyeHeight / 2, eyeWidth, eyeHeight);
+
+      // Pupils (only if eyes are open enough)
+      if (eyeHeight > 3) {
         ctx.fillStyle = "#000";
-        ctx.fillRect(x - eyeSpacing - 4, eyeY - 4, 8, 8);
-        ctx.fillRect(x + eyeSpacing - 4, eyeY - 4, 8, 8);
+        const pupilRadius = Math.max(2, eyeWidth * 0.25);
+        ctx.fillRect(x - eyeSpacing - pupilRadius, pupilY - pupilRadius / 1.5, pupilRadius * 2, pupilRadius);
+        ctx.fillRect(x + eyeSpacing - pupilRadius, pupilY - pupilRadius / 1.5, pupilRadius * 2, pupilRadius);
       }
     }
   }
 
-  // Mouth
+  // Draw mouth with dynamic expression
   const mouthY = y + 35;
   ctx.strokeStyle = "#000";
   ctx.lineWidth = 3;
   ctx.beginPath();
 
-  if (state === "happy" || state === "excited" || state === "petting") {
-    // Happy smile
-    ctx.arc(x, mouthY - 5, 20, 0.2, Math.PI - 0.2);
-  } else if (state === "hungry" || state === "dead") {
-    // Sad frown
-    ctx.arc(x, mouthY + 10, 20, Math.PI + 0.2, Math.PI * 2 - 0.2);
-  } else if (state === "bored") {
-    // Flat/bored mouth
-    ctx.moveTo(x - 15, mouthY);
-    ctx.lineTo(x + 15, mouthY);
-  } else {
-    // Neutral
-    ctx.moveTo(x - 15, mouthY);
-    ctx.lineTo(x + 15, mouthY);
+  const mouthIntensity = mouthExpr.intensity;
+
+  switch (mouthExpr.type) {
+    case "smile":
+      // Happy smile - arc curving upward
+      ctx.arc(x, mouthY - 5, 20 * mouthIntensity, 0.2, Math.PI - 0.2);
+      break;
+    case "surprised":
+      // O shape - open mouth
+      ctx.arc(x, mouthY, 8 * mouthIntensity, 0, Math.PI * 2);
+      break;
+    case "frown":
+      // Sad frown - arc curving downward
+      ctx.arc(x, mouthY + 10, 20 * mouthIntensity, Math.PI + 0.2, Math.PI * 2 - 0.2);
+      break;
+    case "open":
+      // Sleeping/resting - slight opening
+      ctx.arc(x, mouthY, 8 * mouthIntensity, 0, Math.PI);
+      break;
+    case "flat":
+    default:
+      // Neutral/flat mouth
+      ctx.moveTo(x - 15, mouthY);
+      ctx.lineTo(x + 15, mouthY);
+      break;
   }
+  
   ctx.stroke();
 }
 
-function drawParticles(ctx: CanvasRenderingContext2D, x: number, y: number, frame: number) {
-  const particles = 12;
-  for (let i = 0; i < particles; i++) {
-    const angle = (i / particles) * Math.PI * 2 + frame * 0.1;
-    const dist = 100 + Math.sin(frame * 0.1 + i) * 20;
-    const px = x + Math.cos(angle) * dist;
-    const py = y + Math.sin(angle) * dist;
+/**
+ * Enhanced particle rendering with physics-based movement
+ * Hearts, sparkles, and stars float upward with gravity falloff
+ */
+function drawParticlesEnhanced(ctx: CanvasRenderingContext2D, x: number, y: number, particles: Particle[]) {
+  particles.forEach(particle => {
+    const px = x + particle.x;
+    const py = y + particle.y;
     
-    // Gradient of colors for richer effect
-    const colors = ["#ff6b9d", "#ffd93d", "#6bcf7f", "#4ecdc4"];
-    ctx.fillStyle = colors[i % colors.length];
-    ctx.globalAlpha = 0.6 - (dist - 100) / 100;
-    ctx.beginPath();
-    ctx.arc(px, py, 5, 0, Math.PI * 2);
-    ctx.fill();
-  }
+    // Fade out as particle dies (life goes 1 -> 0)
+    ctx.globalAlpha = particle.life * 0.8;
+    
+    switch (particle.type) {
+      case "heart":
+        drawHeart(ctx, px, py, 6);
+        break;
+      case "sparkle":
+        drawSparkle(ctx, px, py, 5);
+        break;
+      case "star":
+        drawStar(ctx, px, py, 5);
+        break;
+    }
+  });
+  
   ctx.globalAlpha = 1;
+}
+
+/**
+ * Draw a heart shape (5x5 pixels)
+ */
+function drawHeart(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  ctx.fillStyle = "#ff6b9d";
+  ctx.beginPath();
+  // Simple heart (two circles + triangle)
+  ctx.arc(x - size / 2, y - size / 2, size / 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + size / 2, y - size / 2, size / 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x - size, y - size / 2);
+  ctx.lineTo(x + size, y - size / 2);
+  ctx.lineTo(x, y + size * 1.2);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/**
+ * Draw a sparkle/diamond shape
+ */
+function drawSparkle(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  ctx.fillStyle = "#ffd93d";
+  // Four-pointed star
+  ctx.beginPath();
+  ctx.moveTo(x, y - size);
+  ctx.lineTo(x + size / 2, y - size / 2);
+  ctx.lineTo(x + size, y);
+  ctx.lineTo(x + size / 2, y + size / 2);
+  ctx.lineTo(x, y + size);
+  ctx.lineTo(x - size / 2, y + size / 2);
+  ctx.lineTo(x - size, y);
+  ctx.lineTo(x - size / 2, y - size / 2);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/**
+ * Draw a star shape (5-pointed)
+ */
+function drawStar(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  ctx.fillStyle = "#6bcf7f";
+  ctx.beginPath();
+  
+  for (let i = 0; i < 10; i++) {
+    const angle = (i * Math.PI) / 5;
+    const radius = i % 2 === 0 ? size : size / 2;
+    const px = x + Math.cos(angle - Math.PI / 2) * radius;
+    const py = y + Math.sin(angle - Math.PI / 2) * radius;
+    
+    if (i === 0) {
+      ctx.moveTo(px, py);
+    } else {
+      ctx.lineTo(px, py);
+    }
+  }
+  
+  ctx.closePath();
+  ctx.fill();
 }
 
 function drawBoreIndicators(ctx: CanvasRenderingContext2D, x: number, y: number, frame: number) {
