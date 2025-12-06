@@ -136,6 +136,13 @@ export default function DonutsPage() {
             </p>
           </div>
 
+          {/* Purpose Guide */}
+          <div className="bg-lime-300 border-4 border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="text-[10px] font-black text-black text-center">
+              💡 Tip: Filter by PRIME (⭐) to find breeding partners when your pet is ready!
+            </div>
+          </div>
+
           {/* Search Bar */}
           <div className="bg-white border-4 border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <input

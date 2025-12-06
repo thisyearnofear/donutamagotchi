@@ -104,6 +104,19 @@ export default function BreedingPage() {
             </p>
           </div>
 
+          {/* Requirements */}
+          <div className="bg-white border-4 border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="space-y-1">
+              <div className="text-[10px] font-black text-black">✨ BREEDING REQUIREMENTS</div>
+              <div className="text-[9px] text-black/70 font-bold space-y-0.5">
+                <div>📅 Your donut: PRIME age (30+ days)</div>
+                <div>❤️ Health & happiness: 50%+ each</div>
+                <div>💕 Partner: PRIME age, 50%+ breeding viability</div>
+                <div>💰 Cost: 1000 $DONUTAMAGOTCHI (burned)</div>
+              </div>
+            </div>
+          </div>
+
           {/* Cost Info */}
           <div className="bg-pink-300 border-4 border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
