@@ -4,6 +4,8 @@ import { useState } from "react";
 import { NavBar } from "@/components/nav-bar";
 import { Button } from "@/components/ui/button";
 import { RetiredDonutCard } from "@/components/hall-of-fame/retired-donut-card";
+import { AccordionProvider } from "@/components/accordion-context";
+import { FeaturedSection } from "@/components/featured-section";
 
 interface LegendaryDonut {
   id: string;
@@ -48,6 +50,7 @@ export default function HallOfFamePage() {
   const [sortBy, setSortBy] = useState<"age" | "earnings" | "recent">("age");
   const [filterCategory, setFilterCategory] = useState<"all" | "gameplay" | "breeding" | "social" | "cosmetics">("all");
   const [leaderboardCategory, setLeaderboardCategory] = useState<"earnings" | "age" | "bloodline" | "achievements">("earnings");
+  const [showAllDonuts, setShowAllDonuts] = useState(false);
 
   // Mock data - will be replaced with subgraph queries
   const legendaryDonuts: LegendaryDonut[] = [
@@ -88,6 +91,9 @@ export default function HallOfFamePage() {
     if (sortBy === "earnings") return parseInt(b.totalEarningsDonut) - parseInt(a.totalEarningsDonut);
     return new Date(b.retiredAt).getTime() - new Date(a.retiredAt).getTime();
   });
+
+  const featuredDonuts = sortedDonuts.slice(0, 4);
+  const remainingDonuts = sortedDonuts.slice(4);
 
   // Achievement data
   const achievements: Achievement[] = [
@@ -168,14 +174,15 @@ export default function HallOfFamePage() {
 
   return (
     <main className="flex h-screen w-screen justify-center overflow-hidden bg-gradient-to-b from-purple-900 via-pink-900 to-orange-900 font-mono text-white">
-      <div
-        className="relative flex h-full w-full max-w-[520px] flex-1 flex-col overflow-hidden px-3 pb-3"
-        style={{
-          paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
-          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)",
-        }}
-      >
-        <div className="flex flex-1 flex-col overflow-y-auto space-y-3">
+      <AccordionProvider mode="single">
+        <div
+          className="relative flex h-full w-full max-w-[520px] flex-1 flex-col overflow-hidden px-3 pb-3"
+          style={{
+            paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
+            paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)",
+          }}
+        >
+          <div className="flex flex-1 flex-col overflow-y-auto space-y-2">
           {/* Header */}
           <div className="bg-yellow-300 border-4 border-black rounded-2xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <h1 className="text-2xl font-black text-center text-black tracking-tight">
@@ -189,20 +196,20 @@ export default function HallOfFamePage() {
           {/* Tab Navigation */}
           <div className="grid grid-cols-4 gap-1">
             <button
-              onClick={() => setActiveTab("retired")}
-              className={`py-2 px-1 rounded-lg border-3 border-black font-black text-[9px] transition-all flex flex-col items-center gap-0.5 ${activeTab === "retired"
-                ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                : "bg-white text-black/60 hover:bg-gray-100"
+              onClick={() => { setActiveTab("retired"); setShowAllDonuts(false); }}
+              className={`py-2 px-1 rounded-lg border-3 border-black font-black text-[9px] transition-all duration-200 flex flex-col items-center gap-0.5 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${activeTab === "retired"
+                ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] scale-95"
+                : "bg-white text-black/60 hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                 }`}
             >
               <span className="text-sm">🏤</span>
               <span>RETIRED</span>
             </button>
             <button
-              onClick={() => setActiveTab("legendary")}
-              className={`py-2 px-1 rounded-lg border-3 border-black font-black text-[9px] transition-all flex flex-col items-center gap-0.5 ${activeTab === "legendary"
-                ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                : "bg-white text-black/60 hover:bg-gray-100"
+              onClick={() => { setActiveTab("legendary"); setShowAllDonuts(false); }}
+              className={`py-2 px-1 rounded-lg border-3 border-black font-black text-[9px] transition-all duration-200 flex flex-col items-center gap-0.5 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${activeTab === "legendary"
+                ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] scale-95"
+                : "bg-white text-black/60 hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                 }`}
             >
               <span className="text-sm">⭐</span>
@@ -210,9 +217,9 @@ export default function HallOfFamePage() {
             </button>
             <button
               onClick={() => setActiveTab("achievements")}
-              className={`py-2 px-1 rounded-lg border-3 border-black font-black text-[9px] transition-all flex flex-col items-center gap-0.5 ${activeTab === "achievements"
-                ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                : "bg-white text-black/60 hover:bg-gray-100"
+              className={`py-2 px-1 rounded-lg border-3 border-black font-black text-[9px] transition-all duration-200 flex flex-col items-center gap-0.5 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${activeTab === "achievements"
+                ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] scale-95"
+                : "bg-white text-black/60 hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                 }`}
             >
               <span className="text-sm">🏅</span>
@@ -220,9 +227,9 @@ export default function HallOfFamePage() {
             </button>
             <button
               onClick={() => setActiveTab("leaderboards")}
-              className={`py-2 px-1 rounded-lg border-3 border-black font-black text-[9px] transition-all flex flex-col items-center gap-0.5 ${activeTab === "leaderboards"
-                ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                : "bg-white text-black/60 hover:bg-gray-100"
+              className={`py-2 px-1 rounded-lg border-3 border-black font-black text-[9px] transition-all duration-200 flex flex-col items-center gap-0.5 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${activeTab === "leaderboards"
+                ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] scale-95"
+                : "bg-white text-black/60 hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                 }`}
             >
               <span className="text-sm">🏆</span>
@@ -233,6 +240,22 @@ export default function HallOfFamePage() {
           {/* Content: Hall of Fame Tabs */}
           {(activeTab === "retired" || activeTab === "legendary") && (
             <>
+              {/* Featured Section */}
+              {!showAllDonuts && featuredDonuts.length > 0 && (
+                <FeaturedSection
+                  title={`🏆 ${activeTab === "retired" ? "RETIRED DONUTS" : "LEGENDARY SURVIVORS"}`}
+                  emoji={activeTab === "retired" ? "🏤" : "⭐"}
+                  viewAllLabel={`View all ${sortedDonuts.length}`}
+                  onViewAll={() => setShowAllDonuts(true)}
+                >
+                  <div className="space-y-2">
+                    {featuredDonuts.map((donut) => (
+                      <RetiredDonutCard key={donut.id} donut={donut} />
+                    ))}
+                  </div>
+                </FeaturedSection>
+              )}
+
               {/* Sort Options */}
               <div className="grid grid-cols-3 gap-2">
                 <button onClick={() => setSortBy("age")} className={`py-2 px-2 rounded-lg border-3 border-black font-black text-[10px] transition-all ${sortBy === "age" ? "bg-purple-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" : "bg-white text-black/60 hover:bg-gray-100"}`}>AGE</button>
@@ -243,7 +266,7 @@ export default function HallOfFamePage() {
               {/* Donuts List */}
               {sortedDonuts.length > 0 ? (
                 <div className="space-y-2 flex-1 overflow-y-auto">
-                  {sortedDonuts.map((donut) => (
+                  {(showAllDonuts ? sortedDonuts : remainingDonuts).map((donut) => (
                     <RetiredDonutCard key={donut.id} donut={donut} />
                   ))}
                 </div>
@@ -351,7 +374,8 @@ export default function HallOfFamePage() {
           )}
         </div>
       </div>
-      <NavBar />
+        <NavBar />
+      </AccordionProvider>
     </main>
   );
 }

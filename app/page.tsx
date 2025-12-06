@@ -16,6 +16,11 @@ import { formatEther, formatUnits, zeroAddress, type Address } from "viem";
 import { Button } from "@/components/ui/button";
 import { CONTRACT_ADDRESSES, MULTICALL_ABI } from "@/lib/contracts";
 import { getEthPrice } from "@/lib/utils";
+import {
+  calculateSessionEarnings,
+  calculateDailyRate,
+  calculateTokensUntilNextMilestone,
+} from "@/lib/earnings";
 import { useAccountData } from "@/hooks/useAccountData";
 import { useTraits } from "@/hooks/useTraits";
 import { NavBar } from "@/components/nav-bar";
@@ -26,6 +31,7 @@ import { InteractionPanel } from "@/components/interaction-panel";
 import { AddToFarcasterDialog } from "@/components/add-to-farcaster-dialog";
 import { BreedingBadge } from "@/components/breeding-badge";
 import { CareGuide } from "@/components/care-guide";
+import { AccordionProvider } from "@/components/accordion-context";
 
 type MiniAppContext = {
   user?: {
@@ -94,6 +100,7 @@ export default function HomePage() {
   const [petResponse, setPetResponse] = useState<string>("");
   const [gesture, setGesture] = useState<"bounce" | "wiggle" | "jump" | "spin" | "nod" | null>(null);
   const [lastInteractionTime, setLastInteractionTime] = useState<number>(Date.now());
+  const [sessionStartEarnings, setSessionStartEarnings] = useState<bigint | null>(null);
   const glazeResultTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const petResponseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -296,7 +303,11 @@ export default function HomePage() {
       readyRef.current = true;
       sdk.actions.ready().catch(() => {});
     }
-  }, [minerState]);
+    // Set session start earnings on first load
+    if (minerState && sessionStartEarnings === null) {
+      setSessionStartEarnings(minerState.glazed);
+    }
+  }, [minerState, sessionStartEarnings]);
 
   const {
     data: txHash,
@@ -487,6 +498,9 @@ export default function HomePage() {
   };
 
   const glazeTimeDisplay = minerState ? formatGlazeTime(glazeElapsedSeconds) : "0s";
+  
+  // Calculate age in days for retirement eligibility
+  const ageInDays = Math.floor(glazeElapsedSeconds / 86400);
 
   const petState = useMemo(() => {
     if (!minerState) return { state: "sleeping" as const, happiness: 0, health: 0 };
@@ -514,6 +528,20 @@ export default function HomePage() {
     
     return { state, happiness, health };
   }, [minerState, isWriting, isConfirming, glazeResult, glazeElapsedSeconds, hasMiner, lastInteractionTime]);
+
+  // Calculate earnings metrics using utility functions
+  const sessionEarnings = useMemo(() => {
+    return calculateSessionEarnings(sessionStartEarnings, interpolatedGlazed);
+  }, [sessionStartEarnings, interpolatedGlazed]);
+
+  const dailyEarningRate = useMemo(() => {
+    if (!minerState) return 0;
+    return calculateDailyRate(minerState.nextDps, glazeElapsedSeconds);
+  }, [minerState, glazeElapsedSeconds]);
+
+  const tokensUntilNextMilestone = useMemo(() => {
+    return calculateTokensUntilNextMilestone(sessionEarnings);
+  }, [sessionEarnings]);
 
   const buttonLabel = useMemo(() => {
     if (!minerState) return "LOADING...";
@@ -548,14 +576,15 @@ export default function HomePage() {
   return (
     <main className="flex h-screen w-screen justify-center overflow-hidden bg-gradient-to-b from-purple-900 via-pink-900 to-orange-900 font-mono text-white">
       <AddToFarcasterDialog showOnFirstVisit={true} />
-      <div
-        className="relative flex h-full w-full max-w-[520px] flex-1 flex-col overflow-hidden px-3 pb-3"
-        style={{
-          paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
-          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)",
-        }}
-      >
-        <div className="flex flex-1 flex-col overflow-y-auto space-y-2">
+      <AccordionProvider mode="single">
+        <div
+          className="relative flex h-full w-full max-w-[520px] flex-1 flex-col overflow-hidden px-3 pb-3"
+          style={{
+            paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
+            paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)",
+          }}
+        >
+          <div className="flex flex-1 flex-col overflow-y-auto space-y-2">
           {/* Header */}
           <div className="bg-yellow-300 border-4 border-black rounded-2xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <h1 className="text-2xl font-black text-center text-black tracking-tight">
@@ -589,11 +618,15 @@ export default function HomePage() {
             health={petState.health}
             energy={glazedDisplay}
             age={glazeTimeDisplay}
+            ageInDays={ageInDays}
             grooming={traits?.grooming ?? 50}
             energyLevel={traits?.energy ?? 50}
             satisfaction={traits?.satisfaction ?? 50}
             isDying={petState.state === "dead"}
             lastFedTime={minerState?.startTime ? Number(minerState.startTime) * 1000 : Date.now()}
+            sessionEarnings={sessionEarnings}
+            dailyEarningRate={dailyEarningRate}
+            tokensUntilNextMilestone={tokensUntilNextMilestone}
           />
 
           {/* Breeding Badge - Discoverable Path to Breeding */}
@@ -667,7 +700,8 @@ export default function HomePage() {
           )}
         </div>
       </div>
-      <NavBar />
+        <NavBar />
+      </AccordionProvider>
     </main>
   );
 }

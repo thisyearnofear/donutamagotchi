@@ -1,27 +1,37 @@
 "use client";
 
+import { getRetirementTier, isRetirementEligible } from "@/lib/earnings";
+
 interface PetStatsProps {
   happiness: number;
   health: number;
   energy: string;
   age: string;
+  ageInDays?: number; // For retirement eligibility check
   grooming?: number;
   energyLevel?: number;
   satisfaction?: number;
   isDying?: boolean;
   lastFedTime?: number; // milliseconds
-}
+  sessionEarnings?: number; // Tokens earned this session
+  dailyEarningRate?: number; // Estimated tokens per day
+  tokensUntilNextMilestone?: number; // Tokens until next cosmetic
+};
 
 export function PetStats({ 
   happiness, 
   health, 
   energy, 
   age,
+  ageInDays = 0,
   grooming = 50,
   energyLevel = 50,
   satisfaction = 50,
   isDying = false,
-  lastFedTime = Date.now()
+  lastFedTime = Date.now(),
+  sessionEarnings = 0,
+  dailyEarningRate = 0,
+  tokensUntilNextMilestone = 0
 }: PetStatsProps) {
   // Determine critical status
   const isCriticalHealth = health < 10;
@@ -58,6 +68,10 @@ export function PetStats({
   }
 
   const minutesSinceFed = Math.floor((Date.now() - lastFedTime) / 1000 / 60);
+  
+  // Retirement eligibility check
+  const eligible = isRetirementEligible(ageInDays);
+  const tier = getRetirementTier(ageInDays);
 
   return (
     <div className={`border-4 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-3 ${
@@ -110,9 +124,45 @@ export function PetStats({
         <PixelStatBar label="SATISFIED" value={satisfaction} emoji="😋" color="yellow" size="small" />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 pt-2 border-t-4 border-black border-dashed">
-        <StatDisplay label="ENERGY" value={energy} emoji="⚡" />
-        <StatDisplay label="AGE" value={age} emoji="⏱️" />
+      {/* Earnings Section */}
+      {(sessionEarnings > 0 || dailyEarningRate > 0) && (
+        <div className="bg-gradient-to-br from-amber-100 to-yellow-100 border-3 border-black rounded-lg p-2">
+          <div className="text-[9px] font-black text-black space-y-1">
+            {sessionEarnings > 0 && (
+              <div className="flex items-center justify-between">
+                <span>💰 Session Earnings:</span>
+                <span className="text-xs">{sessionEarnings.toFixed(1)} $DONUT</span>
+              </div>
+            )}
+            {dailyEarningRate > 0 && (
+              <div className="flex items-center justify-between">
+                <span>📊 Est. Daily Rate:</span>
+                <span className="text-xs">{dailyEarningRate.toFixed(1)} $DONUT/day</span>
+              </div>
+            )}
+            {tokensUntilNextMilestone > 0 && (
+              <div className="flex items-center justify-between text-amber-700">
+                <span>🎯 Next Cosmetic:</span>
+                <span className="text-xs font-bold">{tokensUntilNextMilestone.toFixed(0)} more</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-3 pt-2 border-t-4 border-black border-dashed">
+          <StatDisplay label="ENERGY" value={energy} emoji="⚡" />
+          <StatDisplay label="AGE" value={age} emoji="⏱️" />
+        </div>
+
+        {/* Retirement Eligibility Badge */}
+        {eligible && tier && (
+          <div className="bg-gradient-to-r from-purple-500 to-pink-500 border-3 border-black rounded-lg p-2 text-center">
+            <div className="text-xs font-black text-white mb-1">🏛️ HALL OF FAME ELIGIBLE</div>
+            <div className="text-[9px] font-bold text-white">{tier} Tier • Retire to Sanctuary</div>
+          </div>
+        )}
       </div>
     </div>
   );

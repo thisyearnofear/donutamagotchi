@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "./ui/button";
+import { useAccordion } from "./accordion-context";
 
 interface InteractionPanelProps {
   customMessage: string;
@@ -9,15 +10,35 @@ interface InteractionPanelProps {
   petResponse: string;
   isDisabled: boolean;
   onGesture: (gesture: "bounce" | "wiggle" | "jump" | "spin" | "nod") => void;
+  accordionId?: string;
 }
 
+const ACCORDION_ID = "interact";
+
 export function InteractionPanel(props: InteractionPanelProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const accordionId = props.accordionId || ACCORDION_ID;
+  const [fallbackOpen, setFallbackOpen] = useState(false);
+
+  let accordion: ReturnType<typeof useAccordion> | null = null;
+  try {
+    accordion = useAccordion();
+  } catch {
+    // Not inside AccordionProvider, use local state fallback
+  }
+
+  const isOpen = accordion ? accordion.isOpen(accordionId) : fallbackOpen;
+  const handleToggle = () => {
+    if (accordion) {
+      accordion.toggle(accordionId);
+    } else {
+      setFallbackOpen((prev) => !prev);
+    }
+  };
 
   return (
     <div>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className="w-full bg-blue-400 border-4 border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all font-black text-black text-sm"
       >
         <div className="flex items-center justify-between">

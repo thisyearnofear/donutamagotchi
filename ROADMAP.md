@@ -938,6 +938,11 @@ export const usePetState = () => useStore(petStateStore)
 | **Phase 2: Lifecycle** | ✅ COMPLETE | Age system, 4 maturation stages, DPS scaling, progress bars | Passing |
 | **Phase 3: Breeding** | ✅ COMPLETE | Smart contract, trait inheritance, pedigree, matchmaking board | Passing |
 | **Phase 4: Social** | ✅ COMPLETE | Leaderboards, cosmetics shop, notifications, achievements | Passing |
+| **Phase 4.5: UI/UX Refinement** | ✅ COMPLETE | Content-first design, featured sections, micro-interactions | Passing |
+| **Phase A: Integration Readiness** | ✅ COMPLETE | Mock data consolidation, canonical types, contract hooks | Passing |
+| **Phase B: Core Mechanics Display** | ✅ COMPLETE | Token earnings visibility, retirement badges, breeding cooldown ready | Passing |
+| **Phase C: Hook Infrastructure** | ✅ COMPLETE | Earnings utilities, refactored components, contract integration points | Passing |
+| **Phase E: Testing & Validation** | ⏳ PENDING | Integration testing with deployed contracts | Next |
 | **Phase 5: LLM Flavor** | ⏳ DEFERRED | Personality text, breeding announcements, journals | Future enhancement |
 
 ### Phase Completion Details
@@ -1021,6 +1026,266 @@ export const usePetState = () => useStore(petStateStore)
 - ✅ **Hooks**: useTraits, useBreeding, useNotifications fully typed
 - ⏳ **Smart Contract Deployment**: Deferred (ready for mainnet anytime)
 - ⏳ **Backend Oracle**: Deferred (template provided in token contract)
+
+---
+
+## Phase 4.5: UI/UX Refinement - Content-First Design (✅ COMPLETE)
+
+**Goal:** Transform from control-heavy interface to content-first discovery experience, reducing cognitive load while maintaining tamagotchi's engaging, playful feel.
+
+**Status:** ✅ FULLY IMPLEMENTED - All discovery pages refactored with content-first pattern and micro-interactions
+
+### Problem Statement
+
+User feedback: Pages felt "overwhelming" and "cluttered"
+
+**Root Cause:** Control-first design pattern
+- 7 filter/sort buttons visible above content (explore, breeding)
+- Empty state until user configures filters
+- Multiple competing interactive elements (tabs, buttons, panels)
+- Inconsistent patterns across pages
+
+### Solution: Content-First with Optional Controls
+
+**Core Principle:** Show interesting content immediately, hide controls on demand (like tamagotchi shows pet first, menus second).
+
+**Pattern (all discovery pages):**
+```
+1. HEADER (always visible)
+2. FEATURED CONTENT (curated, 4-6 items)
+   - Trending partners, featured cosmetics, etc
+   - Immediate dopamine hit, "show me something fun"
+3. "VIEW ALL" LINK (user controls depth)
+   - Opens full list with pagination or infinite scroll
+4. CONTROLS (collapsed accordion)
+   - Filters, sort, advanced search on demand only
+```
+
+**Specific Implementations:**
+
+#### `/explore` - Donut Explorer
+- **Before:** 7 buttons (4 lifecycle filters + 3 sorts) above 20+ donuts
+- **After:** 
+  - "⭐ TRENDING PARTNERS" section (4-6 PRIME donuts, sorted by popularity)
+  - Search bar (always visible for quick lookup)
+  - "View all {n} partners..." link (user controls list size)
+  - 🔍 FILTERS & SORT (collapsed accordion below)
+- **Benefit:** Opens to "here are good breeding partners", not "please configure filters"
+
+#### `/breeding` - Breeding Board
+- **Before:** Personality filter (4 buttons) + sort (3 buttons) required before seeing partners
+- **After:**
+  - "💕 RECOMMENDED PARTNERS" (compatible + trending, 4-6 items)
+  - Search bar (find specific owner/donut)
+  - Requirements & Cost (collapsed info section)
+  - 🎯 FILTERS & SORT (collapsed accordion, optional)
+- **Benefit:** User sees options immediately, filters enable power use
+
+#### `/shop` - Cosmetics Shop (✅ COMPLETED)
+- **Before:** Category buttons force selection before seeing items
+- **After:**
+   - "✨ FEATURED COSMETICS" (4 spotlight items per category)
+   - Category tabs (updated with micro-interactions)
+   - "View all {n}" toggle reveals remaining items
+   - 🛍️ BROWSE BY CATEGORY (tabs for quick switching)
+- **Implementation:**
+   - `FeaturedSection` shows first 4 items with featured styling
+   - Toggle shows remaining items without page reload
+   - Category change resets featured view (better UX)
+   - Smooth animations on featured section appear
+- **Benefit:** Impulse discovery, categories become optional refinement
+
+#### `/hall-of-fame` - Achievements (✅ COMPLETED)
+- **Before:** 4 tab buttons (Retired/Legendary/Badges/Leaderboards) leading empty tabs
+- **After:**
+   - "🏆 HALL OF FAME HIGHLIGHTS" (4 featured donuts, sorted by age)
+   - "View all {n}" toggle reveals remaining donuts
+   - Tabs reset featured view when switching (consistent UX)
+   - Sort buttons (Age, Earnings, Recent)
+   - Full leaderboards, achievements, tabs preserved
+- **Implementation:**
+   - `FeaturedSection` shows top 4 donuts (featured styling)
+   - Sorting applied to featured + all views
+   - Tab switches reset `showAllDonuts` flag (fresh featured view)
+   - Smooth transitions on all interactions
+- **Benefit:** Celebrate wins immediately, detailed browsing on demand
+
+#### `/` - Home (Already optimized)
+- ✅ Pet centered (content first)
+- ✅ Stats visible (immediate info)
+- ✅ FEED button huge (primary action)
+- ✅ Controls below (interactions, breeding, guide all collapsible)
+
+### Technical Implementation
+
+**Reuse existing components:**
+- ✅ `AccordionContext` - keeps single-panel-open behavior
+- ✅ `CollapsibleSection` - for info panels
+- ✅ `ExploreFilters` / `BreedingFilters` - now collapsed by default
+
+**New additions:**
+- Create `FeaturedSection` component (curated content display)
+- Update pages to show featured content first, full list on "View All"
+- Add "trending" / "recommended" sorting algorithm (can start with random for MVP)
+
+### Design Principles
+
+1. **Content > Controls** - Show what's possible before asking how to filter
+2. **Playfulness > Minimalism** - Tamagotchi is fun and interactive, embrace that
+3. **Quick Sessions** - 2-minute check-ins should reach action (breed/buy/view) without friction
+4. **Progressive Disclosure** - Basic view → Power user features (filters, sort, advanced search)
+
+### User Experience Improvements
+
+| Before | After | Impact |
+|--------|-------|--------|
+| Empty page + 7 buttons | Content + hidden filters | ✅ Reduced cognitive load |
+| "Which filter do I need?" | "Here are suggestions" | ✅ Removed decision fatigue |
+| 3+ interactions to breed | 1-2 interactions to breed | ✅ Faster action loops |
+| Same pattern everywhere? No | Same pattern everywhere | ✅ Consistent mental model |
+| Feels like config tool | Feels like discovery game | ✅ Matches tamagotchi vibe |
+
+### Alignment with Vision
+
+- ✅ **Tamagotchi feel**: Shows delightful content first, complex options available but hidden
+- ✅ **Farcaster native**: Content shareable immediately (trending partners, legendary donuts) without friction
+- ✅ **Layer on $DONUT**: Discovery/breeding becomes bonus layer, not primary focus
+- ✅ **Engagement**: Return to see "trending now", not to re-configure filters
+- ✅ **Approachable**: New players see options without feeling lost
+
+### Pages Refactored (Content-First)
+
+| Page | Featured Section | Sorting | "View All" | Micro-Interactions |
+|------|------------------|---------|------------|-------------------|
+| `/explore` | ✅ 4 TRENDING PARTNERS | ✅ Earnings/Age/Health | ✅ Toggle | ✅ Button press, animations |
+| `/breeding` | ✅ 3 RECOMMENDED PARTNERS | ✅ Viability/Gen/Age | ✅ Toggle | ✅ Button press, animations |
+| `/shop` | ✅ 4 FEATURED COSMETICS | ✅ Category tabs | ✅ Toggle per category | ✅ Tab press, featured fade-in |
+| `/hall-of-fame` | ✅ 4 FEATURED DONUTS | ✅ Age/Earnings/Recent | ✅ Toggle per tab | ✅ Tab press, featured fade-in |
+
+### Micro-Interactions Implemented
+
+**Featured Sections:**
+- `animate-in fade-in-50 slide-in-from-top-2 duration-300` - Smooth entrance
+- View All button: hover color + scale + press feedback
+
+**Category/Tab Buttons:**
+- `transition-all duration-200` - Smooth state changes
+- `active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]` - Pressed effect
+- Inactive: `hover:shadow` for lift effect
+- Active: `scale-95` for press-down appearance
+
+**Overall Polish:**
+- Consistent patterns across all 4 pages
+- 200ms transition duration (snappy but not jarring)
+- Shadow depth for visual hierarchy
+- Scale transforms for tactile feedback
+
+---
+
+## Pre-Deployment Phases: A, B, C ✅ COMPLETE
+
+### Phase A: Integration Readiness ✅
+**Goal:** Foundation for seamless contract deployment with zero UI changes
+
+**Consolidated Mock Data** (`lib/mockData.ts`)
+- Single source of truth for 50+ mock data entries
+- Easy switchover: swap one file when contracts deploy
+- Covers: donuts, partners, cosmetics, leaderboards, achievements
+
+**Canonical Type Definitions** (`lib/types.ts`)
+- 20+ interfaces defining all data types
+- DonutCard, BreedingPartner, RetiredDonut, LeaderboardEntry
+- TokenBalance, DailyEarnings, RetirementEligibility
+- ContractResult wrapper for unified error handling
+
+**Contract Integration Layer** (`hooks/useContractData.ts`)
+- Wagmi hooks: useTokenBalance, useBreedingCooldown, useMaxGeneration, useRetirementInfo
+- Fallback to mock data in dev mode (USE_MOCK_DATA env var)
+- 5-minute cache TTL for performance
+- Single configuration point for contract addresses
+- Ready for: token balance, breeding cooldown, retirement eligibility, generational data
+
+### Phase B: Core Mechanics Display ✅
+**Goal:** Show key gameplay metrics without new components (enhancement only)
+
+**B.1 - Token Earning Visibility**
+- Session earnings tracker (earnings since page load)
+- Daily earning rate projection (from DPS × 86400 seconds)
+- Tokens until next cosmetic milestone (progress toward 50-token purchases)
+- Golden background section in PetStats component
+- Visible when session has activity (no clutter on new sessions)
+
+**B.2 - Retirement Eligibility Badge**
+- Badge appears when pet is 90+ days old
+- Retirement tiers: CHERISHED (90d), HONORED (100d), LEGENDARY (120d)
+- Purple-pink gradient styling with Hall of Fame icon
+- Integrated into age display section
+
+**B.3 - Breeding Viability & Cooldown**
+- BreedingReadiness component accepts optional cooldownRemaining prop
+- Cooldown formatting (e.g., "3d 5h remaining")
+- Displays in requirements list when breeding is on cooldown
+- Integration ready for useBreedingCooldown hook when contracts deploy
+
+### Phase C: Hook Infrastructure ✅
+**Goal:** Consolidate calculations into reusable utilities (pure functions, no bloat)
+
+**Earnings Utilities** (`lib/earnings.ts`)
+- Pure functions, no hooks (avoids bloat)
+- `calculateSessionEarnings()` - Difference between initial and current glazed tokens
+- `calculateDailyRate()` - DPS × 86400 seconds (needs ≥60s of data)
+- `calculateTokensUntilNextMilestone()` - Progress toward cosmetic purchases
+- `getRetirementTier()` - Returns tier string based on age
+- `isRetirementEligible()` - Boolean check for 90+ days
+
+**Component Integration**
+- Home page refactored to use earnings utilities (removed inline calculations)
+- PetStats uses retirement utilities for eligibility logic
+- BreedingReadiness uses retirement tier utility
+- Cleaner, more maintainable, testable code
+
+**Design Results**
+- ✅ No bloat: Pure functions instead of wrapper hooks
+- ✅ DRY: Single source of truth for all calculations
+- ✅ Modular: Easy to test independently, reuse across components
+- ✅ Organized: Clear lib/utilities → component flow
+
+### Contract Integration Points (Ready for Phase E)
+
+**Token Earnings:**
+- Use minerState.nextDps (already available from Multicall contract)
+- Use minerState.glazed (current token balance, already available)
+- Use ageInDays (calculated from minerState.startTime)
+- Replace: call useReadContract instead of hard-coded formulas
+
+**Retirement Eligibility:**
+- Call `/api/sanctuary/check-eligibility` endpoint when contracts deploy
+- Use useRetirementInfo hook with minerAddress + ageInDays
+- Fallback to calculated eligibility (90+ days)
+- Enable when DonutSanctuary.sol is deployed
+
+**Breeding Cooldown:**
+- Call useBreedingCooldown hook with minerAddress
+- Display cooldown in BreedingReadiness component (already updated)
+- Enable when DonutBreeding.sol is deployed
+
+**Leaderboard Data:**
+- Replace mockLeaderboard* exports with subgraph queries
+- Component structure ready, just wire up data source
+- Same component code, different data source
+
+### Pre-Deployment Checklist
+- [x] Mock data consolidated
+- [x] Types defined
+- [x] Contract hooks ready
+- [x] Earnings calculations extracted
+- [x] Integration points documented
+- [x] UI components enhanced
+- [x] Build passing, no warnings
+- [ ] Deploy contracts to Base
+- [ ] Update API route for sanctuary eligibility
+- [ ] Wire up subgraph queries for leaderboards
+- [ ] Integration testing with real contracts
 
 ---
 

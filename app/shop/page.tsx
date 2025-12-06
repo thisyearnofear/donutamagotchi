@@ -6,6 +6,8 @@ import { base } from "wagmi/chains";
 import type { Address } from "viem";
 import { NavBar } from "@/components/nav-bar";
 import { Button } from "@/components/ui/button";
+import { FeaturedSection } from "@/components/featured-section";
+import { AccordionProvider } from "@/components/accordion-context";
 import { CONTRACT_ADDRESSES, DONUTAMAGOTCHI_TOKEN_ABI } from "@/lib/contracts";
 
 interface CosmeticItem {
@@ -23,6 +25,7 @@ export default function ShopPage() {
   const { address } = useAccount();
   const [activeCategory, setActiveCategory] = useState<"hats" | "animations" | "themes" | "names">("hats");
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
+  const [showAllInCategory, setShowAllInCategory] = useState(false);
 
   // Get user's token balance
   const { data: userTokenBalance = 0n } = useReadContract({
@@ -166,6 +169,8 @@ export default function ShopPage() {
   ];
 
   const filteredItems = cosmetics.filter((item) => item.category === activeCategory);
+  const featuredItems = filteredItems.slice(0, 4);
+  const remainingItems = filteredItems.slice(4);
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
@@ -197,15 +202,21 @@ export default function ShopPage() {
     }
   };
 
+  const handleCategoryChange = (category: "hats" | "animations" | "themes" | "names") => {
+    setActiveCategory(category);
+    setShowAllInCategory(false);
+  };
+
   return (
     <main className="flex h-screen w-screen justify-center overflow-hidden bg-gradient-to-b from-purple-900 via-pink-900 to-orange-900 font-mono text-white">
-      <div
-        className="relative flex h-full w-full max-w-[520px] flex-1 flex-col overflow-hidden px-3 pb-3"
-        style={{
-          paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
-          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)",
-        }}
-      >
+      <AccordionProvider mode="single">
+        <div
+          className="relative flex h-full w-full max-w-[520px] flex-1 flex-col overflow-hidden px-3 pb-3"
+          style={{
+            paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
+            paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)",
+          }}
+        >
         <div className="flex flex-1 flex-col overflow-y-auto space-y-3">
           {/* Header */}
           <div className="bg-yellow-300 border-4 border-black rounded-2xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
@@ -230,47 +241,104 @@ export default function ShopPage() {
             </div>
           </div>
 
+          {/* Featured Section */}
+          {!showAllInCategory && featuredItems.length > 0 && (
+            <FeaturedSection
+              title={`${activeCategory.toUpperCase().replace("_", " ")} COSMETICS`}
+              emoji="✨"
+              viewAllLabel={`View all ${filteredItems.length}`}
+              onViewAll={() => setShowAllInCategory(true)}
+            >
+              <div className="grid grid-cols-2 gap-2">
+                {featuredItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`border-4 ${getRarityBorder(
+                      item.rarity
+                    )} rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${getRarityColor(
+                      item.rarity
+                    )} space-y-2`}
+                  >
+                    {/* Emoji */}
+                    <div className="text-3xl text-center">{item.emoji}</div>
+
+                    {/* Name & Rarity */}
+                    <div>
+                      <div className="text-xs font-black text-black text-center">{item.name}</div>
+                      <div className="text-[9px] text-black/60 font-bold text-center uppercase">
+                        {item.rarity}
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <div className="text-[9px] text-black/70 text-center">{item.description}</div>
+
+                    {/* Price or Owned */}
+                    {item.owned ? (
+                      <div className="bg-green-400 border-2 border-black rounded-lg py-1 text-center font-black text-[10px] text-black">
+                        ✅ OWNED
+                      </div>
+                    ) : (
+                      <>
+                        <div className="bg-yellow-200 border-2 border-black rounded-lg py-1 text-center font-black text-[11px] text-black">
+                           {item.price} TOKENS
+                         </div>
+                         <Button
+                           className="w-full bg-gradient-to-b from-pink-400 to-pink-600 border-2 border-black text-black text-[10px] font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50 py-1 h-auto"
+                           disabled={!address || Number(userTokenBalance) / 1e18 < item.price || purchasingId === item.id}
+                           onClick={() => handlePurchase(item)}
+                         >
+                           {purchasingId === item.id ? "⏳ BUYING..." : "BUY"}
+                         </Button>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </FeaturedSection>
+          )}
+
           {/* Category Tabs */}
           <div className="grid grid-cols-4 gap-1.5">
             <button
-              onClick={() => setActiveCategory("hats")}
-              className={`py-2 px-2 rounded-lg border-3 border-black font-black text-[10px] transition-all ${
+              onClick={() => handleCategoryChange("hats")}
+              className={`py-2 px-2 rounded-lg border-3 border-black font-black text-[10px] transition-all duration-200 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${
                 activeCategory === "hats"
-                  ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                  : "bg-white text-black/60 hover:bg-gray-100"
+                  ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] scale-95"
+                  : "bg-white text-black/60 hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
               }`}
             >
               👒
               <div>HATS</div>
             </button>
             <button
-              onClick={() => setActiveCategory("animations")}
-              className={`py-2 px-2 rounded-lg border-3 border-black font-black text-[10px] transition-all ${
+              onClick={() => handleCategoryChange("animations")}
+              className={`py-2 px-2 rounded-lg border-3 border-black font-black text-[10px] transition-all duration-200 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${
                 activeCategory === "animations"
-                  ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                  : "bg-white text-black/60 hover:bg-gray-100"
+                  ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] scale-95"
+                  : "bg-white text-black/60 hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
               }`}
             >
               🎬
               <div>ANIM</div>
             </button>
             <button
-              onClick={() => setActiveCategory("themes")}
-              className={`py-2 px-2 rounded-lg border-3 border-black font-black text-[10px] transition-all ${
+              onClick={() => handleCategoryChange("themes")}
+              className={`py-2 px-2 rounded-lg border-3 border-black font-black text-[10px] transition-all duration-200 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${
                 activeCategory === "themes"
-                  ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                  : "bg-white text-black/60 hover:bg-gray-100"
+                  ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] scale-95"
+                  : "bg-white text-black/60 hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
               }`}
             >
               🎨
               <div>THEMES</div>
             </button>
             <button
-              onClick={() => setActiveCategory("names")}
-              className={`py-2 px-2 rounded-lg border-3 border-black font-black text-[10px] transition-all ${
+              onClick={() => handleCategoryChange("names")}
+              className={`py-2 px-2 rounded-lg border-3 border-black font-black text-[10px] transition-all duration-200 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${
                 activeCategory === "names"
-                  ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                  : "bg-white text-black/60 hover:bg-gray-100"
+                  ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] scale-95"
+                  : "bg-white text-black/60 hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
               }`}
             >
               ✏️
@@ -281,7 +349,7 @@ export default function ShopPage() {
           {/* Items Grid */}
           {filteredItems.length > 0 ? (
             <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto">
-              {filteredItems.map((item) => (
+              {(showAllInCategory ? filteredItems : remainingItems).map((item) => (
                 <div
                   key={item.id}
                   className={`border-4 ${getRarityBorder(
@@ -347,7 +415,8 @@ export default function ShopPage() {
           </div>
         </div>
       </div>
-      <NavBar />
+        <NavBar />
+      </AccordionProvider>
     </main>
   );
 }

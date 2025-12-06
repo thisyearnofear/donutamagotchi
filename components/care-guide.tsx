@@ -1,14 +1,40 @@
 "use client";
 
 import { useState } from "react";
+import { useAccordion } from "./accordion-context";
+
+const ACCORDION_ID = "guide";
 
 export function CareGuide() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [fallbackOpen, setFallbackOpen] = useState(false);
+
+  let accordion: ReturnType<typeof useAccordion> | null = null;
+  try {
+    accordion = useAccordion();
+  } catch {
+    // Not inside AccordionProvider, use local state fallback
+  }
+
+  const isOpen = accordion ? accordion.isOpen(ACCORDION_ID) : fallbackOpen;
+  const handleToggle = () => {
+    if (accordion) {
+      accordion.toggle(ACCORDION_ID);
+    } else {
+      setFallbackOpen((prev) => !prev);
+    }
+  };
+  const handleClose = () => {
+    if (accordion) {
+      accordion.close(ACCORDION_ID);
+    } else {
+      setFallbackOpen(false);
+    }
+  };
 
   if (!isOpen) {
     return (
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={handleToggle}
         className="w-full bg-purple-400 border-3 border-black rounded-lg p-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all"
       >
         <div className="text-[10px] font-black text-black">📖 QUICK GUIDE</div>
@@ -21,7 +47,7 @@ export function CareGuide() {
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-black text-black">📖 HOW TO PLAY</span>
         <button
-          onClick={() => setIsOpen(false)}
+          onClick={handleClose}
           className="text-xs font-black text-black hover:bg-black/10 rounded px-1"
         >
           ✕

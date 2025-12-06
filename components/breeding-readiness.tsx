@@ -1,21 +1,36 @@
 "use client";
 
 import { getLifecycleInfo } from "@/lib/traits";
+import { getRetirementTier } from "@/lib/earnings";
 import { Button } from "./ui/button";
 
 interface BreedingReadinessProps {
   createdAtSeconds: number;
   health: number;
   cleanliness: number;
+  cooldownRemaining?: number; // Seconds until can breed again (from contract)
 }
 
 export function BreedingReadiness(props: BreedingReadinessProps) {
   const lifecycleInfo = getLifecycleInfo(props.createdAtSeconds * 1000);
   const breedingScore = (props.health + props.cleanliness) / 2;
 
-  const canBreed = lifecycleInfo.stage === "prime" && breedingScore >= 30;
+  // Check if breeding is on cooldown (from contract)
+  const isOnCooldown = props.cooldownRemaining && props.cooldownRemaining > 0;
+  const canBreed = lifecycleInfo.stage === "prime" && breedingScore >= 30 && !isOnCooldown;
   const isExcellent = breedingScore >= 70;
   const isGood = breedingScore >= 50;
+
+  // Format cooldown time
+  const formatCooldown = (seconds: number): string => {
+    if (seconds <= 0) return "Ready!";
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${mins}m`;
+    return `${mins}m`;
+  };
 
   const getStatusColor = () => {
     if (!canBreed) return "bg-gray-400";
@@ -72,6 +87,12 @@ export function BreedingReadiness(props: BreedingReadinessProps) {
               <span>{props.cleanliness >= 50 ? "✅" : "⭕"}</span>
               <span>Cleanliness ≥ 50% ({Math.round(props.cleanliness)}%)</span>
             </div>
+            {isOnCooldown && (
+              <div className="flex items-center gap-1 text-amber-700 font-bold">
+                <span>⏳</span>
+                <span>Cooldown: {formatCooldown(props.cooldownRemaining!)}</span>
+              </div>
+            )}
           </div>
 
           {/* Breeding Cost Info */}
