@@ -24,9 +24,6 @@ import { CollapsibleStats } from "@/components/collapsible-stats";
 import { CollapsibleAdvanced } from "@/components/collapsible-advanced";
 import { InteractionPanel } from "@/components/interaction-panel";
 import { AddToFarcasterDialog } from "@/components/add-to-farcaster-dialog";
-import { PetStatusIndicator } from "@/components/pet-status-indicator";
-import { StatCard } from "@/components/stat-card";
-import { EarningDisplay } from "@/components/earning-display";
 import { BreedingBadge } from "@/components/breeding-badge";
 import { CareGuide } from "@/components/care-guide";
 
@@ -537,30 +534,16 @@ export default function HomePage() {
     neynarUser?.user?.username || 
     (hasMiner ? `${minerAddress.slice(0, 6)}...${minerAddress.slice(-4)}` : "Nobody");
 
-  // Calculate lifecycle stage and DPS multiplier
-  const getLifecycleStageInfo = (elapsedSeconds: number) => {
+  // Calculate lifecycle stage from elapsed time
+  const getLifecycleStage = (elapsedSeconds: number): "birth" | "growth" | "prime" | "twilight" => {
     const elapsedDays = elapsedSeconds / 86400;
-    let stage: "birth" | "growth" | "prime" | "twilight";
-    let multiplier: number;
-
-    if (elapsedDays < 1) {
-      stage = "birth";
-      multiplier = 0.5; // 50%
-    } else if (elapsedDays < 30) {
-      stage = "growth";
-      multiplier = 0.5 + ((elapsedDays - 1) / 29) * 0.5; // scales from 50% to 100%
-    } else if (elapsedDays < 90) {
-      stage = "prime";
-      multiplier = 1.0; // 100%
-    } else {
-      stage = "twilight";
-      multiplier = 1.0; // 100%
-    }
-
-    return { stage, multiplier };
+    if (elapsedDays < 1) return "birth";
+    if (elapsedDays < 30) return "growth";
+    if (elapsedDays < 90) return "prime";
+    return "twilight";
   };
 
-  const lifecycleInfo = getLifecycleStageInfo(glazeElapsedSeconds);
+  const lifecycleStage = getLifecycleStage(glazeElapsedSeconds);
 
   return (
     <main className="flex h-screen w-screen justify-center overflow-hidden bg-gradient-to-b from-purple-900 via-pink-900 to-orange-900 font-mono text-white">
@@ -600,53 +583,7 @@ export default function HomePage() {
             />
           </div>
 
-          {/* Status Indicator - Always Visible */}
-          {hasMiner && (
-            <PetStatusIndicator
-              health={petState.health}
-              lastFedTime={minerState?.startTime ? Number(minerState.startTime) * 1000 : Date.now()}
-              isDying={petState.state === "dead"}
-            />
-          )}
-
-          {/* Key Stats - Quick Reference */}
-          {hasMiner && (
-            <div className="grid grid-cols-2 gap-2">
-              <StatCard
-                icon="❤️"
-                label="HEALTH"
-                value={petState.health}
-                consequence="Affects feeding urgency"
-                color="bg-blue-300"
-              />
-              <StatCard
-                icon="😊"
-                label="HAPPINESS"
-                value={petState.happiness}
-                consequence="Affects breeding viability"
-                color="bg-pink-300"
-              />
-            </div>
-          )}
-
-          {/* Lifecycle & Earning Display */}
-          {hasMiner && (
-            <EarningDisplay
-              baseRate={`${formatTokenAmount(minerState!.nextDps, DONUT_DECIMALS, 2)}/sec`}
-              multiplier={lifecycleInfo.multiplier}
-              lifecycleStage={lifecycleInfo.stage}
-            />
-          )}
-
-          {/* Breeding Badge */}
-          {hasMiner && (
-            <BreedingBadge
-              lifecycleStage={lifecycleInfo.stage}
-              happiness={petState.happiness}
-            />
-          )}
-
-          {/* Collapsible Stats */}
+          {/* Collapsible Stats (now always shows status indicator + key stats) */}
           <CollapsibleStats
             happiness={petState.happiness}
             health={petState.health}
@@ -656,7 +593,16 @@ export default function HomePage() {
             energyLevel={traits?.energy ?? 50}
             satisfaction={traits?.satisfaction ?? 50}
             isDying={petState.state === "dead"}
+            lastFedTime={minerState?.startTime ? Number(minerState.startTime) * 1000 : Date.now()}
           />
+
+          {/* Breeding Badge - Discoverable Path to Breeding */}
+          {hasMiner && (
+            <BreedingBadge
+              lifecycleStage={lifecycleStage}
+              happiness={petState.happiness}
+            />
+          )}
 
           {/* Collapsible Advanced Features (Traits, Lifecycle, Breeding) */}
           {hasMiner && (

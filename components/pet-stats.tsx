@@ -9,6 +9,7 @@ interface PetStatsProps {
   energyLevel?: number;
   satisfaction?: number;
   isDying?: boolean;
+  lastFedTime?: number; // milliseconds
 }
 
 export function PetStats({ 
@@ -19,7 +20,8 @@ export function PetStats({
   grooming = 50,
   energyLevel = 50,
   satisfaction = 50,
-  isDying = false
+  isDying = false,
+  lastFedTime = Date.now()
 }: PetStatsProps) {
   // Determine critical status
   const isCriticalHealth = health < 10;
@@ -27,10 +29,53 @@ export function PetStats({
   const isWarningHealth = health < 30;
   const isWarningHappiness = happiness < 30;
 
+  // Status indicator
+  let status: "healthy" | "needs-care" | "critical" | "dead";
+  let statusLabel: string;
+  let statusEmoji: string;
+  let statusBg: string;
+
+  if (isDying) {
+    status = "dead";
+    statusLabel = "DYING";
+    statusEmoji = "💀";
+    statusBg = "bg-red-600";
+  } else if (health < 20) {
+    status = "critical";
+    statusLabel = "CRITICAL";
+    statusEmoji = "🔴";
+    statusBg = "bg-red-500";
+  } else if (health < 50) {
+    status = "needs-care";
+    statusLabel = "NEEDS CARE";
+    statusEmoji = "🟡";
+    statusBg = "bg-yellow-500";
+  } else {
+    status = "healthy";
+    statusLabel = "HEALTHY";
+    statusEmoji = "🟢";
+    statusBg = "bg-green-500";
+  }
+
+  const minutesSinceFed = Math.floor((Date.now() - lastFedTime) / 1000 / 60);
+
   return (
     <div className={`border-4 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-3 ${
       isDying ? "bg-red-200 animate-pulse" : "bg-white"
     }`}>
+      {/* Status Indicator */}
+      <div className={`${statusBg} border-3 border-black rounded-lg p-2`}>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5">
+            <span className="text-lg">{statusEmoji}</span>
+            <span className="font-black text-black text-sm">{statusLabel}</span>
+          </div>
+          <div className="text-right text-[9px] font-bold text-black">
+            <div>Health: {health.toFixed(0)}%</div>
+            <div>Fed: {minutesSinceFed}m ago</div>
+          </div>
+        </div>
+      </div>
       {/* Critical Alerts */}
       {(isCriticalHealth || isCriticalHappiness) && (
         <div className="bg-red-500 border-2 border-black rounded-lg p-2 text-center">
@@ -49,8 +94,14 @@ export function PetStats({
         </div>
       )}
 
-      <PixelStatBar label="HEALTH" value={health} emoji="❤️" color="red" />
-      <PixelStatBar label="HAPPY" value={happiness} emoji="😊" color="yellow" />
+      <div>
+        <PixelStatBar label="HEALTH" value={health} emoji="❤️" color="red" />
+        <div className="text-[8px] text-black/60 font-bold ml-6 mt-0.5">↳ Affects feeding urgency</div>
+      </div>
+      <div>
+        <PixelStatBar label="HAPPY" value={happiness} emoji="😊" color="yellow" />
+        <div className="text-[8px] text-black/60 font-bold ml-6 mt-0.5">↳ Affects breeding viability</div>
+      </div>
       
       {/* Development stats (shown conditionally) */}
       <div className="pt-1 border-t-2 border-black border-dashed space-y-2">
