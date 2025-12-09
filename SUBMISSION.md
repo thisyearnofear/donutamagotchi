@@ -169,95 +169,59 @@
 
 ---
 
-## 🛡️ Community Alignment Implementation (COMPLETE)
+## 🛡️ Simplified Token Architecture
 
-### Phase 1A: Core Infrastructure ✅
+### Core Design Principles
 
-1. **Smart Contract: Transparent Economics** ✅
-   - `DonutamagotchiToken.sol` updated with `processCosmeticsRevenue()`
-   - Auto-routes cosmetics revenue:
-     * 25% → `lpLockAddress` (permanent $DONUT-WETH LP)
-     * 30% → burn (deflation)
-     * 45% → treasury (ecosystem operations)
-   - Tracked with: `totalCosmeticsRevenue`, `totalLockedForLP`, `totalBurnedFromCosmetics`
-   - New events: `CosmeticsRevenueProcessed`, `LPLockAddressUpdated`
-   - View function: `getCosmeticsBreakdown()` returns all splits + percentages
-   - Constructor requires `lpLockAddress` parameter to prevent changes
-   - `setLPLockAddress()` allows governance rotation of LP address
-   - Process flow: Vault calls `processCosmeticsRevenue(1000e18)` → 250e18 → LP lock, 300e18 → burn, 450e18 → treasury
+1. **SIMPLE**: ~215 lines of contract code (vs ~450 previously)
+2. **ALIGNED**: More $DONUT activity = more staker rewards
+3. **DEFLATIONARY**: Burn on cosmetics and breeding
+4. **COMPOSABLE**: Works with existing $DONUT protocol unchanged
 
-2. **Frontend: Transparency Dashboard** ✅
-   - Component: `components/transparency-dashboard.tsx`
-   - Page: `app/transparency/page.tsx`
-   - Real-time on-chain tracking via `readContract`
-   - Shows locked LP, burned tokens, treasury allocation, team vesting progress
-   - Visual progress bars + percentage breakdowns
-   - FAQ on ecosystem-first economics
-   - Verification instructions for community audits
-   - Updated nav: "PROOF" button links to `/transparency`
+### Token Utility
 
-3. **Fair Launch with Team Vesting** ✅
-   - 7.5% team allocation (75M tokens)
-   - Linear vesting over 12 months (~0.625% per month)
-   - `claimTeamVesting()` function releases tokens monthly
-   - `getTeamVestingInfo()` shows vesting progress (auditable)
-   - Team address defined in constructor
-   - Prevents large dumps while ensuring sustainability
-   - All other tokens minted only via:
-     - `mintPlayToEarn()` for gameplay rewards
-     - `mintLiquidity()` for initial LP
-     - Staking rewards (earned)
-   - Governance: voting rights tied to `stakedBalance` (not `balanceOf`)
+| Action | Effect |
+|--------|--------|
+| **Stake** | Earn share of 40% fee pool (ETH) |
+| **Stake 1M+** | Get 10% DPS boost when owning donut |
+| **Care well** | Earn tokens while feeding/caring |
+| **Cosmetics** | Burn tokens for visual upgrades |
+| **Breed** | Burn 1000 tokens to create offspring |
 
-4. **Community Engagement Protocol** (Ready to Deploy)
-   - `/transparency` page with FAQ + community commitment section
-   - Monthly reports can be auto-generated from `getCosmeticsBreakdown()`
-   - GitHub-ready for public discussions
-   - Contract events are indexed for transparency
+### Fee Flow (via 0xSplit)
 
-5. **Smart Contract Integration Ready**
-   - Constructor now requires `lpLockAddress` parameter
-   - `setLPLockAddress()` allows updates (for governance rotation)
-   - All revenue processing is automatic and immutable
-   - Public view functions for community verification
+```
+5% App Provider Fee (from $DONUT feeding)
+├── 60% → Operations
+└── 40% → DonutamagotchiToken contract → Staker Pool
+```
 
-### How It Prevents Donuette Scenario
+### Why This Works
 
-❌ DONUETTE PROBLEM          → ✅ OUR SOLUTION
-─────────────────────────────────────────────────
-Fees dumped to exchange    →  Automatic LP lock (25%)
-No locked LP (rug risk)    →  LP tokens burned to dead address
-Continuous sell pressure   →  30% burned (deflation)
-Non-responsive to concerns →  Public transparency page visible from nav
-Extractive appearance      →  Fair launch, no team allocation
-No proof of alignment      →  On-chain verifiable, auditable
-No transparency            →  Real-time dashboard + FAQ
+1. **Always engaged**: Stakers earn even without owning donut
+2. **Aligned incentives**: More feeding = more staker rewards
+3. **Simple to audit**: Minimal contract complexity
+4. **Direct LP**: $DONUT/$DONUTAMAGOTCHI pairing
 
-### Key Metrics for Success
+### Contract Changes
 
-✓ Transparent: All fees visible on-chain
-✓ Immutable: Contract prevents deviation from percentages
-✓ Fair: No team token allocation
-✓ Ecosystem-aligned: 25% locked LP benefits $DONUT
-✓ Community-responsive: Public dashboard shows commitment
-✓ Auditable: Anyone can verify numbers via getCosmeticsBreakdown()
+**Removed Complexity:**
+- ❌ Complex 25/30/45 revenue splits
+- ❌ Treasury/liquidity allocation caps
+- ❌ Team vesting mechanics
+- ❌ Governance voting thresholds
+- ❌ Cosmetics vault routing
+- ❌ LP lock mechanisms
 
-Event indexing:
-  - CosmeticsRevenueProcessed: indexed on cosmetics revenue
-  - LPLockAddressUpdated: indexed on governance changes
-  - Both logged for community audits
-
-View function getCosmeticsBreakdown():
-  - No gas cost (pure view)
-  - Returns 7 values: amounts + percentages
-  - Used by dashboard to populate real-time data
-  - Can be called by anyone, anytime
+**Added:**
+- ✅ Simple staking with ETH fee share
+- ✅ DPS boost for high stakers
+- ✅ Backend-signed care rewards
+- ✅ Direct burn for cosmetics/breeding
 
 ## 📋 Additional Feedback (Non-Critical)
 
 1. **Breeding Costs**: 1000 $DONUTAMAGOTCHI tokens per breed (sustainable)?
-2. **Cosmetics Pricing**: 50-500 token range reasonable?
-3. **LLM Integration**: Phase 5 feature worth post-launch development?
 4. **Guild System**: Pool-based variant worth exploring (Phase 4+)?
 
 ---

@@ -2,160 +2,181 @@
 
 This directory contains all smart contracts for the Donutamagotchi ecosystem.
 
+## Design Principles
+
+- **SIMPLE**: Minimal code, easy to audit
+- **ALIGNED**: More $DONUT activity = more staker rewards
+- **DEFLATIONARY**: Burn on cosmetics and breeding
+- **COMPOSABLE**: Works with existing $DONUT protocol unchanged
+
+---
+
 ## Contract Structure
 
 ### `/donutamagotchi`
-All new contracts specific to the $DONUTAMAGOTCHI token and ecosystem features.
 
-#### DonutamagotchiToken.sol
-**ERC20 token for the Donutamagotchi ecosystem**
+#### DonutamagotchiToken.sol (~215 lines)
 
-- **Total Supply**: 1 Billion tokens
-- **Distribution**:
-  - 70% (700M) → Play-to-earn rewards
-  - 20% (200M) → Treasury & cosmetics operations
-  - 10% (100M) → Liquidity & staking rewards
+**Simplified ERC20 token with staking and fee share**
 
-**Key Features**:
-- Minting tied to game events (oracle-based)
-- Daily mint cap: 5M tokens/day (prevents hyperinflation)
-- 30% of cosmetics revenue auto-burns (deflationary)
-- 1000 tokens burned per breeding (demand sink)
-- Staking for 5% APY + governance voting (10M+ to vote)
-- No presale or whitelist (fair launch)
+**Core Features**:
+- **Staking**: Stake tokens to earn share of ETH fee pool
+- **DPS Boost**: 1M+ staked = 10% DPS boost when owning donut
+- **Burn**: Used for cosmetics and breeding
+- **Care Rewards**: Backend-signed minting for gameplay actions
 
-**Minting Reasons**:
-```
-- daily_login: +10 tokens
-- pet_interaction: +5 tokens
-- feeding_bonus: +10 tokens
-- donut_explorer: +10 tokens (discovering other pets)
-- breeding: +25 tokens (for offspring owners)
-```
+**Token Info**:
+- **Total Supply**: 1 Billion tokens (fixed, no inflation)
+- **Distribution**: Minted to initial holder for LP seeding + rewards reserve
 
 **Staking Benefits**:
-- 5% annual percentage yield (APY)
-- Governance voting rights (10M+ staked)
-- Vote on cosmetics shop additions
+| Stake Amount | Benefit |
+|--------------|---------|
+| Any | Share of 40% fee pool (ETH) |
+| 1M+ | 10% DPS boost when owning donut |
+
+**Fee Flow (via 0xSplit)**:
+```
+5% App Provider Fee (from $DONUT feeding)
+├── 60% → Operations
+└── 40% → Staker Pool → Contract receives ETH → Stakers claim
+```
+
+**Care Rewards** (backend-signed):
+```
+feeding: Tokens for feeding your donut
+daily_checkin: Small tokens for daily engagement
+```
 
 ---
 
-#### DonutBreeding.sol
+#### DonutBreeding.sol (Phase 2)
+
 **ERC721 NFT contract tracking offspring and pedigree**
 
-- **Purpose**: Create and track breeding relationships between parent donuts
-- **Parents**: Referenced by miner contract address (not NFT ID) since donuts are tracked in $DONUT mining protocol
-- **Cost**: 1000 $DONUTAMAGOTCHI per breed (burned)
-- **Cooldown**: 7 days between breeds for same parent
-
-**Key Features**:
-- Offspring NFTs store genetic data (trait inheritance info)
-- Generation tracking (offspring = max(parentGen) + 1)
-- Pedigree queries (all offspring by parent/owner)
-- Breeding readiness checks
-- Family tree retrieval (parents + generations)
+- **Cost**: 1000 $DONUTAMAGOTCHI burned per breed
+- **Parents**: Referenced by miner address
+- **Cooldown**: 7 days between breeds
+- **Generation**: max(parentGen) + 1
 
 **Traits Inherited**:
 ```
-- Personality: 70% inherit one parent's + 30% mutation
-- Color: Genetic blending of both parents
-- Earning Potential: Average of both (cosmetic, no P2W)
-- Generation: max(parentGen) + 1
-```
-
-**Events**:
-```
-OffspringCreated: When breeding succeeds
-BreedingCooldownApplied: When breeding cooldown starts
+- Personality: 70% inherit + 30% mutation
+- Color: Genetic blending
+- Generation: Tracked on-chain
 ```
 
 ---
 
-#### DonutSanctuary.sol
-**ERC721 NFT contract for retired donuts**
+#### DonutSanctuary.sol (Phase 3+)
 
-- **Purpose**: Preserve retired donuts in perpetuity
-- **Retirement Requirement**: Minimum 90 days old
-- **Effect**: Cannot be stolen, cannot mine, generates passive income
-- **Passive Income**: 0.1 $DONUTAMAGOTCHI per day forever
+**ERC721 NFT for retired donuts**
 
-**Key Features**:
-- Frozen stats at retirement (immutable legacy)
-- Hall of Fame tiers based on achievement:
-  - **LEGENDARY**: 120+ days AND 2000+ $DONUT earned
-  - **HONORED**: 90+ days AND 1000+ $DONUT earned
-  - **CHERISHED**: 90+ days (baseline)
-  - **RETIRED**: Generic retirement
-- Memorial text (epitaph) for each donut
-- Lifetime earnings tracked (DONUT + WETH)
-- Offspring count preserved (legacy lives on)
-
-**Inheritance**:
-- Retired donuts' genetics can be inherited via breeding offspring
-- Breeding with a retired parent's offspring maintains bloodline
-- Creates "legacy" gameplay (dead donuts live through descendants)
+- **Requirement**: 90+ days old
+- **Effect**: Preserved in Hall of Fame forever
+- **Tiers**: Legendary, Honored, Cherished, Retired
 
 ---
 
-## Integration Notes
+## Integration
 
 ### With $DONUT Protocol
-- **No changes to core $DONUT contracts** - full backward compatibility
-- Donutamagotchi operates as enhancement layer (builder code model)
-- Treasury collects cosmetics revenue to support $DONUT-WETH liquidity pool
-- Breeding mechanics independent from mining mechanics
+- **No changes** to core $DONUT contracts
+- Donutamagotchi is a pure enhancement layer
+- Fee routing via 0xSplit (app provider address)
+
+### With 0xSplit
+Configure the app provider address in $DONUT to point to a 0xSplit:
+- 60% → Operations wallet
+- 40% → DonutamagotchiToken contract (staker pool)
 
 ### Frontend Integration
-1. **Token Minting**: Backend oracle calls `mintPlayToEarn()` with game events
-2. **Breeding Flow**:
-   - User approves 1000 $DONUTAMAGOTCHI for DonutBreeding
-   - Frontend calls `breed(parentA, parentB, geneticData)`
-   - NFT minted to offspring owner
-3. **Retirement Flow**:
-   - User calls `retireDonut()` with final stats
-   - NFT minted to Sanctuary
-   - Donut no longer mineable
-4. **Staking**: User calls `stake()` with tokens → earns 5% APY
+
+1. **Staking**:
+   ```typescript
+   // Stake tokens
+   await token.stake(amount);
+   
+   // Claim ETH fees
+   await token.claimFees();
+   
+   // Check DPS boost
+   const hasBoost = await token.hasDPSBoost(userAddress);
+   ```
+
+2. **Care Rewards** (backend signs, frontend claims):
+   ```typescript
+   // Backend generates signature for care reward
+   const sig = await signCareReward(user, amount, reason, nonce);
+   
+   // Frontend claims
+   await token.mintCareReward(user, amount, reason, nonce, sig);
+   ```
+
+3. **Breeding** (Phase 2):
+   ```typescript
+   // Burn tokens for breeding
+   await token.burnForBreeding();
+   
+   // Then call breeding contract
+   await breeding.breed(parentA, parentB, geneticData, signature);
+   ```
 
 ---
 
-## Deployment Checklist
+## Deployment
 
-### Pre-Deployment
-- [ ] Audit contracts (especially token minting caps)
-- [ ] Test on Base testnet
-- [ ] Verify minter address (backend oracle)
-- [ ] Verify cosmetics vault address
-- [ ] Verify treasury address
+### Phase 0: Core Token
 
-### Deployment Order
-1. **DonutamagotchiToken** - Deploy first (others depend on it)
-2. **DonutBreeding** - Needs token address
-3. **DonutSanctuary** - Independent, can deploy anytime
-4. Update contract addresses in frontend (`lib/contracts.ts`)
+1. Deploy `DonutamagotchiToken.sol`:
+   ```
+   Constructor args:
+   - _careSigner: Backend signer address
+   - _initialHolder: Your wallet (for LP seeding)
+   ```
 
-### Post-Deployment
-- [ ] Add liquidity to DEX (Uniswap V3 on Base)
-- [ ] Configure minter in token contract
-- [ ] Test breeding flow end-to-end
-- [ ] Launch staking pool
-- [ ] Enable cosmetics shop
+2. Configure 0xSplit:
+   - Create split with 60/40 (ops/token contract)
+   - Set as app provider address in $DONUT
+
+3. Seed LP:
+   - Create $DONUT/$DONUTAMAGOTCHI pool
+   - Add initial liquidity
+
+4. Reserve tokens:
+   - Transfer portion to contract for care rewards
+   - Keep portion for future breeding/cosmetics
+
+### Phase 2: Breeding
+
+1. Deploy `DonutBreeding.sol`
+2. Update frontend
+
+### Phase 3+: Sanctuary
+
+1. Deploy `DonutSanctuary.sol`
+2. Add Hall of Fame UI
 
 ---
 
-## Security Considerations
+## Security
 
-1. **Token Minting**: Gated behind minter role (backend oracle only)
-2. **Daily Cap**: Prevents runaway inflation
-3. **Breeding Cost**: Burned immediately (no rug risk)
-4. **Retirement**: Immutable once set (preserves trust)
-5. **Staking**: Tokens locked in contract (cannot be withdrawn without claiming rewards)
+1. **No inflation**: Total supply fixed at 1B
+2. **Signed minting**: Only backend can authorize care rewards
+3. **Replay protection**: Signatures can only be used once
+4. **Staker safety**: Tokens locked in contract, ETH distributed proportionally
+5. **Emergency withdraw**: Only if no stakers (safety valve)
 
 ---
 
-## Future Enhancements
+## Removed Complexity
 
-- **Guild System**: Collective donut ownership with shared cosmetics treasury
-- **Cross-Chain**: Bridge $DONUTAMAGOTCHI to other chains (Optimism, Arbitrum)
-- **Cosmetics NFTs**: Ultra-rare trait combinations minted as NFTs
-- **Marketplace**: Secondary trading of breeding offspring NFTs
+The following were intentionally removed for simplicity:
+- ❌ Complex allocation caps (70/20/10 splits)
+- ❌ Treasury minting functions
+- ❌ Team vesting (handled externally)
+- ❌ Governance voting thresholds
+- ❌ Cosmetics vault routing (25/30/45 splits)
+- ❌ LP lock mechanisms
+
+The new design is ~215 lines vs ~450 lines previously.

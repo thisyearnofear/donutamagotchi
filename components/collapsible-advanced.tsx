@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getAgeInDays } from "@/lib/traits";
 import { TraitsDisplay } from "./traits-display";
-import { BreedingViability } from "./breeding-viability";
 import { BreedingReadiness } from "./breeding-readiness";
 import { LifecycleDisplay } from "./lifecycle-display";
 
@@ -74,11 +72,10 @@ function TabButton({
   return (
     <button
       onClick={onClick}
-      className={`flex-1 py-2 px-2 rounded-lg border-2 border-black font-black text-xs transition-all ${
-        active
+      className={`flex-1 py-2 px-2 rounded-lg border-2 border-black font-black text-xs transition-all ${active
           ? "bg-pink-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
           : "bg-gray-600 text-white hover:bg-gray-500"
-      }`}
+        }`}
     >
       <div className="text-lg">{emoji}</div>
       <div>{label}</div>

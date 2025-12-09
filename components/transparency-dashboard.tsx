@@ -4,66 +4,25 @@ import { useEffect, useState } from 'react'
 import { useAccount } from 'wagmi'
 import { readContract } from '@wagmi/core'
 import { wagmiConfig } from '@/lib/wagmi'
+import { CONTRACT_ADDRESSES, DONUTAMAGOTCHI_TOKEN_ABI } from '@/lib/contracts'
+import { formatEther } from 'viem'
 
-const DONUTAMAGOTCHI_TOKEN_ABI = [
-  {
-    name: 'getCosmeticsBreakdown',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [
-      { name: 'totalRevenue', type: 'uint256' },
-      { name: 'lockedForLP', type: 'uint256' },
-      { name: 'burned', type: 'uint256' },
-      { name: 'toTreasury', type: 'uint256' },
-      { name: 'lpLockPercentage', type: 'uint256' },
-      { name: 'burnPercentage', type: 'uint256' },
-      { name: 'treasuryPercentage', type: 'uint256' },
-    ],
-  },
-  {
-    name: 'getTeamVestingInfo',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [
-      { name: 'totalAllocation', type: 'uint256' },
-      { name: 'claimed', type: 'uint256' },
-      { name: 'remaining', type: 'uint256' },
-      { name: 'monthlyRelease', type: 'uint256' },
-      { name: 'elapsedMonths', type: 'uint256' },
-      { name: 'vestingDuration', type: 'uint256' },
-      { name: 'startTime', type: 'uint256' },
-      { name: 'isFullyVested', type: 'bool' },
-    ],
-  },
-] as const
-
-interface CosmeticsData {
-  totalRevenue: bigint
-  lockedForLP: bigint
-  burned: bigint
-  toTreasury: bigint
-  lpLockPercentage: number
-  burnPercentage: number
-  treasuryPercentage: number
+interface StakingData {
+  totalStaked: bigint
+  feePool: bigint
+  totalDistributed: bigint
 }
 
-interface VestingData {
-  totalAllocation: bigint
-  claimed: bigint
-  remaining: bigint
-  monthlyRelease: bigint
-  elapsedMonths: bigint
-  vestingDuration: bigint
-  startTime: bigint
-  isFullyVested: boolean
+interface UserStakingData {
+  staked: bigint
+  pending: bigint
+  hasDpsBoost: boolean
 }
 
 export function TransparencyDashboard() {
-  const { isConnected } = useAccount()
-  const [data, setData] = useState<CosmeticsData | null>(null)
-  const [vestingData, setVestingData] = useState<VestingData | null>(null)
+  const { isConnected, address } = useAccount()
+  const [stakingData, setStakingData] = useState<StakingData | null>(null)
+  const [userStaking, setUserStaking] = useState<UserStakingData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -73,45 +32,52 @@ export function TransparencyDashboard() {
         setLoading(true)
         setError(null)
 
-        // Note: Replace with actual deployed token address
-        const tokenAddress = process.env.NEXT_PUBLIC_DONUTAMAGOTCHI_TOKEN as `0x${string}`
+        const tokenAddress = CONTRACT_ADDRESSES.donutamagotchiToken as `0x${string}`
 
-        const [cosmeticResult, vestingResult] = await Promise.all([
+        // Skip if token not deployed
+        if (tokenAddress === '0x0000000000000000000000000000000000000000') {
+          setLoading(false)
+          return
+        }
+
+        // Fetch global staking data
+        const [totalStaked, feePool] = await Promise.all([
           readContract(wagmiConfig, {
             address: tokenAddress,
             abi: DONUTAMAGOTCHI_TOKEN_ABI,
-            functionName: 'getCosmeticsBreakdown',
+            functionName: 'totalStaked',
           }),
           readContract(wagmiConfig, {
             address: tokenAddress,
             abi: DONUTAMAGOTCHI_TOKEN_ABI,
-            functionName: 'getTeamVestingInfo',
+            functionName: 'feePool',
           }),
         ])
 
-        setData({
-          totalRevenue: cosmeticResult[0],
-          lockedForLP: cosmeticResult[1],
-          burned: cosmeticResult[2],
-          toTreasury: cosmeticResult[3],
-          lpLockPercentage: Number(cosmeticResult[4]),
-          burnPercentage: Number(cosmeticResult[5]),
-          treasuryPercentage: Number(cosmeticResult[6]),
+        setStakingData({
+          totalStaked: totalStaked as bigint,
+          feePool: feePool as bigint,
+          totalDistributed: 0n, // Would need to track this separately
         })
 
-        setVestingData({
-          totalAllocation: vestingResult[0],
-          claimed: vestingResult[1],
-          remaining: vestingResult[2],
-          monthlyRelease: vestingResult[3],
-          elapsedMonths: vestingResult[4],
-          vestingDuration: vestingResult[5],
-          startTime: vestingResult[6],
-          isFullyVested: vestingResult[7],
-        })
+        // Fetch user staking data if connected
+        if (address) {
+          const userInfo = await readContract(wagmiConfig, {
+            address: tokenAddress,
+            abi: DONUTAMAGOTCHI_TOKEN_ABI,
+            functionName: 'getStakingInfo',
+            args: [address],
+          }) as [bigint, bigint, boolean, bigint, bigint]
+
+          setUserStaking({
+            staked: userInfo[0],
+            pending: userInfo[1],
+            hasDpsBoost: userInfo[2],
+          })
+        }
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Failed to fetch transparency data',
+          err instanceof Error ? err.message : 'Failed to fetch data',
         )
       } finally {
         setLoading(false)
@@ -120,24 +86,80 @@ export function TransparencyDashboard() {
 
     if (isConnected) {
       fetchData()
-      // Refresh every 5 minutes
-      const interval = setInterval(fetchData, 5 * 60 * 1000)
+      const interval = setInterval(fetchData, 30 * 1000) // Refresh every 30s
       return () => clearInterval(interval)
     }
-  }, [isConnected])
+  }, [isConnected, address])
 
   const formatTokens = (amount: bigint) => {
-    const decimals = 18
-    const value = Number(amount) / Math.pow(10, decimals)
+    const value = Number(amount) / 1e18
+    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`
+    if (value >= 1_000) return `${(value / 1_000).toFixed(2)}K`
     return value.toFixed(2)
+  }
+
+  // Pre-deployment view
+  if (CONTRACT_ADDRESSES.donutamagotchiToken === '0x0000000000000000000000000000000000000000') {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-pink-400 to-purple-500 rounded-xl p-6 text-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <h2 className="text-2xl font-black mb-2">🍩 Token Not Yet Deployed</h2>
+          <p className="text-pink-100">
+            The $DONUTAMAGOTCHI token will be deployed soon. Here&apos;s how it will work:
+          </p>
+        </div>
+
+        {/* How it works */}
+        <div className="bg-white rounded-xl p-6 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <h3 className="font-black text-lg mb-4">📊 Fee Share System</h3>
+
+          <div className="space-y-4">
+            <div className="bg-blue-100 rounded-lg p-4 border-2 border-black">
+              <div className="font-black text-blue-800 mb-2">How You Earn</div>
+              <div className="text-sm text-blue-700">
+                <p>1. Each time someone feeds a donut, 5% goes to app fees</p>
+                <p>2. 40% of that goes to the staker pool</p>
+                <p>3. You claim your share based on how much you&apos;ve staked</p>
+              </div>
+            </div>
+
+            <div className="bg-green-100 rounded-lg p-4 border-2 border-black">
+              <div className="font-black text-green-800 mb-2">DPS Boost</div>
+              <div className="text-sm text-green-700">
+                Stake 1M+ $DONUTAMAGOTCHI to get a 10% boost to your $DONUT earnings when you own the donut!
+              </div>
+            </div>
+
+            <div className="bg-yellow-100 rounded-lg p-4 border-2 border-black">
+              <div className="font-black text-yellow-800 mb-2">Fee Flow</div>
+              <pre className="text-xs text-yellow-700 font-mono">
+                {`5% App Fee (from feeding)
+├── 60% → Operations
+└── 40% → Staker Pool (YOU!)`}
+              </pre>
+            </div>
+          </div>
+        </div>
+
+        {/* LP Info */}
+        <div className="bg-purple-100 rounded-xl p-6 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <h3 className="font-black text-lg mb-2">💧 Liquidity</h3>
+          <p className="text-sm text-purple-700">
+            The primary LP will be <strong>$DONUT / $DONUTAMAGOTCHI</strong>, directly linking the two tokens.
+            This means success in one drives demand for the other!
+          </p>
+        </div>
+      </div>
+    )
   }
 
   if (!isConnected) {
     return (
-      <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-6 text-center">
-        <h3 className="text-lg font-bold mb-2">🔗 Connect Wallet to View</h3>
-        <p className="text-gray-600 dark:text-gray-400">
-          Connect your wallet to see real-time transparency data
+      <div className="bg-gray-100 rounded-xl p-6 text-center border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <h3 className="text-lg font-black mb-2">🔗 Connect Wallet to View</h3>
+        <p className="text-gray-600">
+          Connect your wallet to see staking data and your pending rewards
         </p>
       </div>
     )
@@ -145,7 +167,7 @@ export function TransparencyDashboard() {
 
   if (loading) {
     return (
-      <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-6 text-center">
+      <div className="bg-gray-100 rounded-xl p-6 text-center border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
         <div className="animate-pulse space-y-3">
           <div className="h-4 bg-gray-300 rounded w-3/4 mx-auto"></div>
           <div className="h-4 bg-gray-300 rounded w-1/2 mx-auto"></div>
@@ -156,239 +178,96 @@ export function TransparencyDashboard() {
 
   if (error) {
     return (
-      <div className="bg-red-100 dark:bg-red-900 rounded-lg p-6 text-center text-red-700 dark:text-red-200">
-        <p>⚠️ Error loading data: {error}</p>
+      <div className="bg-red-100 rounded-xl p-6 text-center border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <p className="text-red-700 font-bold">⚠️ Error: {error}</p>
       </div>
     )
-  }
-
-  if (!data) {
-    return null
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
-        <h2 className="text-2xl font-bold mb-2">🌍 Ecosystem Transparency</h2>
-        <p className="text-blue-100">
-          Real-time proof of Donutamagotchi&apos;s commitment to the $DONUT ecosystem
+      <div className="bg-gradient-to-r from-pink-400 to-purple-500 rounded-xl p-6 text-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <h2 className="text-2xl font-black mb-2">🍩 Staking Dashboard</h2>
+        <p className="text-pink-100">
+          Stake $DONUTAMAGOTCHI to earn ETH from app fees
         </p>
       </div>
 
-      {/* Community Alignment Message */}
-      <div className="bg-green-50 dark:bg-green-900 border-l-4 border-green-500 rounded-lg p-6">
-        <h3 className="font-bold text-green-800 dark:text-green-200 mb-2">
-          ✅ Community-First Economics
-        </h3>
-        <p className="text-green-700 dark:text-green-300 text-sm mb-3">
-          We lock LP and burn tokens. Every cosmetic purchase directly strengthens the $DONUT
-          ecosystem. Team and community interests are permanently aligned.
-        </p>
-        <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
-          <li>• 25% → Locked $DONUT-WETH LP (permanent liquidity)</li>
-          <li>• 30% → Token burns (deflation, holder benefit)</li>
-          <li>• 45% → Treasury (ecosystem operations)</li>
-        </ul>
-      </div>
-
-      {/* Total Revenue Card */}
-      <div className="bg-blue-50 dark:bg-blue-900 rounded-lg p-6 border border-blue-200 dark:border-blue-700">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Cosmetics Revenue</p>
-            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-              {formatTokens(data.totalRevenue)} $DONUTAMAGOTCHI
-            </p>
-          </div>
-          <div className="text-4xl">💰</div>
-        </div>
-      </div>
-
-      {/* Revenue Breakdown Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Locked for LP */}
-        <div className="bg-purple-50 dark:bg-purple-900 rounded-lg p-6 border border-purple-200 dark:border-purple-700">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">
-                Locked for LP
-              </p>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {formatTokens(data.lockedForLP)}
-              </p>
-            </div>
-            <div className="text-3xl">🔒</div>
-          </div>
-          <div className="w-full bg-purple-200 dark:bg-purple-800 rounded-full h-2">
-            <div
-              className="bg-purple-600 h-2 rounded-full"
-              style={{
-                width:
-                  data.totalRevenue > 0n
-                    ? `${(Number(data.lockedForLP) / Number(data.totalRevenue)) * 100}%`
-                    : '0%',
-              }}
-            ></div>
-          </div>
-          <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-            {data.lpLockPercentage}% of all cosmetics
-          </p>
-        </div>
-
-        {/* Burned */}
-        <div className="bg-red-50 dark:bg-red-900 rounded-lg p-6 border border-red-200 dark:border-red-700">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Tokens Burned</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {formatTokens(data.burned)}
-              </p>
-            </div>
-            <div className="text-3xl">🔥</div>
-          </div>
-          <div className="w-full bg-red-200 dark:bg-red-800 rounded-full h-2">
-            <div
-              className="bg-red-600 h-2 rounded-full"
-              style={{
-                width:
-                  data.totalRevenue > 0n
-                    ? `${(Number(data.burned) / Number(data.totalRevenue)) * 100}%`
-                    : '0%',
-              }}
-            ></div>
-          </div>
-          <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-            {data.burnPercentage}% deflation
-          </p>
-        </div>
-
-        {/* Treasury */}
-        <div className="bg-green-50 dark:bg-green-900 rounded-lg p-6 border border-green-200 dark:border-green-700">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Treasury</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {formatTokens(data.toTreasury)}
-              </p>
-            </div>
-            <div className="text-3xl">💳</div>
-          </div>
-          <div className="w-full bg-green-200 dark:bg-green-800 rounded-full h-2">
-            <div
-              className="bg-green-600 h-2 rounded-full"
-              style={{
-                width:
-                  data.totalRevenue > 0n
-                    ? `${(Number(data.toTreasury) / Number(data.totalRevenue)) * 100}%`
-                    : '0%',
-              }}
-            ></div>
-          </div>
-          <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-            {data.treasuryPercentage}% operations
-          </p>
-        </div>
-      </div>
-
-      {/* Verification Section */}
-      <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-        <h3 className="font-bold text-gray-800 dark:text-gray-200 mb-3">
-          ✓ On-Chain Verification
-        </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          All numbers above are verified on-chain. You can audit them anytime:
-        </p>
-        <div className="space-y-2 text-sm">
-          <p className="text-gray-700 dark:text-gray-300">
-            <span className="font-mono text-xs bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded">
-              getCosmeticsBreakdown()
-            </span>
-            <span className="text-gray-600 dark:text-gray-400 ml-2">
-              - View all breakdowns
-            </span>
-          </p>
-          <p className="text-gray-700 dark:text-gray-300">
-            <span className="font-mono text-xs bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded">
-              lpLockAddress
-            </span>
-            <span className="text-gray-600 dark:text-gray-400 ml-2">
-              - Check locked LP on Uniswap/Dexscreener
-            </span>
-          </p>
-        </div>
-      </div>
-
-      {/* Team Vesting Section */}
-      {vestingData && (
-        <div className="bg-orange-50 dark:bg-orange-900 rounded-lg p-6 border border-orange-200 dark:border-orange-700">
-          <h3 className="font-bold text-orange-800 dark:text-orange-200 mb-4">
-            👨‍💻 Team Allocation (7.5% Vested)
-          </h3>
-          <p className="text-sm text-orange-700 dark:text-orange-300 mb-4">
-            Solo dev, linear vesting over 12 months (~0.625% per month). Fair, transparent, and
-            auditable.
-          </p>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-            <div>
-              <p className="text-xs text-orange-600 dark:text-orange-400 mb-1">Total Allocation</p>
-              <p className="font-bold text-orange-800 dark:text-orange-200">
-                {formatTokens(vestingData.totalAllocation)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-orange-600 dark:text-orange-400 mb-1">Claimed</p>
-              <p className="font-bold text-orange-800 dark:text-orange-200">
-                {formatTokens(vestingData.claimed)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-orange-600 dark:text-orange-400 mb-1">Remaining</p>
-              <p className="font-bold text-orange-800 dark:text-orange-200">
-                {formatTokens(vestingData.remaining)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-orange-600 dark:text-orange-400 mb-1">Monthly Release</p>
-              <p className="font-bold text-orange-800 dark:text-orange-200">
-                {formatTokens(vestingData.monthlyRelease)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-orange-600 dark:text-orange-400 mb-1">Elapsed Months</p>
-              <p className="font-bold text-orange-800 dark:text-orange-200">
-                {Number(vestingData.elapsedMonths)} / 12
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-orange-600 dark:text-orange-400 mb-1">Status</p>
-              <p className="font-bold text-orange-800 dark:text-orange-200">
-                {vestingData.isFullyVested ? '✓ Fully Vested' : 'Vesting...'}
-              </p>
+      {/* User Stats */}
+      {userStaking && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-green-100 rounded-xl p-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="text-sm text-green-600 mb-1">Your Staked</div>
+            <div className="text-2xl font-black text-green-800">
+              {formatTokens(userStaking.staked)}
             </div>
           </div>
 
-          {/* Vesting Progress Bar */}
-          <div className="w-full bg-orange-200 dark:bg-orange-800 rounded-full h-3">
-            <div
-              className="bg-orange-600 h-3 rounded-full transition-all"
-              style={{
-                width: `${Math.min((Number(vestingData.elapsedMonths) / 12) * 100, 100)}%`,
-              }}
-            ></div>
+          <div className="bg-yellow-100 rounded-xl p-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="text-sm text-yellow-600 mb-1">Pending ETH</div>
+            <div className="text-2xl font-black text-yellow-800">
+              {formatEther(userStaking.pending)} Ξ
+            </div>
           </div>
-          <p className="text-xs text-orange-600 dark:text-orange-400 mt-2">
-            {Math.min((Number(vestingData.elapsedMonths) / 12) * 100, 100).toFixed(1)}% vested
-          </p>
+
+          <div className={`rounded-xl p-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${userStaking.hasDpsBoost ? 'bg-purple-100' : 'bg-gray-100'
+            }`}>
+            <div className="text-sm text-gray-600 mb-1">DPS Boost</div>
+            <div className={`text-2xl font-black ${userStaking.hasDpsBoost ? 'text-purple-800' : 'text-gray-400'
+              }`}>
+              {userStaking.hasDpsBoost ? '✨ +10%' : '🔒 Need 1M'}
+            </div>
+          </div>
         </div>
       )}
 
-      {/* CTA */}
-      <div className="bg-blue-100 dark:bg-blue-900 rounded-lg p-6 border-l-4 border-blue-500">
-        <p className="text-sm text-blue-800 dark:text-blue-200">
-          📊 This dashboard updates every 5 minutes. Check back regularly to see the ecosystem
-          grow stronger.
+      {/* Global Stats */}
+      {stakingData && (
+        <div className="bg-white rounded-xl p-6 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <h3 className="font-black text-lg mb-4">📊 Global Staking Stats</h3>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div className="text-sm text-gray-600 mb-1">Total Staked</div>
+              <div className="text-xl font-black">
+                {formatTokens(stakingData.totalStaked)} $DONUTAMAGOTCHI
+              </div>
+            </div>
+
+            <div>
+              <div className="text-sm text-gray-600 mb-1">Fee Pool</div>
+              <div className="text-xl font-black text-green-600">
+                {formatEther(stakingData.feePool)} ETH
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* How it works */}
+      <div className="bg-blue-50 rounded-xl p-6 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <h3 className="font-black text-lg mb-3">💡 How Fee Share Works</h3>
+        <div className="text-sm space-y-2 text-blue-700">
+          <p>• <strong>40%</strong> of the 5% app fee goes to stakers</p>
+          <p>• Claim your share anytime with <code className="bg-blue-200 px-1 rounded">claimFees()</code></p>
+          <p>• Stake <strong>1M+ tokens</strong> for 10% DPS boost</p>
+          <p>• More feeding activity = more rewards for everyone</p>
+        </div>
+      </div>
+
+      {/* Verification */}
+      <div className="bg-gray-50 rounded-xl p-4 border-2 border-gray-200">
+        <p className="text-xs text-gray-500 text-center">
+          All data is read directly from the blockchain. Verify on{' '}
+          <a
+            href={`https://basescan.org/address/${CONTRACT_ADDRESSES.donutamagotchiToken}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 underline"
+          >
+            BaseScan
+          </a>
         </p>
       </div>
     </div>

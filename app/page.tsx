@@ -162,13 +162,13 @@ export default function HomePage() {
 
   const getPetResponse = useCallback((message: string, state: "idle" | "happy" | "excited" | "hungry" | "sleeping" | "dead" | "bored" | "petting") => {
     const msg = message.toLowerCase();
-    
+
     // Positive keywords
     const positive = ["love", "cute", "good", "nice", "sweet", "yum", "delicious", "tasty", "best", "amazing", "awesome", "great"];
     const negative = ["bad", "ugly", "hate", "gross", "yuck", "worst", "terrible"];
     const food = ["hungry", "feed", "eat", "food", "donut", "snack"];
     const greetings = ["hi", "hello", "hey", "sup", "yo"];
-    
+
     const hasPositive = positive.some(word => msg.includes(word));
     const hasNegative = negative.some(word => msg.includes(word));
     const hasFood = food.some(word => msg.includes(word));
@@ -178,23 +178,23 @@ export default function HomePage() {
     if (state === "dead") {
       return hasPositive ? "💀 *ghost noises*" : "💀 Too late...";
     }
-    
+
     if (state === "hungry") {
       if (hasFood) return "😟 Yes please! I'm starving!";
       if (hasPositive) return "😟 Thanks but... I need food!";
       return "😟 *stomach rumbles*";
     }
-    
+
     if (state === "sleeping") {
       return "😴 Zzz... *snoring*";
     }
-    
+
     if (state === "bored") {
       if (hasPositive) return "😑 Thanks, I guess...";
       if (hasFood) return "😑 Not really hungry...";
       return "😑 *yawn*";
     }
-    
+
     if (state === "excited" || state === "happy" || state === "petting") {
       if (hasPositive) return "😊 Aww thanks! You're the best!";
       if (hasFood) return "🤩 More donuts? YES!";
@@ -207,7 +207,7 @@ export default function HomePage() {
     if (hasPositive) return "😊 You're so sweet!";
     if (hasFood) return "🍩 Mmm, I love donuts!";
     if (hasGreeting) return "👋 Hello!";
-    
+
     // Default responses
     const defaults = [
       "🍩 *wiggles happily*",
@@ -216,25 +216,25 @@ export default function HomePage() {
       "😊 Tell me more!",
       "🍩 *donut sounds*"
     ];
-    
+
     return defaults[Math.floor(Math.random() * defaults.length)];
   }, []);
 
   const handleMessageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setCustomMessage(value);
-    
+
     // Clear existing timeout
     if (petResponseTimeoutRef.current) {
       clearTimeout(petResponseTimeoutRef.current);
     }
-    
+
     // Show response after user stops typing (500ms delay)
     if (value.trim().length > 2) {
       petResponseTimeoutRef.current = setTimeout(() => {
         const response = getPetResponse(value, petState.state);
         setPetResponse(response);
-        
+
         // Clear response after 3 seconds
         setTimeout(() => setPetResponse(""), 3000);
       }, 500);
@@ -247,7 +247,7 @@ export default function HomePage() {
     const timeout = setTimeout(() => {
       if (!readyRef.current) {
         readyRef.current = true;
-        sdk.actions.ready().catch(() => {});
+        sdk.actions.ready().catch(() => { });
       }
     }, 1200);
     return () => clearTimeout(timeout);
@@ -280,7 +280,7 @@ export default function HomePage() {
     connectAsync({
       connector: primaryConnector,
       chainId: base.id,
-    }).catch(() => {});
+    }).catch(() => { });
   }, [connectAsync, isConnected, isConnecting, primaryConnector]);
 
   const { data: rawMinerState, refetch: refetchMinerState } = useReadContract({
@@ -304,7 +304,7 @@ export default function HomePage() {
   useEffect(() => {
     if (!readyRef.current && minerState) {
       readyRef.current = true;
-      sdk.actions.ready().catch(() => {});
+      sdk.actions.ready().catch(() => { });
     }
     // Set session start earnings on first load
     if (minerState && sessionStartEarnings === null) {
@@ -501,16 +501,16 @@ export default function HomePage() {
   };
 
   const glazeTimeDisplay = minerState ? formatGlazeTime(glazeElapsedSeconds) : "0s";
-  
+
   // Calculate age in days for retirement eligibility
   const ageInDays = Math.floor(glazeElapsedSeconds / 86400);
 
   const petState = useMemo(() => {
     if (!minerState) return { state: "sleeping" as const, happiness: 0, health: 0 };
-    
+
     const maxDps = 4e18;
     const happiness = Math.min(100, (Number(minerState.nextDps) / maxDps) * 100);
-    const health = minerState.initPrice > 0n 
+    const health = minerState.initPrice > 0n
       ? Math.min(100, (Number(minerState.price) / (Number(minerState.initPrice) * 2)) * 100)
       : 0;
 
@@ -519,7 +519,7 @@ export default function HomePage() {
     const isBored = timeSinceInteraction > 300 && happiness < 60;
 
     let state: "idle" | "happy" | "excited" | "hungry" | "sleeping" | "dead" | "bored" | "petting" = "idle";
-    
+
     if (health < 5) state = "dead";
     else if (health < 30) state = "hungry";
     else if (isWriting || isConfirming) state = "excited";
@@ -528,7 +528,7 @@ export default function HomePage() {
     else if (happiness > 70) state = "happy";
     else if (glazeElapsedSeconds < 60) state = "excited";
     else if (!hasMiner) state = "sleeping";
-    
+
     return { state, happiness, health };
   }, [minerState, isWriting, isConfirming, glazeResult, glazeElapsedSeconds, hasMiner, lastInteractionTime]);
 
@@ -566,8 +566,8 @@ export default function HomePage() {
     ? `$${(Number(formatEther(minerState.price)) * ethUsdPrice).toFixed(2)}`
     : "$0";
 
-  const ownerName = neynarUser?.user?.displayName || 
-    neynarUser?.user?.username || 
+  const ownerName = neynarUser?.user?.displayName ||
+    neynarUser?.user?.username ||
     (hasMiner ? `${minerAddress.slice(0, 6)}...${minerAddress.slice(-4)}` : "Nobody");
 
   return (
@@ -582,136 +582,139 @@ export default function HomePage() {
           }}
         >
           <div className="flex flex-1 flex-col overflow-y-auto space-y-2">
-          {/* Header */}
-          <div className="bg-yellow-300 border-4 border-black rounded-2xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <h1 className="text-2xl font-black text-center text-black tracking-tight">
-              DONUTAMAGOTCHI
-            </h1>
-            <p className="text-center text-[10px] text-black/70 font-bold mt-0.5">
-              OWNER: {ownerName}
-            </p>
-          </div>
+            {/* Header */}
+            <div className="bg-yellow-300 border-4 border-black rounded-2xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <h1 className="text-2xl font-black text-center text-black tracking-tight">
+                DONUTAMAGOTCHI
+              </h1>
+              <p className="text-center text-[10px] text-black/70 font-bold mt-0.5">
+                OWNER: {ownerName}
+              </p>
+            </div>
 
-          {/* Pet Display */}
-          <div 
-            className="bg-cyan-300 border-4 border-black rounded-2xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-shadow"
-            onClick={handlePetting}
-            onDoubleClick={() => handleGesture("jump")}
-          >
-            <DonutPet
-              state={petState.state}
+            {/* Pet Display */}
+            <div
+              className="bg-cyan-300 border-4 border-black rounded-2xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-shadow"
+              onClick={handlePetting}
+              onDoubleClick={() => handleGesture("jump")}
+            >
+              <DonutPet
+                state={petState.state}
+                happiness={petState.happiness}
+                health={petState.health}
+                isAnimating={isWriting || isConfirming}
+                gesture={gesture}
+                onGestureComplete={() => setGesture(null)}
+                traits={traits}
+                createdAtSeconds={minerState?.startTime ? Number(minerState.startTime) : undefined}
+              />
+            </div>
+
+            {/* Collapsible Stats (now always shows status indicator + key stats) */}
+            <CollapsibleStats
               happiness={petState.happiness}
               health={petState.health}
-              isAnimating={isWriting || isConfirming}
-              gesture={gesture}
-              onGestureComplete={() => setGesture(null)}
-              traits={traits}
-              createdAtSeconds={minerState?.startTime ? Number(minerState.startTime) : undefined}
-            />
-          </div>
-
-          {/* Collapsible Stats (now always shows status indicator + key stats) */}
-          <CollapsibleStats
-            happiness={petState.happiness}
-            health={petState.health}
-            energy={glazedDisplay}
-            age={glazeTimeDisplay}
-            ageInDays={ageInDays}
-            grooming={traits?.grooming ?? 50}
-            energyLevel={traits?.energy ?? 50}
-            satisfaction={traits?.satisfaction ?? 50}
-            isDying={petState.state === "dead"}
-            lastFedTime={minerState?.startTime ? Number(minerState.startTime) * 1000 : Date.now()}
-            sessionEarnings={sessionEarnings}
-            dailyEarningRate={dailyEarningRate}
-            tokensUntilNextMilestone={tokensUntilNextMilestone}
-          />
-
-          {/* Breeding Badge - Discoverable Path to Breeding */}
-          {hasMiner && (
-            <BreedingBadge
-              lifecycleStage={lifecycleStage}
-              happiness={petState.happiness}
-            />
-          )}
-
-          {/* Retirement Badge - Discoverable Path to Hall of Fame */}
-          {hasMiner && (
-            <RetirementBadge ageInDays={ageInDays} />
-          )}
-
-          {/* Decay Status - Shows pet health/care urgency */}
-          {hasMiner && traits && (
-            <DecayStatus 
-              satisfaction={traits.satisfaction}
-              energy={traits.energy}
-              grooming={traits.grooming}
-            />
-          )}
-
-          {/* Collapsible Advanced Features (Traits, Lifecycle, Breeding) */}
-          {hasMiner && (
-            <CollapsibleAdvanced
-              traits={traits}
-              lastInteractionTime={lastInteractionTime}
+              energy={glazedDisplay}
+              age={glazeTimeDisplay}
+              ageInDays={ageInDays}
+              grooming={traits?.grooming ?? 50}
+              energyLevel={traits?.energy ?? 50}
+              satisfaction={traits?.satisfaction ?? 50}
+              isDying={petState.state === "dead"}
               lastFedTime={minerState?.startTime ? Number(minerState.startTime) * 1000 : Date.now()}
-              createdAtSeconds={minerState?.startTime ? Number(minerState.startTime) : 0}
-              hasMiner={hasMiner}
-              minerState={minerState}
+              sessionEarnings={sessionEarnings}
+              dailyEarningRate={dailyEarningRate}
+              tokensUntilNextMilestone={tokensUntilNextMilestone}
             />
-          )}
 
-          {/* Collapsible Interaction Panel */}
-          <InteractionPanel
-            customMessage={customMessage}
-            onMessageChange={handleMessageChange}
-            petResponse={petResponse}
-            isDisabled={isGlazeDisabled}
-            onGesture={handleGesture}
-          />
+            {/* PROGRESSIVE DISCLOSURE: Show How to Play prominently for new users */}
+            {/* CareGuide auto-expands for donuts < 7 days old */}
+            {hasMiner && <CareGuide ageInDays={ageInDays} />}
 
-          {/* Quick Guide */}
-          {hasMiner && <CareGuide />}
+            {/* Decay Status - Only show if stats need attention (< 70% avg) */}
+            {hasMiner && traits && (traits.satisfaction + traits.energy + traits.grooming) / 3 < 70 && (
+              <DecayStatus
+                satisfaction={traits.satisfaction}
+                energy={traits.energy}
+                grooming={traits.grooming}
+              />
+            )}
 
-          {/* Feed Button */}
-          <Button
-            className="w-full h-14 rounded-2xl bg-gradient-to-b from-pink-400 to-pink-600 border-4 border-black text-black text-lg font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
-            onClick={handleGlaze}
-            disabled={isGlazeDisabled}
-          >
-            <div className="flex flex-col items-center gap-0.5">
-              <span className="text-base">{buttonLabel}</span>
-              <span className="text-[10px] font-bold">{feedCost} ({feedCostUsd})</span>
-            </div>
-          </Button>
+            {/* Breeding Badge - Progressive: hidden early, teaser approaching, full when ready */}
+            {hasMiner && (
+              <BreedingBadge
+                lifecycleStage={lifecycleStage}
+                happiness={petState.happiness}
+                ageInDays={ageInDays}
+              />
+            )}
 
-          {/* Wallet Info */}
-          {address && (
-            <div className="bg-lime-300 border-4 border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <div className="grid grid-cols-3 gap-1 text-center">
-                <div>
-                  <div className="text-[8px] font-black text-black/60">DONUTS</div>
-                  <div className="text-xs font-black text-black">
-                    {minerState ? formatTokenAmount(minerState.donutBalance, DONUT_DECIMALS, 0) : "0"}
+            {/* Retirement Badge - Progressive: hidden until 60 days, teaser 60-89, full at 90+ */}
+            {hasMiner && (
+              <RetirementBadge ageInDays={ageInDays} />
+            )}
+
+            {/* Advanced Features - Only show for older donuts (7+ days) */}
+            {hasMiner && ageInDays >= 7 && (
+              <CollapsibleAdvanced
+                traits={traits}
+                lastInteractionTime={lastInteractionTime}
+                lastFedTime={minerState?.startTime ? Number(minerState.startTime) * 1000 : Date.now()}
+                createdAtSeconds={minerState?.startTime ? Number(minerState.startTime) : 0}
+                hasMiner={hasMiner}
+                minerState={minerState}
+                ageInDays={ageInDays}
+              />
+            )}
+
+            {/* Interaction Panel - Core gameplay action */}
+            <InteractionPanel
+              customMessage={customMessage}
+              onMessageChange={handleMessageChange}
+              petResponse={petResponse}
+              isDisabled={isGlazeDisabled}
+              onGesture={handleGesture}
+            />
+
+            {/* Feed Button */}
+            <Button
+              className="w-full h-14 rounded-2xl bg-gradient-to-b from-pink-400 to-pink-600 border-4 border-black text-black text-lg font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              onClick={handleGlaze}
+              disabled={isGlazeDisabled}
+            >
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-base">{buttonLabel}</span>
+                <span className="text-[10px] font-bold">{feedCost} ({feedCostUsd})</span>
+              </div>
+            </Button>
+
+            {/* Wallet Info */}
+            {address && (
+              <div className="bg-lime-300 border-4 border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <div className="grid grid-cols-3 gap-1 text-center">
+                  <div>
+                    <div className="text-[8px] font-black text-black/60">DONUTS</div>
+                    <div className="text-xs font-black text-black">
+                      {minerState ? formatTokenAmount(minerState.donutBalance, DONUT_DECIMALS, 0) : "0"}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <div className="text-[8px] font-black text-black/60">ETH</div>
-                  <div className="text-xs font-black text-black">
-                    {minerState ? formatEth(minerState.ethBalance, 3) : "0"}
+                  <div>
+                    <div className="text-[8px] font-black text-black/60">ETH</div>
+                    <div className="text-xs font-black text-black">
+                      {minerState ? formatEth(minerState.ethBalance, 3) : "0"}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <div className="text-[8px] font-black text-black/60">WETH</div>
-                  <div className="text-xs font-black text-black">
-                    {minerState ? formatEth(minerState.wethBalance, 3) : "0"}
+                  <div>
+                    <div className="text-[8px] font-black text-black/60">WETH</div>
+                    <div className="text-xs font-black text-black">
+                      {minerState ? formatEth(minerState.wethBalance, 3) : "0"}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
         <NavBar />
       </AccordionProvider>
     </main>

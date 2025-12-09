@@ -52,31 +52,37 @@ TWILIGHT (90+ days)- Aging gracefully, retirement eligible, full size
 
 ## 🛡️ Community First
 
-Donutamagotchi is designed to strengthen the $DONUT ecosystem, not extract value. See our transparency page (`/transparency`) for proof:
-- **25% of cosmetics revenue locked for $DONUT-WETH LP** (permanent liquidity)
-- **30% burned** (deflationary, benefits holders)
-- **45% to treasury** (ecosystem operations only)
-- **7.5% team vesting** (linear over 12 months, ~0.625%/month)
-- **Sustainable incentives** - team benefits when $DONUT succeeds
-- **Full transparency** - vesting progress visible on dashboard
-
-From day 1, we align team incentives with ecosystem health through verifiable on-chain mechanics.
+Donutamagotchi is designed to strengthen the $DONUT ecosystem, not extract value:
+- **Direct LP pairing** - $DONUT/$DONUTAMAGOTCHI liquidity pool
+- **Fee sharing** - 40% of app fees go to $DONUTAMAGOTCHI stakers
+- **Deflationary** - Tokens burned for cosmetics and breeding
+- **Aligned incentives** - More $DONUT activity = more staker rewards
 
 ## 💰 Economics
 
-### Revenue Split (On-Chain)
+### $DONUT Revenue Split (Unchanged Protocol)
 - 80% → Previous owner (profit opportunity!)
 - 15% → Treasury (LP buyback & burn)
-- 5% → App provider
+- 5% → App provider (routed to 0xSplit)
 
-### Treasury Alignment (Community First)
-- **25% minimum** of cosmetics revenue → Locked $DONUT-WETH LP (burned)
-- **30%** of cosmetics revenue → $DONUTAMAGOTCHI token burn (deflation)
-- **Remaining** → Ecosystem operations, events, community rewards
-- **No developer dumps** - all profits reinvested in ecosystem
-- **Transparent reporting** - monthly proofs, quarterly voting on allocation
+### $DONUTAMAGOTCHI Token Utility
 
-### Token Emissions
+| Action | Effect |
+|--------|--------|
+| **Stake** | Earn share of fee pool (ETH) |
+| **Stake 1M+** | Get 10% DPS boost |
+| **Care well** | Earn tokens while feeding |
+| **Cosmetics** | Burn tokens to customize |
+| **Breed** | Burn 1000 tokens for offspring |
+
+### Fee Distribution (via 0xSplit)
+```
+5% App Provider Fee
+├── 60% → Operations
+└── 40% → Staker Pool (distributed to stakers)
+```
+
+### Token Emissions ($DONUT - Unchanged)
 - Starts at 4 DONUT/sec
 - Halves every 30 days
 - Minimum 0.01 DONUT/sec (forever)

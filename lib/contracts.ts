@@ -318,16 +318,7 @@ export const BREEDING_ABI = [
 ] as const;
 
 export const DONUTAMAGOTCHI_TOKEN_ABI = [
-  {
-    name: "mintPlayToEarn",
-    type: "function",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "to", type: "address" },
-      { name: "amount", type: "uint256" },
-      { name: "reason", type: "string" },
-    ],
-  },
+  // Staking
   {
     name: "stake",
     type: "function",
@@ -341,10 +332,63 @@ export const DONUTAMAGOTCHI_TOKEN_ABI = [
     inputs: [{ name: "amount", type: "uint256" }],
   },
   {
-    name: "claimStakingReward",
+    name: "claimFees",
     type: "function",
     stateMutability: "nonpayable",
   },
+  {
+    name: "pendingFees",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "hasDPSBoost",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    name: "getStakingInfo",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [
+      { name: "staked", type: "uint256" },
+      { name: "pending", type: "uint256" },
+      { name: "hasDpsBoost", type: "bool" },
+      { name: "totalStakedGlobal", type: "uint256" },
+      { name: "feePoolBalance", type: "uint256" },
+    ],
+  },
+  // Care rewards
+  {
+    name: "mintCareReward",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "amount", type: "uint256" },
+      { name: "reason", type: "string" },
+      { name: "nonce", type: "uint256" },
+      { name: "signature", type: "bytes" },
+    ],
+  },
+  // Breeding burn
+  {
+    name: "burnForBreeding",
+    type: "function",
+    stateMutability: "nonpayable",
+  },
+  {
+    name: "BREEDING_COST",
+    type: "function",
+    stateMutability: "view",
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  // Standard ERC20
   {
     name: "balanceOf",
     type: "function",
@@ -360,21 +404,19 @@ export const DONUTAMAGOTCHI_TOKEN_ABI = [
     outputs: [{ name: "", type: "uint256" }],
   },
   {
-    name: "calculateStakingReward",
+    name: "totalSupply",
     type: "function",
     stateMutability: "view",
-    inputs: [{ name: "user", type: "address" }],
     outputs: [{ name: "", type: "uint256" }],
   },
   {
-    name: "canVote",
+    name: "totalStaked",
     type: "function",
     stateMutability: "view",
-    inputs: [{ name: "user", type: "address" }],
-    outputs: [{ name: "", type: "bool" }],
+    outputs: [{ name: "", type: "uint256" }],
   },
   {
-    name: "totalSupply",
+    name: "feePool",
     type: "function",
     stateMutability: "view",
     outputs: [{ name: "", type: "uint256" }],
@@ -400,26 +442,14 @@ export const DONUTAMAGOTCHI_TOKEN_ABI = [
     outputs: [{ name: "", type: "bool" }],
   },
   {
-    name: "allowance",
+    name: "burn",
     type: "function",
-    stateMutability: "view",
-    inputs: [
-      { name: "owner", type: "address" },
-      { name: "spender", type: "address" },
-    ],
-    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "nonpayable",
+    inputs: [{ name: "amount", type: "uint256" }],
   },
+  // Events
   {
-    name: "TokensMinted",
-    type: "event",
-    inputs: [
-      { name: "to", type: "address", indexed: true },
-      { name: "amount", type: "uint256", indexed: false },
-      { name: "reason", type: "string", indexed: true },
-    ],
-  },
-  {
-    name: "TokensStaked",
+    name: "Staked",
     type: "event",
     inputs: [
       { name: "user", type: "address", indexed: true },
@@ -427,10 +457,28 @@ export const DONUTAMAGOTCHI_TOKEN_ABI = [
     ],
   },
   {
-    name: "StakingRewardClaimed",
+    name: "Unstaked",
     type: "event",
     inputs: [
+      { name: "user", type: "address", indexed: true },
       { name: "amount", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    name: "FeesClaimed",
+    type: "event",
+    inputs: [
+      { name: "user", type: "address", indexed: true },
+      { name: "amount", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    name: "CareRewardMinted",
+    type: "event",
+    inputs: [
+      { name: "user", type: "address", indexed: true },
+      { name: "amount", type: "uint256", indexed: false },
+      { name: "reason", type: "string", indexed: false },
     ],
   },
 ] as const;

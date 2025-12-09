@@ -1,13 +1,11 @@
 "use client";
 
-import { getRetirementTier, isRetirementEligible } from "@/lib/earnings";
-
 interface PetStatsProps {
   happiness: number;
   health: number;
   energy: string;
   age: string;
-  ageInDays?: number; // For retirement eligibility check
+  ageInDays?: number;
   grooming?: number;
   energyLevel?: number;
   satisfaction?: number;
@@ -18,12 +16,11 @@ interface PetStatsProps {
   tokensUntilNextMilestone?: number; // Tokens until next cosmetic
 };
 
-export function PetStats({ 
-  happiness, 
-  health, 
-  energy, 
+export function PetStats({
+  happiness,
+  health,
+  energy,
   age,
-  ageInDays = 0,
   grooming = 50,
   energyLevel = 50,
   satisfaction = 50,
@@ -40,43 +37,33 @@ export function PetStats({
   const isWarningHappiness = happiness < 30;
 
   // Status indicator
-  let status: "healthy" | "needs-care" | "critical" | "dead";
   let statusLabel: string;
   let statusEmoji: string;
   let statusBg: string;
 
   if (isDying) {
-    status = "dead";
     statusLabel = "DYING";
     statusEmoji = "💀";
     statusBg = "bg-red-600";
   } else if (health < 20) {
-    status = "critical";
     statusLabel = "CRITICAL";
     statusEmoji = "🔴";
     statusBg = "bg-red-500";
   } else if (health < 50) {
-    status = "needs-care";
     statusLabel = "NEEDS CARE";
     statusEmoji = "🟡";
     statusBg = "bg-yellow-500";
   } else {
-    status = "healthy";
     statusLabel = "HEALTHY";
     statusEmoji = "🟢";
     statusBg = "bg-green-500";
   }
 
   const minutesSinceFed = Math.floor((Date.now() - lastFedTime) / 1000 / 60);
-  
-  // Retirement eligibility check
-  const eligible = isRetirementEligible(ageInDays);
-  const tier = getRetirementTier(ageInDays);
 
   return (
-    <div className={`border-4 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-3 ${
-      isDying ? "bg-red-200 animate-pulse" : "bg-white"
-    }`}>
+    <div className={`border-4 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-3 ${isDying ? "bg-red-200 animate-pulse" : "bg-white"
+      }`}>
       {/* Status Indicator */}
       <div className={`${statusBg} border-3 border-black rounded-lg p-2`}>
         <div className="flex items-center justify-between gap-2">
@@ -116,7 +103,7 @@ export function PetStats({
         <PixelStatBar label="HAPPY" value={happiness} emoji="😊" color="yellow" />
         <div className="text-[8px] text-black/60 font-bold ml-6 mt-0.5">↳ Affects breeding viability</div>
       </div>
-      
+
       {/* Development stats (shown conditionally) */}
       <div className="pt-1 border-t-2 border-black border-dashed space-y-2">
         <PixelStatBar label="GROOMING" value={grooming} emoji="✨" color="yellow" size="small" />
@@ -150,34 +137,24 @@ export function PetStats({
         </div>
       )}
 
-      <div className="space-y-2">
-        <div className="grid grid-cols-2 gap-3 pt-2 border-t-4 border-black border-dashed">
-          <StatDisplay label="ENERGY" value={energy} emoji="⚡" />
-          <StatDisplay label="AGE" value={age} emoji="⏱️" />
-        </div>
-
-        {/* Retirement Eligibility Badge */}
-        {eligible && tier && (
-          <div className="bg-gradient-to-r from-purple-500 to-pink-500 border-3 border-black rounded-lg p-2 text-center">
-            <div className="text-xs font-black text-white mb-1">🏛️ HALL OF FAME ELIGIBLE</div>
-            <div className="text-[9px] font-bold text-white">{tier} Tier • Retire to Sanctuary</div>
-          </div>
-        )}
+      <div className="grid grid-cols-2 gap-3 pt-2 border-t-4 border-black border-dashed">
+        <StatDisplay label="ENERGY" value={energy} emoji="⚡" />
+        <StatDisplay label="AGE" value={age} emoji="⏱️" />
       </div>
     </div>
   );
 }
 
-function PixelStatBar({ 
-  label, 
-  value, 
-  emoji, 
+function PixelStatBar({
+  label,
+  value,
+  emoji,
   color,
   size = "normal"
-}: { 
-  label: string; 
-  value: number; 
-  emoji: string; 
+}: {
+  label: string;
+  value: number;
+  emoji: string;
   color: "red" | "yellow";
   size?: "normal" | "small";
 }) {
@@ -185,7 +162,7 @@ function PixelStatBar({
   const blocks = Math.round(percentage / 10);
   const blockCount = size === "small" ? 5 : 10;
   const scaledBlocks = Math.round((percentage / 100) * blockCount);
-  
+
   const blockColor = color === "red"
     ? percentage > 60 ? "bg-green-500" : percentage > 30 ? "bg-yellow-500" : "bg-red-500"
     : percentage > 60 ? "bg-yellow-400" : percentage > 30 ? "bg-orange-400" : "bg-gray-400";
@@ -208,9 +185,8 @@ function PixelStatBar({
         {Array.from({ length: blockCount }).map((_, i) => (
           <div
             key={i}
-            className={`${barHeight} flex-1 border-2 border-black ${
-              i < scaledBlocks ? blockColor : "bg-gray-200"
-            }`}
+            className={`${barHeight} flex-1 border-2 border-black ${i < scaledBlocks ? blockColor : "bg-gray-200"
+              }`}
           />
         ))}
       </div>
@@ -218,13 +194,13 @@ function PixelStatBar({
   );
 }
 
-function StatDisplay({ 
-  label, 
-  value, 
-  emoji 
-}: { 
-  label: string; 
-  value: string; 
+function StatDisplay({
+  label,
+  value,
+  emoji
+}: {
+  label: string;
+  value: string;
   emoji: string;
 }) {
   return (
