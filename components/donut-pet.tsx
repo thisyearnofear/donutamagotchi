@@ -171,10 +171,21 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
       const sizeMultiplier = lifecycleInfo?.stage === "birth" ? 0.7 : lifecycleInfo?.stage === "growth" ? 0.85 : 1;
       const actualRadius = radius * sizeMultiplier;
       
-      // Draw donut body with trait-based coloring
+      // Draw donut body with trait-based coloring and depth shading
+      const donutColor = getDonutColor(state, health, traits);
+      
+      // Body with radial gradient for 3D depth effect
+      const bodyGradient = ctx.createRadialGradient(
+        -actualRadius * 0.2, -actualRadius * 0.2, 0,
+        0, 0, actualRadius
+      );
+      bodyGradient.addColorStop(0, lightenColor(donutColor, 0.2));
+      bodyGradient.addColorStop(0.5, donutColor);
+      bodyGradient.addColorStop(1, darkenColor(donutColor, 0.2));
+      
       ctx.beginPath();
       ctx.arc(0, 0, actualRadius, 0, Math.PI * 2);
-      ctx.fillStyle = getDonutColor(state, health, traits);
+      ctx.fillStyle = bodyGradient;
       ctx.fill();
       ctx.strokeStyle = "#8b4513";
       ctx.lineWidth = 4;
@@ -296,16 +307,21 @@ function drawFrosting(ctx: CanvasRenderingContext2D, x: number, y: number, width
 /**
  * Enhanced face drawing with exaggerated expression animations
  * Uses calculateEyeExpression and calculateMouthExpression for state-driven visuals
+ * Includes: big expressive eyes with shine, cheek blushes, improved mouth shapes
  */
 function drawFaceEnhanced(ctx: CanvasRenderingContext2D, x: number, y: number, state: PetState, frame: number, traits?: Traits | null) {
-  const eyeY = y + 10;
-  const eyeSpacing = 25;
-  const baseEyeWidth = 16;
-  const baseEyeHeight = 12;
+  const eyeY = y + 8;
+  const eyeSpacing = 28;
+  const baseEyeWidth = 20; // Enlarged from 16
+  const baseEyeHeight = 16; // Enlarged from 12
 
   // Get expression state from physics engine
   const eyeExpr = calculateEyeExpression(state, frame);
   const mouthExpr = calculateMouthExpression(state, frame);
+  
+  // Draw cheek blushes (key to cuteness)
+  const blushIntensity = Math.max(0, calculateEyeExpression(state, frame).height * 0.7);
+  drawCheekBlushes(ctx, x, y, blushIntensity, traits?.personality);
 
   // Special case: dead pets get X eyes (classic)
   if (state === "dead") {
@@ -344,6 +360,8 @@ function drawFaceEnhanced(ctx: CanvasRenderingContext2D, x: number, y: number, s
     if (eyeShape === "round" && eyeHeight > 0.1) {
       // Round eyes (Stubborn personality)
       const radius = eyeWidth / 2;
+      
+      // Eye white base
       ctx.fillStyle = "#fff";
       ctx.beginPath();
       ctx.arc(x - eyeSpacing, eyeY, radius * 0.9, 0, Math.PI * 2);
@@ -354,62 +372,88 @@ function drawFaceEnhanced(ctx: CanvasRenderingContext2D, x: number, y: number, s
 
       // Pupils (offset for expression)
       ctx.fillStyle = "#000";
+      const pupilRadius = radius * 0.4;
       ctx.beginPath();
-      ctx.arc(x - eyeSpacing, pupilY, radius * 0.4, 0, Math.PI * 2);
+      ctx.arc(x - eyeSpacing, pupilY, pupilRadius, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(x + eyeSpacing, pupilY, radius * 0.4, 0, Math.PI * 2);
+      ctx.arc(x + eyeSpacing, pupilY, pupilRadius, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Shine/highlight spots (adds depth and sparkle)
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(x - eyeSpacing - pupilRadius * 0.5, pupilY - pupilRadius * 0.5, pupilRadius * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x + eyeSpacing - pupilRadius * 0.5, pupilY - pupilRadius * 0.5, pupilRadius * 0.35, 0, Math.PI * 2);
       ctx.fill();
     } else {
-      // Rectangular eyes (default/Lazy)
+      // Oval/rectangular eyes (default/Lazy) - now with shine
       ctx.fillStyle = "#fff";
-      ctx.fillRect(x - eyeSpacing - eyeWidth / 2, eyeY - eyeHeight / 2, eyeWidth, eyeHeight);
-      ctx.fillRect(x + eyeSpacing - eyeWidth / 2, eyeY - eyeHeight / 2, eyeWidth, eyeHeight);
+      
+      // Draw rounded rectangle eye whites
+      drawRoundedRect(ctx, x - eyeSpacing - eyeWidth / 2, eyeY - eyeHeight / 2, eyeWidth, eyeHeight, eyeHeight / 3);
+      drawRoundedRect(ctx, x + eyeSpacing - eyeWidth / 2, eyeY - eyeHeight / 2, eyeWidth, eyeHeight, eyeHeight / 3);
 
       // Pupils (only if eyes are open enough)
       if (eyeHeight > 3) {
         ctx.fillStyle = "#000";
         const pupilRadius = Math.max(2, eyeWidth * 0.25);
-        ctx.fillRect(x - eyeSpacing - pupilRadius, pupilY - pupilRadius / 1.5, pupilRadius * 2, pupilRadius);
-        ctx.fillRect(x + eyeSpacing - pupilRadius, pupilY - pupilRadius / 1.5, pupilRadius * 2, pupilRadius);
+        const pupilX1 = x - eyeSpacing;
+        const pupilX2 = x + eyeSpacing;
+        
+        ctx.beginPath();
+        ctx.arc(pupilX1, pupilY, pupilRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(pupilX2, pupilY, pupilRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Shine spots on pupils
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(pupilX1 - pupilRadius * 0.4, pupilY - pupilRadius * 0.4, pupilRadius * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(pupilX2 - pupilRadius * 0.4, pupilY - pupilRadius * 0.4, pupilRadius * 0.3, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
   }
 
-  // Draw mouth with dynamic expression
+  // Draw mouth with dynamic expression (improved shapes and shading)
   const mouthY = y + 35;
-  ctx.strokeStyle = "#000";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-
   const mouthIntensity = mouthExpr.intensity;
 
   switch (mouthExpr.type) {
     case "smile":
-      // Happy smile - arc curving upward
-      ctx.arc(x, mouthY - 5, 20 * mouthIntensity, 0.2, Math.PI - 0.2);
+      // Happy smile - filled arc with depth
+      drawSmileMouth(ctx, x, mouthY - 5, 20 * mouthIntensity);
       break;
     case "surprised":
       // O shape - open mouth
-      ctx.arc(x, mouthY, 8 * mouthIntensity, 0, Math.PI * 2);
+      drawSurprisedMouth(ctx, x, mouthY, 8 * mouthIntensity);
       break;
     case "frown":
       // Sad frown - arc curving downward
-      ctx.arc(x, mouthY + 10, 20 * mouthIntensity, Math.PI + 0.2, Math.PI * 2 - 0.2);
+      drawFrownMouth(ctx, x, mouthY + 10, 20 * mouthIntensity);
       break;
     case "open":
       // Sleeping/resting - slight opening
-      ctx.arc(x, mouthY, 8 * mouthIntensity, 0, Math.PI);
+      drawOpenMouth(ctx, x, mouthY, 8 * mouthIntensity);
       break;
     case "flat":
     default:
       // Neutral/flat mouth
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
       ctx.moveTo(x - 15, mouthY);
       ctx.lineTo(x + 15, mouthY);
+      ctx.stroke();
       break;
   }
-  
-  ctx.stroke();
 }
 
 /**
@@ -520,4 +564,144 @@ function drawBoreIndicators(ctx: CanvasRenderingContext2D, x: number, y: number,
     ctx.fillText("Z", zX, zY);
     ctx.globalAlpha = 1;
   }
+}
+
+/**
+ * Draw cheek blushes - circles on the sides that fade based on happiness
+ * Core tamagotchi aesthetic element
+ */
+function drawCheekBlushes(ctx: CanvasRenderingContext2D, x: number, y: number, intensity: number, personality?: string) {
+  if (intensity < 0.1) return; // Don't draw if very faint
+  
+  // Personality-based blush color
+  let blushColor = "#ff9bb5"; // Default pink
+  if (personality === "Friendly") {
+    blushColor = "#ffb3c1"; // Lighter pink
+  } else if (personality === "Energetic") {
+    blushColor = "#ff7fa0"; // More vibrant
+  }
+  
+  ctx.fillStyle = blushColor;
+  ctx.globalAlpha = intensity * 0.5; // Blushes are semi-transparent
+  
+  // Left cheek
+  ctx.beginPath();
+  ctx.arc(x - 45, y + 15, 15, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Right cheek
+  ctx.beginPath();
+  ctx.arc(x + 45, y + 15, 15, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.globalAlpha = 1;
+}
+
+/**
+ * Draw rounded rectangle for eye whites (softer look)
+ */
+function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/**
+ * Smile mouth - filled arc with subtle gradient for depth
+ */
+function drawSmileMouth(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  // Draw filled smile (more expressive than just stroke)
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(x, y, size, 0.2, Math.PI - 0.2);
+  ctx.stroke();
+  
+  // Optional: add subtle fill for warmth (very light red)
+  ctx.fillStyle = "rgba(255, 150, 150, 0.1)";
+  ctx.beginPath();
+  ctx.arc(x, y, size, 0.2, Math.PI - 0.2);
+  ctx.lineTo(x + size * 0.8, y - size * 0.2);
+  ctx.lineTo(x - size * 0.8, y - size * 0.2);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/**
+ * Surprised mouth - open O shape
+ */
+function drawSurprisedMouth(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  ctx.fillStyle = "#ffb3c1"; // Light pink interior
+  ctx.beginPath();
+  ctx.arc(x, y, size, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Black outline
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(x, y, size, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+/**
+ * Frown mouth - sad downward arc
+ */
+function drawFrownMouth(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(x, y, size, Math.PI + 0.2, Math.PI * 2 - 0.2);
+  ctx.stroke();
+}
+
+/**
+ * Open mouth - sleeping or resting
+ */
+function drawOpenMouth(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  ctx.fillStyle = "#ffb3c1";
+  ctx.beginPath();
+  ctx.arc(x, y, size, 0, Math.PI);
+  ctx.lineTo(x - size, y);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(x, y, size, 0, Math.PI);
+  ctx.stroke();
+}
+
+/**
+ * Utility: Lighten color by percentage (for highlights)
+ */
+function lightenColor(hex: string, percent: number): string {
+  const num = parseInt(hex.replace("#", ""), 16);
+  const amt = Math.round(2.55 * percent * 100);
+  const R = Math.min(255, (num >> 16) + amt);
+  const G = Math.min(255, (num >> 8 & 0x00FF) + amt);
+  const B = Math.min(255, (num & 0x0000FF) + amt);
+  return "#" + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+}
+
+/**
+ * Utility: Darken color by percentage (for shadows)
+ */
+function darkenColor(hex: string, percent: number): string {
+  const num = parseInt(hex.replace("#", ""), 16);
+  const amt = Math.round(2.55 * percent * 100);
+  const R = Math.max(0, (num >> 16) - amt);
+  const G = Math.max(0, (num >> 8 & 0x00FF) - amt);
+  const B = Math.max(0, (num & 0x0000FF) - amt);
+  return "#" + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
 }
