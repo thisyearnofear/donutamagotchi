@@ -15,6 +15,7 @@ import {
   calculateMouthExpression,
   calculateEyebrowExpression,
   calculateHeadBreathing,
+  calculateLimbExpression,
   getEyeAppearance,
   spawnParticles,
   updateParticle,
@@ -225,6 +226,10 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
       
       // Draw particles
       drawParticlesEnhanced(ctx, 0, 0, particlesRef.current);
+
+      // Draw limbs (arms and feet)
+      const limbExpr = calculateLimbExpression(state, frameRef.current);
+      drawLimbs(ctx, 0, 0, actualRadius, limbExpr);
 
       // Draw face with expression-based eyes and mouth
       drawFaceEnhanced(ctx, 0, 0, state, frameRef.current, traits);
@@ -581,6 +586,53 @@ function drawBoreIndicators(ctx: CanvasRenderingContext2D, x: number, y: number,
     ctx.fillText("Z", zX, zY);
     ctx.globalAlpha = 1;
   }
+}
+
+/**
+ * Draw cute limbs (arms and feet)
+ * Simple rounded shapes that pose based on emotional state
+ */
+function drawLimbs(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, limbExpr: any) {
+  // Arm dimensions
+  const armWidth = radius * 0.35;
+  const armHeight = radius * 0.25;
+  const armDistance = radius * 0.55; // Distance from center
+  
+  // Foot dimensions
+  const footRadius = radius * 0.18;
+  const footDistance = radius * 0.65;
+  
+  ctx.fillStyle = "#8b4513"; // Brown (donut color)
+  ctx.strokeStyle = "#654321"; // Darker brown outline
+  ctx.lineWidth = 2;
+  
+  // Draw left arm
+  ctx.save();
+  ctx.translate(x - armDistance, y + limbExpr.armYOffset);
+  ctx.rotate(limbExpr.leftArmRotation);
+  drawRoundedRect(ctx, -armWidth / 2, -armHeight / 2, armWidth, armHeight, armHeight / 2);
+  ctx.strokeRect(-armWidth / 2, -armHeight / 2, armWidth, armHeight);
+  ctx.restore();
+  
+  // Draw right arm
+  ctx.save();
+  ctx.translate(x + armDistance, y + limbExpr.armYOffset);
+  ctx.rotate(limbExpr.rightArmRotation);
+  drawRoundedRect(ctx, -armWidth / 2, -armHeight / 2, armWidth, armHeight, armHeight / 2);
+  ctx.strokeRect(-armWidth / 2, -armHeight / 2, armWidth, armHeight);
+  ctx.restore();
+  
+  // Draw feet (simple circles)
+  ctx.fillStyle = "#8b4513";
+  ctx.beginPath();
+  ctx.arc(x - footDistance * 0.7, y + radius + footRadius - 5, footRadius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.arc(x + footDistance * 0.7, y + radius + footRadius - 5, footRadius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
 }
 
 /**

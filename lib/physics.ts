@@ -398,6 +398,69 @@ export function calculateHeadBreathing(frame: number, speed: number = 1): number
 }
 
 /**
+ * Calculate limb positions based on emotional state
+ * Returns arm rotation and y-offset for cute posing
+ */
+export interface LimbExpression {
+  leftArmRotation: number;   // Rotation in radians
+  rightArmRotation: number;  // Rotation in radians
+  armYOffset: number;        // Vertical position adjustment
+}
+
+export function calculateLimbExpression(state: string, frame: number): LimbExpression {
+  // Gentle idle arm sway
+  const idleSway = Math.sin(frame * 0.02) * 0.08;
+  
+  switch (state) {
+    case "happy":
+    case "petting":
+      // Arms relaxed outward and up slightly
+      return {
+        leftArmRotation: -0.3,   // Left arm up
+        rightArmRotation: 0.3,   // Right arm up
+        armYOffset: -8,          // Lifted
+      };
+    case "excited":
+      // Arms raised high with pulsing
+      const pulse = Math.sin(frame * 0.08) * 0.2;
+      return {
+        leftArmRotation: -0.6 + pulse,
+        rightArmRotation: 0.6 + pulse,
+        armYOffset: -15,
+      };
+    case "hungry":
+    case "dead":
+      // Arms drooping down
+      return {
+        leftArmRotation: 0.4,
+        rightArmRotation: -0.4,
+        armYOffset: 15,
+      };
+    case "bored":
+      // Arms loose, minimal movement
+      return {
+        leftArmRotation: idleSway * 0.5,
+        rightArmRotation: -idleSway * 0.5,
+        armYOffset: 5,
+      };
+    case "sleeping":
+      // One arm under head
+      return {
+        leftArmRotation: 1.5,    // Tucked
+        rightArmRotation: -1.5,
+        armYOffset: 0,
+      };
+    default:
+      // Neutral idle
+      return {
+        leftArmRotation: idleSway * 0.3,
+        rightArmRotation: -idleSway * 0.3,
+        armYOffset: 0,
+      };
+  }
+}
+
+/**
  * Mouth expression based on emotional state
  * @param state Pet emotional state
  * @param frame For subtle animations
