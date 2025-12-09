@@ -53,6 +53,9 @@ contract DonutSanctuary is ERC721, ERC721URIStorage, Ownable {
     IDONUTAMAGOTCHIToken public donutamagotchiToken;
     mapping(uint256 => uint256) public lastClaimTime;
     
+    // Ownership tracking: miner address -> owner address
+    mapping(address => address) public minerOwner;
+    
     uint256 public totalRetired = 0;
     mapping(address => uint256[]) public retirementsByUser; // User -> all their retired donuts
     
@@ -77,28 +80,48 @@ contract DonutSanctuary is ERC721, ERC721URIStorage, Ownable {
         uint256 amount
     );
 
+    event MinerOwnershipRegistered(
+        address indexed minerAddress,
+        address indexed owner
+    );
+
     // ============ Constructor ============
     constructor(address _donutamagotchiToken) ERC721("Donutamagotchi Sanctuary", "DSANC") Ownable(msg.sender) {
         require(_donutamagotchiToken != address(0), "Invalid token address");
         donutamagotchiToken = IDONUTAMAGOTCHIToken(_donutamagotchiToken);
     }
 
+    // ============ Miner Registration ============
+    /**
+      * @dev Register caller as owner of a miner (donut)
+      * Must be called once per miner before retirement
+      * Proves that msg.sender owns/controls the miner address
+      */
+    function registerMinerOwnership(address minerAddress) external {
+        require(minerAddress != address(0), "Invalid miner address");
+        require(minerOwner[minerAddress] == address(0), "Miner already registered");
+        
+        minerOwner[minerAddress] = msg.sender;
+        
+        emit MinerOwnershipRegistered(minerAddress, msg.sender);
+    }
+
     // ============ Retirement Logic ============
     /**
-     * @dev Retire a donut (move to sanctuary for permanence)
-     * @param minerAddress Address of the miner contract to retire
-     * @param createdAtTimestamp When the donut was born
-     * @param totalEarningsDonut Total $DONUT earned in lifetime
-     * @param totalEarningsWeth Total WETH earned in lifetime
-     * @param finalGeneration Generation at retirement
-     * @param offspringCount Total offspring produced
-     * @param memorialText Optional epitaph
-     * 
-     * Requirements:
-     * - Donut must be at least 90 days old
-     * - Only owner of the donut can retire it
-     * - Miner address must not already be retired
-     */
+      * @dev Retire a donut (move to sanctuary for permanence)
+      * @param minerAddress Address of the miner contract to retire
+      * @param createdAtTimestamp When the donut was born
+      * @param totalEarningsDonut Total $DONUT earned in lifetime
+      * @param totalEarningsWeth Total WETH earned in lifetime
+      * @param finalGeneration Generation at retirement
+      * @param offspringCount Total offspring produced
+      * @param memorialText Optional epitaph
+      * 
+      * Requirements:
+      * - Donut must be at least 90 days old
+      * - Only owner of the donut can retire it (must have registered ownership)
+      * - Miner address must not already be retired
+      */
     function retireDonut(
         address minerAddress,
         uint256 createdAtTimestamp,
@@ -109,6 +132,7 @@ contract DonutSanctuary is ERC721, ERC721URIStorage, Ownable {
         string calldata memorialText
     ) external returns (uint256) {
         require(minerAddress != address(0), "Invalid miner address");
+        require(minerOwner[minerAddress] == msg.sender, "Not owner of this donut");
         require(minerAddressToNFT[minerAddress] == 0, "Donut already retired");
         
         // Verify minimum age (90 days)
@@ -181,9 +205,12 @@ contract DonutSanctuary is ERC721, ERC721URIStorage, Ownable {
     }
 
     /**
-     * @dev Calculate passive income earned since retirement
-     * Increases by 0.1 $DONUTAMAGOTCHI per day
-     */
+      * @dev Calculate passive income earned since retirement
+      * Income is tier-based with generation bonus:
+      * - Base: 1 token/day for Gen 1 CHERISHED
+      * - Generation: +0.5 tokens per generation above 1
+      * - Tier multiplier: CHERISHED 1x, HONORED 1.5x, LEGENDARY 2x
+      */
     function calculatePassiveIncome(uint256 tokenId) external view returns (uint256) {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
         RetiredDonut memory retired = retiredDonuts[tokenId];
@@ -197,7 +224,36 @@ contract DonutSanctuary is ERC721, ERC721URIStorage, Ownable {
         uint256 secondsSinceLastClaim = block.timestamp - startTime;
         uint256 daysSinceLastClaim = secondsSinceLastClaim / 1 days;
         
-        return daysSinceLastClaim * DAILY_PASSIVE_INCOME;
+        // Calculate daily rate based on tier and generation
+        uint256 dailyRate = _calculateDailyRate(tokenId);
+        
+        return daysSinceLastClaim * dailyRate;
+    }
+
+    /**
+      * @dev Internal: Calculate daily passive income rate based on tier and generation
+      */
+    function _calculateDailyRate(uint256 tokenId) internal view returns (uint256) {
+        RetiredDonut memory retired = retiredDonuts[tokenId];
+        
+        // Base rate: 1 token/day for Gen 1
+        uint256 baseRate = 1e18; // 1 token with 18 decimals
+        
+        // Generation bonus: +0.5 tokens per generation above 1
+        uint256 generationBonus = (retired.finalGeneration - 1) * 5e17; // 0.5 token per gen
+        uint256 rateWithGeneration = baseRate + generationBonus;
+        
+        // Tier multiplier
+        uint256 ageInDays = (retired.retiredAtTimestamp - retired.createdAtTimestamp) / 1 days;
+        uint256 tierMultiplier = 100; // Default to 100% (CHERISHED)
+        
+        if (ageInDays >= 120) {
+            tierMultiplier = 200; // LEGENDARY: 2x
+        } else if (ageInDays >= 100) {
+            tierMultiplier = 150; // HONORED: 1.5x
+        }
+        
+        return (rateWithGeneration * tierMultiplier) / 100;
     }
 
     /**

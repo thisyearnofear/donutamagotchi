@@ -43,10 +43,13 @@ contract DonutBreeding is ERC721, ERC721URIStorage, Ownable {
     }
 
     // ============ State ============
-    // ============ State ============
     IDONUTAMAGOTCHIToken public donutamagotchiToken;
     address public signerOracle;
     mapping(address => uint256) public nonces;
+    
+    // Ownership tracking: miner address -> owner address
+    mapping(address => address) public minerOwner;
+    mapping(address => bool) public isRegisteredMiner;
     
     uint256 private nextTokenId = 1;
     mapping(uint256 => Offspring) public offspring;
@@ -71,6 +74,11 @@ contract DonutBreeding is ERC721, ERC721URIStorage, Ownable {
         uint256 cooldownUntil
     );
 
+    event MinerOwnershipRegistered(
+        address indexed minerAddress,
+        address indexed owner
+    );
+
     // ============ Constructor ============
     constructor(address _donutamagotchiToken, address _signerOracle) ERC721("Donutamagotchi Offspring", "DOFF") Ownable(msg.sender) {
         require(_donutamagotchiToken != address(0), "Invalid token address");
@@ -79,24 +87,45 @@ contract DonutBreeding is ERC721, ERC721URIStorage, Ownable {
         signerOracle = _signerOracle;
     }
 
+    // ============ Miner Registration ============
+    /**
+      * @dev Register caller as owner of a miner (donut)
+      * Must be called once per miner before breeding
+      * Proves that msg.sender owns/controls the miner address
+      */
+    function registerMinerOwnership(address minerAddress) external {
+        require(minerAddress != address(0), "Invalid miner address");
+        require(minerOwner[minerAddress] == address(0), "Miner already registered");
+        
+        minerOwner[minerAddress] = msg.sender;
+        isRegisteredMiner[minerAddress] = true;
+        
+        emit MinerOwnershipRegistered(minerAddress, msg.sender);
+    }
+
     // ============ Core Breeding Logic ============
     /**
-     * @dev Create offspring from two parent donuts
-     * @param parentAMiner Address of parent A's miner contract
-     * @param parentBMiner Address of parent B's miner contract
-     * @param geneticData Encoded genetic information (JSON string with trait inheritance data)
-     * 
-     * Requirements:
-     * - Both parents must be different addresses
-     * - Caller must approve BREEDING_COST tokens
-     * - Neither parent can have bred in the last 7 days
-     */
+      * @dev Create offspring from two parent donuts
+      * @param parentAMiner Address of parent A's miner contract
+      * @param parentBMiner Address of parent B's miner contract
+      * @param geneticData Encoded genetic information (JSON string with trait inheritance data)
+      * 
+      * Requirements:
+      * - Both parents must be registered and owned by caller
+      * - Both parents must be different addresses
+      * - Caller must approve BREEDING_COST tokens
+      * - Neither parent can have bred in the last 7 days
+      */
     function breed(
         address parentAMiner,
         address parentBMiner,
         string calldata geneticData,
         bytes calldata signature
     ) external returns (uint256) {
+        // Verify ownership of both parents
+        require(minerOwner[parentAMiner] == msg.sender, "Not owner of parent A");
+        require(minerOwner[parentBMiner] == msg.sender, "Not owner of parent B");
+        
         // Verify signature
         bytes32 structHash = keccak256(abi.encodePacked(
             parentAMiner,
