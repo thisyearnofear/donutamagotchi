@@ -115,25 +115,33 @@ Team Allocation: 7.5% (75M tokens)
 
 ---
 
-## Tier 2 Cuteness Enhancements (Pending)
+## ✅ Tier 2 Enhancements (Complete)
+
+**Personality-Based Eyebrows** ✅
+- Friendly: curved (welcoming)
+- Energetic: sharp (expressive)
+- Lazy: droopy (relaxed)
+- Stubborn: straight (determined)
+- Respond to emotional state (up=happy, down=sad/hungry)
+
+**Personality-Based Eye Colors** ✅
+- Friendly: warm black pupils
+- Energetic: deep blue-tinted pupils
+- Lazy: sleepy warm-white eyes
+- Stubborn: red/brown-tinted pupils
+
+**Enhanced Micro-Expressions** ✅
+- Blinks: 2x more frequent (every 70 frames vs 120)
+- Eye glances: Look left/right occasionally without moving head
+- Head tilting: Subtle side-to-side rotation during breathing
+- All personality-aware (speed scales with personality)
+
+## Tier 3 Enhancements (Pending)
 
 **Visible Limbs** (Medium-high impact)
-- Feet: rotate during jump gesture
+- Feet: rotate during jump/bounce gestures
 - Arms/hands: pose during bounce, jump, wiggle, spin
 - Implementation: ~60-80 lines in gesture section
-
-**Personality-Based Eyes** (Low-medium impact)
-- Eyebrows: Friendly=curved, Energetic=sharp, Lazy=droopy, Stubborn=straight
-- Eye colors: Optional tint based on personality
-- Implementation: ~40-60 lines in face drawing
-
-**Idle Micro-Expressions** (Low impact, polish)
-- More frequent blinks (currently ~120 frames apart)
-- Occasional eye glances (look left/right)
-- Subtle head tilts during breathing
-- Implementation: ~30-50 lines in physics.ts
-
-All follow DRY + ENHANCEMENT FIRST principles (no new components).
 
 ---
 
