@@ -13,6 +13,9 @@ import {
   calculateHeadShake,
   calculateEyeExpression,
   calculateMouthExpression,
+  calculateEyebrowExpression,
+  calculateHeadBreathing,
+  getEyeAppearance,
   spawnParticles,
   updateParticle,
   type Particle,
@@ -86,6 +89,8 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
       if (state !== "dead" && !gesture) {
         const breathe = Math.sin(frameRef.current * 0.05 * personalitySpeed) * 5;
         offsetY = breathe;
+        // Add subtle head tilt during breathing
+        rotation = calculateHeadBreathing(frameRef.current, personalitySpeed);
       }
 
       // Physics-based gesture animations
@@ -318,10 +323,17 @@ function drawFaceEnhanced(ctx: CanvasRenderingContext2D, x: number, y: number, s
   // Get expression state from physics engine
   const eyeExpr = calculateEyeExpression(state, frame);
   const mouthExpr = calculateMouthExpression(state, frame);
+  const eyebrowExpr = traits ? calculateEyebrowExpression(traits.personality, state, frame) : null;
+  const eyeAppearance = traits ? getEyeAppearance(traits.personality) : null;
   
   // Draw cheek blushes (key to cuteness)
   const blushIntensity = Math.max(0, calculateEyeExpression(state, frame).height * 0.7);
   drawCheekBlushes(ctx, x, y, blushIntensity, traits?.personality);
+  
+  // Draw eyebrows before eyes (so eyes render on top)
+  if (eyebrowExpr && !("sleeping".includes(state) || "dead".includes(state))) {
+    drawEyebrows(ctx, x, y, eyebrowExpr, eyeSpacing);
+  }
 
   // Special case: dead pets get X eyes (classic)
   if (state === "dead") {
@@ -348,60 +360,65 @@ function drawFaceEnhanced(ctx: CanvasRenderingContext2D, x: number, y: number, s
     ctx.lineTo(x + eyeSpacing + 8, eyeY);
     ctx.stroke();
   } else {
-    // Draw eyes with exaggerated expression
+    // Draw eyes with exaggerated expression and glancing
     const eyeWidth = baseEyeWidth * eyeExpr.width;
     const eyeHeight = baseEyeHeight * eyeExpr.height;
     const pupilY = eyeY + eyeExpr.pupilOffset * 4; // Pupil can move up/down
+    const glanceShift = eyeExpr.glanceOffset * 6; // Horizontal glance offset
 
     // Personality-based eye shape
     const eyeShape = traits?.personality === "Stubborn" ? "round" : traits?.personality === "Lazy" ? "small" : "normal";
+    
+    // Get personality-based eye colors
+    const pupilColor = eyeAppearance?.pupilColor || "#000";
+    const eyeWhiteColor = eyeAppearance?.eyeWhiteColor || "#fff";
 
     // Draw eye whites and pupils (exaggerated for emotion)
     if (eyeShape === "round" && eyeHeight > 0.1) {
       // Round eyes (Stubborn personality)
       const radius = eyeWidth / 2;
       
-      // Eye white base
-      ctx.fillStyle = "#fff";
+      // Eye white base with personality color
+      ctx.fillStyle = eyeWhiteColor;
       ctx.beginPath();
-      ctx.arc(x - eyeSpacing, eyeY, radius * 0.9, 0, Math.PI * 2);
+      ctx.arc(x - eyeSpacing + glanceShift, eyeY, radius * 0.9, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(x + eyeSpacing, eyeY, radius * 0.9, 0, Math.PI * 2);
+      ctx.arc(x + eyeSpacing + glanceShift, eyeY, radius * 0.9, 0, Math.PI * 2);
       ctx.fill();
 
-      // Pupils (offset for expression)
-      ctx.fillStyle = "#000";
+      // Pupils with personality color tint
+      ctx.fillStyle = pupilColor;
       const pupilRadius = radius * 0.4;
       ctx.beginPath();
-      ctx.arc(x - eyeSpacing, pupilY, pupilRadius, 0, Math.PI * 2);
+      ctx.arc(x - eyeSpacing + glanceShift, pupilY, pupilRadius, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(x + eyeSpacing, pupilY, pupilRadius, 0, Math.PI * 2);
+      ctx.arc(x + eyeSpacing + glanceShift, pupilY, pupilRadius, 0, Math.PI * 2);
       ctx.fill();
       
       // Shine/highlight spots (adds depth and sparkle)
       ctx.fillStyle = "#fff";
       ctx.beginPath();
-      ctx.arc(x - eyeSpacing - pupilRadius * 0.5, pupilY - pupilRadius * 0.5, pupilRadius * 0.35, 0, Math.PI * 2);
+      ctx.arc(x - eyeSpacing + glanceShift - pupilRadius * 0.5, pupilY - pupilRadius * 0.5, pupilRadius * 0.35, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(x + eyeSpacing - pupilRadius * 0.5, pupilY - pupilRadius * 0.5, pupilRadius * 0.35, 0, Math.PI * 2);
+      ctx.arc(x + eyeSpacing + glanceShift - pupilRadius * 0.5, pupilY - pupilRadius * 0.5, pupilRadius * 0.35, 0, Math.PI * 2);
       ctx.fill();
     } else {
-      // Oval/rectangular eyes (default/Lazy) - now with shine
-      ctx.fillStyle = "#fff";
+      // Oval/rectangular eyes (default/Lazy) - now with shine and glancing
+      ctx.fillStyle = eyeWhiteColor;
       
       // Draw rounded rectangle eye whites
-      drawRoundedRect(ctx, x - eyeSpacing - eyeWidth / 2, eyeY - eyeHeight / 2, eyeWidth, eyeHeight, eyeHeight / 3);
-      drawRoundedRect(ctx, x + eyeSpacing - eyeWidth / 2, eyeY - eyeHeight / 2, eyeWidth, eyeHeight, eyeHeight / 3);
+      drawRoundedRect(ctx, x - eyeSpacing + glanceShift - eyeWidth / 2, eyeY - eyeHeight / 2, eyeWidth, eyeHeight, eyeHeight / 3);
+      drawRoundedRect(ctx, x + eyeSpacing + glanceShift - eyeWidth / 2, eyeY - eyeHeight / 2, eyeWidth, eyeHeight, eyeHeight / 3);
 
       // Pupils (only if eyes are open enough)
       if (eyeHeight > 3) {
-        ctx.fillStyle = "#000";
+        ctx.fillStyle = pupilColor;
         const pupilRadius = Math.max(2, eyeWidth * 0.25);
-        const pupilX1 = x - eyeSpacing;
-        const pupilX2 = x + eyeSpacing;
+        const pupilX1 = x - eyeSpacing + glanceShift;
+        const pupilX2 = x + eyeSpacing + glanceShift;
         
         ctx.beginPath();
         ctx.arc(pupilX1, pupilY, pupilRadius, 0, Math.PI * 2);
@@ -563,6 +580,72 @@ function drawBoreIndicators(ctx: CanvasRenderingContext2D, x: number, y: number,
     ctx.globalAlpha = zAlpha;
     ctx.fillText("Z", zX, zY);
     ctx.globalAlpha = 1;
+  }
+}
+
+/**
+ * Draw personality-based eyebrows
+ * Different styles (curved, sharp, droopy, straight) reinforce personality
+ */
+function drawEyebrows(ctx: CanvasRenderingContext2D, x: number, y: number, eyebrowExpr: any, eyeSpacing: number) {
+  const eyebrowY = y - 8; // Above eyes
+  const eyebrowHeight = eyebrowExpr.height;
+  const eyebrowAngle = eyebrowExpr.angle;
+  
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 3;
+  ctx.lineCap = "round";
+  
+  // Left and right eyebrow positions
+  const leftX = x - eyeSpacing;
+  const rightX = x + eyeSpacing;
+  
+  switch (eyebrowExpr.type) {
+    case "curved":
+      // Soft curved eyebrows - Friendly personality
+      ctx.beginPath();
+      ctx.arc(leftX, eyebrowY + eyebrowHeight, 18, Math.PI, 0, true);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(rightX, eyebrowY + eyebrowHeight, 18, Math.PI, 0, true);
+      ctx.stroke();
+      break;
+      
+    case "sharp":
+      // Pointed angled eyebrows - Energetic personality
+      ctx.beginPath();
+      ctx.moveTo(leftX - 15, eyebrowY + eyebrowHeight - 8);
+      ctx.lineTo(leftX + 15, eyebrowY + eyebrowHeight + 4);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(rightX - 15, eyebrowY + eyebrowHeight - 8);
+      ctx.lineTo(rightX + 15, eyebrowY + eyebrowHeight + 4);
+      ctx.stroke();
+      break;
+      
+    case "droopy":
+      // Relaxed drooping eyebrows - Lazy personality
+      ctx.beginPath();
+      ctx.moveTo(leftX - 18, eyebrowY + eyebrowHeight - 5);
+      ctx.quadraticCurveTo(leftX, eyebrowY + eyebrowHeight + 8, leftX + 18, eyebrowY + eyebrowHeight + 10);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(rightX - 18, eyebrowY + eyebrowHeight - 5);
+      ctx.quadraticCurveTo(rightX, eyebrowY + eyebrowHeight + 8, rightX + 18, eyebrowY + eyebrowHeight + 10);
+      ctx.stroke();
+      break;
+      
+    case "straight":
+      // Determined horizontal eyebrows - Stubborn personality
+      ctx.beginPath();
+      ctx.moveTo(leftX - 18, eyebrowY + eyebrowHeight);
+      ctx.lineTo(leftX + 18, eyebrowY + eyebrowHeight);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(rightX - 18, eyebrowY + eyebrowHeight);
+      ctx.lineTo(rightX + 18, eyebrowY + eyebrowHeight);
+      ctx.stroke();
+      break;
   }
 }
 

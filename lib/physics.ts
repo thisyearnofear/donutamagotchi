@@ -204,6 +204,18 @@ export interface EyeExpression {
   height: number;     // Eye height (scaled 0-1)
   pupilOffset: number; // Pupil vertical offset (-1 to 1)
   rotation: number;   // Eye rotation in radians
+  glanceOffset: number; // Horizontal eye shift for glancing (-1 to 1)
+}
+
+export interface EyebrowExpression {
+  type: "curved" | "sharp" | "droopy" | "straight"; // Personality-based
+  height: number;      // Vertical position offset
+  angle: number;       // Rotation in radians
+}
+
+export interface EyeAppearance {
+  pupilColor: string;   // Color tint for pupils
+  eyeWhiteColor: string; // Optional tint for eye whites
 }
 
 /**
@@ -215,8 +227,15 @@ export interface EyeExpression {
  * @returns Eye expression parameters
  */
 export function calculateEyeExpression(state: string, frame: number): EyeExpression {
-  const blinkPhase = Math.floor(frame / 120) % 20; // Blink every ~120 frames
-  const isBlink = blinkPhase === 0;
+  // Frequent blinks (every 60-80 frames, faster than before)
+  const blinkCycle = 70;
+  const blinkPhase = Math.floor(frame / blinkCycle) % 30;
+  const isBlink = blinkPhase < 3; // Blink duration: 3 frames
+  
+  // Occasional glances (look left/right) every 180+ frames
+  const glanceCycle = Math.sin(frame * 0.004) * 0.3; // Gentle horizontal sway
+  const glancePhase = Math.floor(frame / 180) % 10;
+  const hasGlance = glancePhase > 2 ? glanceCycle : 0; // Random glances
   
   // Base eye dimensions (will be scaled based on state)
   let widthScale = 1;
@@ -256,14 +275,15 @@ export function calculateEyeExpression(state: string, frame: number): EyeExpress
       heightScale = 1;
   }
   
-  // Apply blink (close eyes briefly)
-  if (isBlink) heightScale *= 0.1;
+  // Apply blink (close eyes briefly, more frequently)
+  if (isBlink) heightScale *= 0.05;
   
   return {
     width: widthScale,
     height: Math.max(0.05, heightScale), // Minimum 5% height for blink
     pupilOffset,
     rotation,
+    glanceOffset: hasGlance, // Horizontal eye shift for glancing
   };
 }
 
@@ -274,6 +294,107 @@ export function calculateEyeExpression(state: string, frame: number): EyeExpress
 export interface MouthExpression {
   type: "smile" | "frown" | "flat" | "surprised" | "open";
   intensity: number; // 0-1, how pronounced
+}
+
+/**
+ * Calculate personality-based eyebrow expression
+ * Different personality types have distinct eyebrow styles
+ * @param personality Personality type
+ * @param state Emotional state (affects height/angle)
+ * @param frame For subtle breathing animations
+ * @returns Eyebrow expression parameters
+ */
+export function calculateEyebrowExpression(personality: string, state: string, frame: number): EyebrowExpression {
+  // Subtle breathing/bobbing of eyebrows
+  const breatheAmount = Math.sin(frame * 0.03) * 0.15;
+  
+  // State-based height changes
+  let stateHeightBoost = 0;
+  let stateAngle = 0;
+  
+  switch (state) {
+    case "happy":
+    case "excited":
+      stateHeightBoost = 3; // Eyebrows up when happy
+      stateAngle = 0.1; // Slight upward angle
+      break;
+    case "hungry":
+    case "dead":
+      stateHeightBoost = -5; // Eyebrows down when sad
+      stateAngle = -0.15; // Downward angle (concerned)
+      break;
+    case "bored":
+      stateHeightBoost = -2;
+      stateAngle = -0.05;
+      break;
+  }
+  
+  // Personality-based eyebrow shape
+  let type: "curved" | "sharp" | "droopy" | "straight";
+  switch (personality) {
+    case "Friendly":
+      type = "curved"; // Soft, welcoming
+      break;
+    case "Energetic":
+      type = "sharp"; // Pointed, expressive
+      break;
+    case "Lazy":
+      type = "droopy"; // Relaxed, sleepy
+      break;
+    case "Stubborn":
+      type = "straight"; // Determined, firm
+      break;
+    default:
+      type = "curved";
+  }
+  
+  return {
+    type,
+    height: breatheAmount + stateHeightBoost,
+    angle: stateAngle,
+  };
+}
+
+/**
+ * Get personality-based eye appearance
+ * Includes pupil color tint based on personality
+ * @param personality Personality type
+ * @returns Eye appearance parameters
+ */
+export function getEyeAppearance(personality: string): EyeAppearance {
+  // Subtle color tints for different personalities
+  const appearances: { [key: string]: EyeAppearance } = {
+    Friendly: {
+      pupilColor: "#1a1a1a", // Warm black
+      eyeWhiteColor: "#ffffff",
+    },
+    Energetic: {
+      pupilColor: "#003d99", // Deep blue tint
+      eyeWhiteColor: "#fffbf0", // Warm white
+    },
+    Lazy: {
+      pupilColor: "#1a1a1a",
+      eyeWhiteColor: "#fff9f0", // Sleepy warm white
+    },
+    Stubborn: {
+      pupilColor: "#4d0000", // Deep red/brown tint
+      eyeWhiteColor: "#ffffff",
+    },
+  };
+  
+  return appearances[personality] || appearances.Friendly;
+}
+
+/**
+ * Calculate breathing animation for head (subtle tilt)
+ * Makes idle animation more organic
+ * @param frame Current frame
+ * @param speed Personality-adjusted speed
+ * @returns Head tilt rotation in radians
+ */
+export function calculateHeadBreathing(frame: number, speed: number = 1): number {
+  // Gentle head bob side-to-side during breathing (not just vertical)
+  return Math.sin(frame * 0.02 * speed) * 0.08; // Small rotation
 }
 
 /**
