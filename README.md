@@ -50,12 +50,31 @@ TWILIGHT (90+ days)- Aging gracefully, retirement eligible, full size
 4. **Watch It Grow** - Progress through lifecycle stages
 5. **Breed (Soon!)** - Create offspring with Prime age donuts
 
+## 🛡️ Community First
+
+Donutamagotchi is designed to strengthen the $DONUT ecosystem, not extract value. See our transparency page (`/transparency`) for proof:
+- **25% of cosmetics revenue locked for $DONUT-WETH LP** (permanent liquidity)
+- **30% burned** (deflationary, benefits holders)
+- **45% to treasury** (ecosystem operations only)
+- **7.5% team vesting** (linear over 12 months, ~0.625%/month)
+- **Sustainable incentives** - team benefits when $DONUT succeeds
+- **Full transparency** - vesting progress visible on dashboard
+
+From day 1, we align team incentives with ecosystem health through verifiable on-chain mechanics.
+
 ## 💰 Economics
 
 ### Revenue Split (On-Chain)
 - 80% → Previous owner (profit opportunity!)
 - 15% → Treasury (LP buyback & burn)
 - 5% → App provider
+
+### Treasury Alignment (Community First)
+- **25% minimum** of cosmetics revenue → Locked $DONUT-WETH LP (burned)
+- **30%** of cosmetics revenue → $DONUTAMAGOTCHI token burn (deflation)
+- **Remaining** → Ecosystem operations, events, community rewards
+- **No developer dumps** - all profits reinvested in ecosystem
+- **Transparent reporting** - monthly proofs, quarterly voting on allocation
 
 ### Token Emissions
 - Starts at 4 DONUT/sec
@@ -118,7 +137,19 @@ Requires `.env.local` with:
 ```
 NEXT_PUBLIC_FARCASTER_HUB_ID=...
 NEYNAR_API_KEY=...
+NEXT_PUBLIC_DONUTAMAGOTCHI_TOKEN=<deployed_token_address>
+NEXT_PUBLIC_DONUT_BREEDING=<deployed_breeding_address>
+NEXT_PUBLIC_DONUT_SANCTUARY=<deployed_sanctuary_address>
 ```
+
+### Smart Contract Deployment
+
+Before launching, deploy in this order:
+1. **DonutamagotchiToken.sol** (set `lpLockAddress` to dead address `0x000...000`)
+2. **DonutBreeding.sol** (reference token address)
+3. **DonutSanctuary.sol** (reference token address)
+4. Update `.env.local` with deployed addresses
+5. Transparency dashboard will auto-populate from on-chain data
 
 ## 🎯 Frontend Features
 

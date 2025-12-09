@@ -60,6 +60,47 @@ We are **not** replacing or competing with the protocol—we are **enhancing it*
 
 ---
 
+## Community Alignment Strategy
+
+### Ecosystem-First Economics
+
+**Principle:** A successful $DONUT frontend succeeds when $DONUT succeeds. Our design ensures alignment through:
+
+1. **Transparent Fee Usage (On-Chain Proof)**
+   - Treasury address publicly visible in contracts
+   - All cosmetics revenue traceable
+   - Burn mechanism verifiable on-chain
+   - Monthly reports with linked proofs
+
+2. **Locked LP Commitment**
+   - Minimum 25% of cosmetics revenue → $DONUT-WETH LP
+   - LP tokens burned (permanent liquidity)
+   - Published LP burn receipts
+   - Community dashboard showing locked value
+
+3. **Sustainable Team Incentives**
+   - 7.5% team allocation vested linearly over 12 months
+   - Tokens unlock gradually (~0.625%/month)
+   - Prevents large dumps, aligns long-term interests
+   - Transparent vesting visible on dashboard
+
+4. **Community Responsiveness**
+   - Active builder chat participation
+   - Public decision-making on governance votes
+   - Regular builder community updates
+   - Address concerns directly and publicly
+
+5. **Ecosystem Contribution Documentation**
+   - Public dashboard showing:
+     - Total $DONUT LP locked
+     - Cumulative burns
+     - Treasury balance & allocation
+     - Team vesting progress
+     - Community votes & outcomes
+   - Quarterly ecosystem health reports
+
+---
+
 ## What Makes Us Different
 
 ### vs King Glazer (Pool Model)
@@ -71,6 +112,29 @@ We are **not** replacing or competing with the protocol—we are **enhancing it*
 - **Builder Codes (Generic Frontends)**: Simple UI, no persistence
 - **Donutamagotchi**: Pet lifecycle, breeding, traits, sanctuary system
 - **Differentiation**: True tamagotchi gameplay, not just theming
+
+---
+
+## Phase 1A: Community Alignment (PREREQUISITE)
+
+**Goal:** Establish transparent ecosystem contribution before gameplay launch
+
+### Smart Contract Changes
+- Updated `DonutamagotchiToken.sol` with `processCosmeticsRevenue()`
+- Revenue splits: 25% → LP lock, 30% → burn, 45% → treasury
+- Tracking: `totalCosmeticsRevenue`, `totalLockedForLP`, `totalBurnedFromCosmetics`
+- View function: `getCosmeticsBreakdown()` for real-time transparency
+
+### Frontend Features
+- New page: `/transparency` with dashboard + FAQ
+- Component: `TransparencyDashboard` shows on-chain data
+- Nav button: "PROOF" link to transparency page
+- Community commitment messaging
+
+### Key Differentiator
+- **Ecosystem alignment**: Locked LP, automatic burns, sustainable team incentives
+- **Fair allocation**: 7.5% team vesting, governance via staking
+- **Community first**: Transparent reports, audit-friendly smart contracts
 
 ---
 

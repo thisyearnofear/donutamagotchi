@@ -22,6 +22,7 @@ export function NavBar() {
         <NavButton href="/breeding" active={pathname === "/breeding"} emoji="💕" label="BREED" />
         <NavButton href="/shop" active={pathname === "/shop"} emoji="🎨" label="SHOP" />
         <NavButton href="/hall-of-fame" active={pathname === "/hall-of-fame"} emoji="👑" label="FAME" />
+        <NavButton href="/transparency" active={pathname === "/transparency"} emoji="🌍" label="PROOF" />
       </div>
     </nav>
   );
