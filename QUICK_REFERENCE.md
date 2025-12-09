@@ -115,5 +115,27 @@ Team Allocation: 7.5% (75M tokens)
 
 ---
 
+## Tier 2 Cuteness Enhancements (Pending)
+
+**Visible Limbs** (Medium-high impact)
+- Feet: rotate during jump gesture
+- Arms/hands: pose during bounce, jump, wiggle, spin
+- Implementation: ~60-80 lines in gesture section
+
+**Personality-Based Eyes** (Low-medium impact)
+- Eyebrows: Friendly=curved, Energetic=sharp, Lazy=droopy, Stubborn=straight
+- Eye colors: Optional tint based on personality
+- Implementation: ~40-60 lines in face drawing
+
+**Idle Micro-Expressions** (Low impact, polish)
+- More frequent blinks (currently ~120 frames apart)
+- Occasional eye glances (look left/right)
+- Subtle head tilts during breathing
+- Implementation: ~30-50 lines in physics.ts
+
+All follow DRY + ENHANCEMENT FIRST principles (no new components).
+
+---
+
 For detailed implementation, see IMPLEMENTATION_SUMMARY.txt
 For full plan, see ROADMAP.md
