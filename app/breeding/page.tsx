@@ -12,7 +12,7 @@ import { OffspringPreview } from "@/components/offspring-preview";
 import { PedigreeCard } from "@/components/pedigree-card";
 import { AccordionProvider } from "@/components/accordion-context";
 import { generateOffspringPreviews } from "@/lib/genetics";
-import { Traits } from "@/lib/traits";
+import { Traits, getLifecycleStage } from "@/lib/traits";
 
 interface BreedingPartner {
   id: string;
@@ -115,7 +115,13 @@ export default function BreedingPage() {
   ];
 
   const filteredPartners = useMemo(() => {
-    let filtered = availablePartners.filter((p) => p.personality === filterPersonality);
+    // Filter by: personality, prime age (30-90 days), and viable breeding stats
+    let filtered = availablePartners.filter((p) => {
+      const isPrimeAge = getLifecycleStage(p.ageInDays) === "prime";
+      const isViable = p.breedingViability >= 30; // At least 30% viability
+      const hasGoodStats = p.health >= 50;
+      return p.personality === filterPersonality && isPrimeAge && isViable && hasGoodStats;
+    });
 
     return filtered.sort((a, b) => {
       if (sortBy === "generation") return b.generation - a.generation;

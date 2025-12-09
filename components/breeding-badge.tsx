@@ -1,7 +1,9 @@
 "use client";
 
+import { LifecycleStage } from "@/lib/traits";
+
 interface BreedingBadgeProps {
-  lifecycleStage: "birth" | "growth" | "prime" | "twilight";
+  lifecycleStage: LifecycleStage;
   happiness: number;
 }
 

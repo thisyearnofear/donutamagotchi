@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { getLifecycleStage } from "@/lib/traits";
 import { NavBar } from "@/components/nav-bar";
 import { Button } from "@/components/ui/button";
 import { ExploreFilters } from "@/components/explore-filters";
@@ -62,13 +63,6 @@ export default function DonutsPage() {
       generation: 1,
     },
   ];
-
-  const getLifecycleStage = (days: number) => {
-    if (days < 1) return "birth";
-    if (days < 30) return "growth";
-    if (days < 90) return "prime";
-    return "twilight";
-  };
 
   const filteredBySearch = allDonuts.filter(
     (donut) =>
@@ -170,6 +164,7 @@ export default function DonutsPage() {
             >
               {sortedDonuts.slice(0, 4).map((donut) => {
                 const stage = getLifecycleStage(donut.ageInDays);
+                if (stage === "dead") return null; // Skip dead donuts
                 return <DonutCardComponent key={donut.id} donut={donut} stage={stage} />;
               })}
             </FeaturedSection>
@@ -188,6 +183,7 @@ export default function DonutsPage() {
             <div className="space-y-2 flex-1 overflow-y-auto">
               {(showAllDonuts ? sortedDonuts : sortedDonuts.slice(4)).map((donut) => {
                 const stage = getLifecycleStage(donut.ageInDays);
+                if (stage === "dead") return null; // Skip dead donuts
                 return <DonutCardComponent key={donut.id} donut={donut} stage={stage} />;
               })}
             </div>

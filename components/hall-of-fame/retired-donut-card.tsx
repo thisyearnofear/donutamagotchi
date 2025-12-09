@@ -1,7 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { PedigreeCard } from "@/components/pedigree-card";
 import { useSanctuary } from "@/hooks/useSanctuary";
+import { calculateSanctuaryIncome, getRetirementTier } from "@/lib/earnings";
 import { useAccount } from "wagmi";
 
 interface RetiredDonutProps {
@@ -28,11 +28,16 @@ interface RetiredDonutProps {
 }
 
 export function RetiredDonutCard({ donut }: RetiredDonutProps) {
-    const { address } = useAccount();
-    const { claimIncome, getPendingIncome, isClaiming } = useSanctuary();
+     const { address } = useAccount();
+     const { claimIncome, getPendingIncome, isClaiming } = useSanctuary();
 
-    const pendingIncome = getPendingIncome(donut.id);
-    const isOwner = address?.toLowerCase() === donut.ownerAddress?.toLowerCase();
+     const pendingIncome = getPendingIncome(donut.id);
+     const isOwner = address?.toLowerCase() === donut.ownerAddress?.toLowerCase();
+     
+     // Calculate sanctuary income based on tier
+     const tier = getRetirementTier(donut.totalDaysAlive);
+     const daysRetired = 0; // Would come from contract in production
+     const sanctuaryIncome = tier ? calculateSanctuaryIncome(donut.traits.generation, tier, daysRetired) : null;
 
     return (
         <div className="bg-white border-4 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-2">
@@ -78,19 +83,30 @@ export function RetiredDonutCard({ donut }: RetiredDonutProps) {
             </div>
 
             {/* Pedigree Display */}
-            <div className="pt-2 border-t-2 border-black border-dashed">
-                <PedigreeCard
-                    generation={donut.traits.generation}
-                    parentAPersonality={donut.traits.parentAPersonality}
-                    parentBPersonality={donut.traits.parentBPersonality}
-                    parentAColor={donut.traits.parentAColor}
-                    parentBColor={donut.traits.parentBColor}
-                    offspring={donut.traits.offspringCount}
-                    compact={false}
-                />
-            </div>
+             <div className="pt-2 border-t-2 border-black border-dashed">
+                 <PedigreeCard
+                     generation={donut.traits.generation}
+                     parentAPersonality={donut.traits.parentAPersonality}
+                     parentBPersonality={donut.traits.parentBPersonality}
+                     parentAColor={donut.traits.parentAColor}
+                     parentBColor={donut.traits.parentBColor}
+                     offspring={donut.traits.offspringCount}
+                     compact={false}
+                 />
+             </div>
 
-            {/* Claim Section for Owners */}
+             {/* Sanctuary Income Section */}
+             {sanctuaryIncome && (
+                 <div className="bg-purple-100 border-2 border-purple-400 rounded-lg p-2 space-y-1">
+                     <div className="text-[10px] font-black text-purple-900">🌙 SANCTUARY INCOME ({tier})</div>
+                     <div className="grid grid-cols-2 gap-2 text-[9px] font-bold text-purple-800">
+                         <div>Daily: +{sanctuaryIncome.dailyRate} tokens</div>
+                         <div>Lifetime: {sanctuaryIncome.totalEarned} tokens</div>
+                     </div>
+                 </div>
+             )}
+
+             {/* Claim Section for Owners */}
             {isOwner && pendingIncome > 0 && (
                 <div className="bg-green-100 border-2 border-green-500 rounded-lg p-2 flex items-center justify-between">
                     <div className="text-[10px] font-black text-green-800">

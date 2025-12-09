@@ -74,3 +74,42 @@ export function getRetirementTier(
 export function isRetirementEligible(ageInDays: number): boolean {
   return ageInDays >= 90;
 }
+
+/**
+ * Calculate passive sanctuary income for retired donuts
+ * Retired donuts earn small passive rewards forever
+ * Rate depends on generation and rarity tier
+ * 
+ * @param generation - Donut generation (1+)
+ * @param tier - Retirement tier (CHERISHED, HONORED, LEGENDARY)
+ * @param daysRetired - Days since retirement
+ */
+export function calculateSanctuaryIncome(
+  generation: number,
+  tier: "CHERISHED" | "HONORED" | "LEGENDARY",
+  daysRetired: number
+): {
+  dailyRate: number; // $DONUTAMAGOTCHI per day
+  totalEarned: number; // Lifetime earnings in sanctuary
+} {
+  // Base rate: 1 token/day for Gen 1 CHERISHED
+  let baseRate = 1;
+  
+  // Generation bonus: +0.5 per generation above 1
+  baseRate += (generation - 1) * 0.5;
+  
+  // Tier multiplier
+  const tierMultiplier = {
+    CHERISHED: 1,
+    HONORED: 1.5,
+    LEGENDARY: 2,
+  };
+  
+  const dailyRate = baseRate * tierMultiplier[tier];
+  const totalEarned = dailyRate * daysRetired;
+  
+  return {
+    dailyRate: Math.round(dailyRate * 100) / 100,
+    totalEarned: Math.round(totalEarned * 100) / 100,
+  };
+}

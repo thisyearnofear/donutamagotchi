@@ -21,6 +21,7 @@ import {
   calculateDailyRate,
   calculateTokensUntilNextMilestone,
 } from "@/lib/earnings";
+import { getLifecycleStage, getDPSMultiplier, getLifecycleInfo, getAgeInDays } from "@/lib/traits";
 import { useAccountData } from "@/hooks/useAccountData";
 import { useTraits } from "@/hooks/useTraits";
 import { NavBar } from "@/components/nav-bar";
@@ -31,6 +32,7 @@ import { InteractionPanel } from "@/components/interaction-panel";
 import { AddToFarcasterDialog } from "@/components/add-to-farcaster-dialog";
 import { BreedingBadge } from "@/components/breeding-badge";
 import { RetirementBadge } from "@/components/retirement-badge";
+import { DecayStatus } from "@/components/decay-status";
 import { CareGuide } from "@/components/care-guide";
 import { AccordionProvider } from "@/components/accordion-context";
 
@@ -530,6 +532,9 @@ export default function HomePage() {
     return { state, happiness, health };
   }, [minerState, isWriting, isConfirming, glazeResult, glazeElapsedSeconds, hasMiner, lastInteractionTime]);
 
+  // Get lifecycle stage from elapsed time
+  const lifecycleStage = getLifecycleStage(ageInDays);
+
   // Calculate earnings metrics using utility functions
   const sessionEarnings = useMemo(() => {
     return calculateSessionEarnings(sessionStartEarnings, interpolatedGlazed);
@@ -537,8 +542,10 @@ export default function HomePage() {
 
   const dailyEarningRate = useMemo(() => {
     if (!minerState) return 0;
-    return calculateDailyRate(minerState.nextDps, glazeElapsedSeconds);
-  }, [minerState, glazeElapsedSeconds]);
+    const baseRate = calculateDailyRate(minerState.nextDps, glazeElapsedSeconds);
+    const dpsMultiplier = getDPSMultiplier(lifecycleStage, ageInDays);
+    return baseRate * dpsMultiplier;
+  }, [minerState, glazeElapsedSeconds, lifecycleStage, ageInDays]);
 
   const tokensUntilNextMilestone = useMemo(() => {
     return calculateTokensUntilNextMilestone(sessionEarnings);
@@ -562,17 +569,6 @@ export default function HomePage() {
   const ownerName = neynarUser?.user?.displayName || 
     neynarUser?.user?.username || 
     (hasMiner ? `${minerAddress.slice(0, 6)}...${minerAddress.slice(-4)}` : "Nobody");
-
-  // Calculate lifecycle stage from elapsed time
-  const getLifecycleStage = (elapsedSeconds: number): "birth" | "growth" | "prime" | "twilight" => {
-    const elapsedDays = elapsedSeconds / 86400;
-    if (elapsedDays < 1) return "birth";
-    if (elapsedDays < 30) return "growth";
-    if (elapsedDays < 90) return "prime";
-    return "twilight";
-  };
-
-  const lifecycleStage = getLifecycleStage(glazeElapsedSeconds);
 
   return (
     <main className="flex h-screen w-screen justify-center overflow-hidden bg-gradient-to-b from-purple-900 via-pink-900 to-orange-900 font-mono text-white">
@@ -642,6 +638,15 @@ export default function HomePage() {
           {/* Retirement Badge - Discoverable Path to Hall of Fame */}
           {hasMiner && (
             <RetirementBadge ageInDays={ageInDays} />
+          )}
+
+          {/* Decay Status - Shows pet health/care urgency */}
+          {hasMiner && traits && (
+            <DecayStatus 
+              satisfaction={traits.satisfaction}
+              energy={traits.energy}
+              grooming={traits.grooming}
+            />
           )}
 
           {/* Collapsible Advanced Features (Traits, Lifecycle, Breeding) */}
