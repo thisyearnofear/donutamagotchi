@@ -30,6 +30,7 @@ import { CollapsibleAdvanced } from "@/components/collapsible-advanced";
 import { InteractionPanel } from "@/components/interaction-panel";
 import { AddToFarcasterDialog } from "@/components/add-to-farcaster-dialog";
 import { BreedingBadge } from "@/components/breeding-badge";
+import { RetirementBadge } from "@/components/retirement-badge";
 import { CareGuide } from "@/components/care-guide";
 import { AccordionProvider } from "@/components/accordion-context";
 
@@ -636,6 +637,11 @@ export default function HomePage() {
               lifecycleStage={lifecycleStage}
               happiness={petState.happiness}
             />
+          )}
+
+          {/* Retirement Badge - Discoverable Path to Hall of Fame */}
+          {hasMiner && (
+            <RetirementBadge ageInDays={ageInDays} />
           )}
 
           {/* Collapsible Advanced Features (Traits, Lifecycle, Breeding) */}

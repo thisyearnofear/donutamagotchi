@@ -1,5 +1,6 @@
 
 import { Button } from "@/components/ui/button";
+import { PedigreeCard } from "@/components/pedigree-card";
 import { useSanctuary } from "@/hooks/useSanctuary";
 import { useAccount } from "wagmi";
 
@@ -17,6 +18,10 @@ interface RetiredDonutProps {
         traits: {
             generation: number;
             offspringCount: number;
+            parentAPersonality?: string;
+            parentBPersonality?: string;
+            parentAColor?: string;
+            parentBColor?: string;
         };
         status: "retired" | "legendary";
     };
@@ -70,6 +75,19 @@ export function RetiredDonutCard({ donut }: RetiredDonutProps) {
                     👶 Gen {donut.traits.generation} • 👨‍👩‍👧‍👦 {donut.traits.offspringCount} offspring
                 </div>
                 <div>📅 Retired {donut.retiredAt}</div>
+            </div>
+
+            {/* Pedigree Display */}
+            <div className="pt-2 border-t-2 border-black border-dashed">
+                <PedigreeCard
+                    generation={donut.traits.generation}
+                    parentAPersonality={donut.traits.parentAPersonality}
+                    parentBPersonality={donut.traits.parentBPersonality}
+                    parentAColor={donut.traits.parentAColor}
+                    parentBColor={donut.traits.parentBColor}
+                    offspring={donut.traits.offspringCount}
+                    compact={false}
+                />
             </div>
 
             {/* Claim Section for Owners */}

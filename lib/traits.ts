@@ -13,6 +13,7 @@ export interface Traits {
   grooming: number; // 0-100
   energy: number; // 0-100
   satisfaction: number; // 0-100
+  generation?: number; // Gen 1 = original, Gen 2+ = offspring (default 1 for backward compat)
 }
 
 /**
@@ -70,6 +71,7 @@ export function generateTraits(minerAddress: Address): Traits {
     grooming: Math.max(0, Math.min(100, grooming)),
     energy: Math.max(0, Math.min(100, energy)),
     satisfaction: Math.max(0, Math.min(100, satisfaction)),
+    generation: 1, // Original miners are Gen 1
   };
 }
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAccount } from 'wagmi'
 import { readContract } from '@wagmi/core'
-import { config } from '@/lib/wagmi-config'
+import { wagmiConfig } from '@/lib/wagmi'
 
 const DONUTAMAGOTCHI_TOKEN_ABI = [
   {
@@ -77,12 +77,12 @@ export function TransparencyDashboard() {
         const tokenAddress = process.env.NEXT_PUBLIC_DONUTAMAGOTCHI_TOKEN as `0x${string}`
 
         const [cosmeticResult, vestingResult] = await Promise.all([
-          readContract(config, {
+          readContract(wagmiConfig, {
             address: tokenAddress,
             abi: DONUTAMAGOTCHI_TOKEN_ABI,
             functionName: 'getCosmeticsBreakdown',
           }),
-          readContract(config, {
+          readContract(wagmiConfig, {
             address: tokenAddress,
             abi: DONUTAMAGOTCHI_TOKEN_ABI,
             functionName: 'getTeamVestingInfo',

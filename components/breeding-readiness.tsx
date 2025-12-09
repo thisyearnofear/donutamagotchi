@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { getLifecycleInfo } from "@/lib/traits";
 import { getRetirementTier } from "@/lib/earnings";
 import { Button } from "./ui/button";
@@ -106,12 +107,13 @@ export function BreedingReadiness(props: BreedingReadinessProps) {
 
           {/* Breed Button */}
           {canBreed ? (
-            <Button
-              className="w-full bg-gradient-to-b from-pink-400 to-pink-600 border-3 border-black text-black text-xs font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50"
-              disabled={true}
-            >
-              💑 FIND PARTNER (Coming Soon)
-            </Button>
+            <Link href="/breeding" className="w-full">
+              <Button
+                className="w-full bg-gradient-to-b from-pink-400 to-pink-600 border-3 border-black text-black text-xs font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all"
+              >
+                💑 FIND PARTNER
+              </Button>
+            </Link>
           ) : (
             <Button
               className="w-full bg-gray-400 border-3 border-black text-black text-xs font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
