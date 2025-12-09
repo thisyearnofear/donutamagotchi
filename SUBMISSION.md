@@ -182,6 +182,9 @@
    - Tracked with: `totalCosmeticsRevenue`, `totalLockedForLP`, `totalBurnedFromCosmetics`
    - New events: `CosmeticsRevenueProcessed`, `LPLockAddressUpdated`
    - View function: `getCosmeticsBreakdown()` returns all splits + percentages
+   - Constructor requires `lpLockAddress` parameter to prevent changes
+   - `setLPLockAddress()` allows governance rotation of LP address
+   - Process flow: Vault calls `processCosmeticsRevenue(1000e18)` → 250e18 → LP lock, 300e18 → burn, 450e18 → treasury
 
 2. **Frontend: Transparency Dashboard** ✅
    - Component: `components/transparency-dashboard.tsx`
@@ -217,6 +220,38 @@
    - `setLPLockAddress()` allows updates (for governance rotation)
    - All revenue processing is automatic and immutable
    - Public view functions for community verification
+
+### How It Prevents Donuette Scenario
+
+❌ DONUETTE PROBLEM          → ✅ OUR SOLUTION
+─────────────────────────────────────────────────
+Fees dumped to exchange    →  Automatic LP lock (25%)
+No locked LP (rug risk)    →  LP tokens burned to dead address
+Continuous sell pressure   →  30% burned (deflation)
+Non-responsive to concerns →  Public transparency page visible from nav
+Extractive appearance      →  Fair launch, no team allocation
+No proof of alignment      →  On-chain verifiable, auditable
+No transparency            →  Real-time dashboard + FAQ
+
+### Key Metrics for Success
+
+✓ Transparent: All fees visible on-chain
+✓ Immutable: Contract prevents deviation from percentages
+✓ Fair: No team token allocation
+✓ Ecosystem-aligned: 25% locked LP benefits $DONUT
+✓ Community-responsive: Public dashboard shows commitment
+✓ Auditable: Anyone can verify numbers via getCosmeticsBreakdown()
+
+Event indexing:
+  - CosmeticsRevenueProcessed: indexed on cosmetics revenue
+  - LPLockAddressUpdated: indexed on governance changes
+  - Both logged for community audits
+
+View function getCosmeticsBreakdown():
+  - No gas cost (pure view)
+  - Returns 7 values: amounts + percentages
+  - Used by dashboard to populate real-time data
+  - Can be called by anyone, anytime
 
 ## 📋 Additional Feedback (Non-Critical)
 

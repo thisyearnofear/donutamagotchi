@@ -90,313 +90,67 @@ We are **not** replacing or competing with the protocol—we are **enhancing it*
    - Regular builder community updates
    - Address concerns directly and publicly
 
-5. **Ecosystem Contribution Documentation**
-   - Public dashboard showing:
-     - Total $DONUT LP locked
-     - Cumulative burns
-     - Treasury balance & allocation
-     - Team vesting progress
-     - Community votes & outcomes
-   - Quarterly ecosystem health reports
-
 ---
 
-## What Makes Us Different
+## Development Phases
 
-### vs King Glazer (Pool Model)
-- **King Glazer**: Governance voting, strategy optimization, yield farming
-- **Donutamagotchi**: Personal pets, generational legacy, trait development
-- **Synergy**: Both operate on same $DONUT infrastructure, different use cases
-
-### vs Other Frontends
-- **Builder Codes (Generic Frontends)**: Simple UI, no persistence
-- **Donutamagotchi**: Pet lifecycle, breeding, traits, sanctuary system
-- **Differentiation**: True tamagotchi gameplay, not just theming
-
----
-
-## Phase 1A: Community Alignment (PREREQUISITE)
+### Phase 1A: Community Alignment (COMPLETED)
 
 **Goal:** Establish transparent ecosystem contribution before gameplay launch
 
-### Smart Contract Changes
-- Updated `DonutamagotchiToken.sol` with `processCosmeticsRevenue()`
-- Revenue splits: 25% → LP lock, 30% → burn, 45% → treasury
-- Tracking: `totalCosmeticsRevenue`, `totalLockedForLP`, `totalBurnedFromCosmetics`
-- View function: `getCosmeticsBreakdown()` for real-time transparency
+- **Smart Contract**: Updated `DonutamagotchiToken.sol` with revenue splitting (25% LP lock, 30% burn, 45% treasury)
+- **Frontend**: `/transparency` page with real-time on-chain data dashboard
+- **Key Differentiator**: Ecosystem-first approach preventing Donuette scenario
 
-### Frontend Features
-- New page: `/transparency` with dashboard + FAQ
-- Component: `TransparencyDashboard` shows on-chain data
-- Nav button: "PROOF" link to transparency page
-- Community commitment messaging
-
-### Key Differentiator
-- **Ecosystem alignment**: Locked LP, automatic burns, sustainable team incentives
-- **Fair allocation**: 7.5% team vesting, governance via staking
-- **Community first**: Transparent reports, audit-friendly smart contracts
-
----
-
-## Phase 1: Foundation
+### Phase 1: Foundation (COMPLETED)
 
 **Goal:** Add personality and progression to the existing donut
 
-### Traits System
+- **Traits System**: Personality types, coloring, social scores
+- **$DONUTAMAGOTCHI Token**: Incentivize engagement without modifying $DONUT mechanics
+- **Global Donut Explorer**: View all active miners with discovery incentives
 
-**Pet Attributes:**
-- **Personality Type**: Friendly, Energetic, Lazy, Stubborn (affects animations/responses)
-- **Coloring**: Hue variations (affects visual appearance)
-- **Base Earning Potential**: ±5% DPS variance (cosmetic, no P2W)
-- **Social Score**: 0-100 (increases via interactions with other donuts)
-
-### Trait Development
-
-**How Traits Evolve Through Play:**
-- **Grooming** (Petting): Increases shininess/color saturation
-- **Energy** (Playing): Changes animation speed/intensity
-- **Satisfaction** (Feeding): Shifts expression, increases idle happiness
-- **Sociability** (Cross-donut interactions): Unlocks special poses/reactions
-
-### $DONUTAMAGOTCHI Token Launch
-
-**Purpose:** Incentivize engagement without modifying $DONUT mechanics
-
-**Distribution:**
-- **Daily Login**: +10 $DONUTAMAGOTCHI/day (simple claim)
-- **Pet Interactions**: +5 tokens per action (petting, poking, playing)
-- **Feeding Bonus**: +10 tokens when you feed your donut (not instead of, but bonus)
-- **View Leaderboard**: +3 tokens per session (discovery incentive)
-
-**Total Supply:** 1B tokens (fair launch, no presale)
-- 70% to play-to-earn
-- 20% to treasury/cosmetics shop
-- 10% to liquidity/staking rewards
-
-### Global Donut Explorer
-
-**New Page:** `/donuts` - View all active miners
-
-**Features:**
-- List all active donuts sorted by: earnings/hour, age, health, personality
-- Click to view full stats: owner, earnings, trait breakdown, health/happiness
-- **You earn +10 $DONUTAMAGOTCHI tokens** when you view a donut
-- **You earn +5 tokens** when you interact with someone else's donut (click it to poke)
-
----
-
-## Phase 2: Decay System
+### Phase 1.5: Decay System (COMPLETED)
 
 **Goal:** Create natural care rhythm and urgency through stat decay
 
-### Decay-Based Needs
+- **Decay-Based Needs**: Health, happiness, and cleanliness decay over time
+- **Check-in Pattern**: ~5-6 interactions per day for optimal care
+- **Breeding Success Rates**: Stat-based breeding viability
 
-**Implementation:**
-- **Health Decay**: -0.5% every 30 minutes (halted if fed recently)
-- **Happiness Decay**: -1% every 30 minutes (halted if played with)
-- **Cleanliness Decay**: -2% every 30 minutes (halted if "cleaned"/interacted)
-
-**Check-in Pattern:**
-```
-Ideal pet care routine (casual):
-├─ Feed every 4 hours (prevents health critical)
-├─ Play every 6 hours (prevents happiness critical)
-├─ Pet/interact every 2 hours (prevents cleanliness critical)
-└─ Total: ~5-6 interactions per day
-```
-
-### Breeding Success Rates
-
-**Stat-Based Breeding Viability:**
-```
-Breeding Success = (health + cleanliness) / 2
-├─ <30%: High chance of sickly offspring (lower earning potential)
-├─ 30-70%: Normal offspring
-└─ >70%: Healthy offspring (bonus trait variation chances)
-```
-
----
-
-## Phase 3: Lifecycle
+### Phase 2: Lifecycle (COMPLETED)
 
 **Goal:** Give donuts natural growth cycles and retirement options
 
-### Age & Maturation System
+- **Age & Maturation System**: Birth → Growth → Prime → Twilight lifecycle stages
+- **Sanctuary System**: Retirement option for aged donuts with passive income
 
-**Donut Lifecycle:**
-```
-BIRTH (Day 0)
-├─ Starting DPS: 0.05 DONUT/sec (50% of normal)
-├─ Cannot breed yet
-├─ Rapid trait changes possible
-└─ New player-friendly (slower earning = less pressure to defend)
-
-GROWTH (Days 1-30)
-├─ DPS grows gradually: 0.05 → 4.0 DONUT/sec
-├─ Traits solidify
-├─ Still cannot breed
-└─ Players build attachment
-
-PRIME (Days 30-90)
-├─ Full earning rate: 4.0 DONUT/sec (or current tier)
-├─ Can breed with other Prime donuts
-├─ Peak health/happiness possible
-└─ Most exciting phase (full potential, breeding competition)
-
-TWILIGHT (Days 90+)
-├─ Health gradually decays (even if fed)
-├─ Cannot breed anymore
-├─ Can be retired or left to die
-└─ Graceful endgame phase
-```
-
-### Sanctuary System
-
-**Retirement Option:**
-- At Day 90+, owner can claim "Retirement Certificate" (free action)
-- Donut leaves active rotation permanently
-- Cannot be stolen, cannot mine anymore
-- Generates passive $DONUTAMAGOTCHI (small, forever)
-- Appears in Sanctuary + Hall of Fame
-
----
-
-## Phase 4: Breeding
+### Phase 3: Breeding (IN PROGRESS)
 
 **Goal:** Enable players to create next generation, build bloodlines, extend ecosystem
 
-### Breeding Mechanics
+- **Breeding Mechanics**: Trait inheritance with 30% mutation chance
+- **Pedigree Tracking**: On-chain bloodline verification and family trees
+- **Bloodline Leaderboards**: Rarity rankings and breeding achievements
 
-**Requirements:**
-- Both donuts must be Prime age (30-90 days)
-- Both must be owned by wallet addresses
-- Breeding costs: 1000 $DONUTAMAGOTCHI (burned to reduce supply)
-- Breeds can happen 1x per donut per 7 days
-- Offspring takes 1 day to "incubate"
+### Phase 4: Farcaster Mini App (SHORT TERM)
 
-**Trait Inheritance:**
-- Personality: 70% chance inherit one parent's + 30% mutation
-- Color: Blend of both (genetic crossover)
-- Earning Potential: Average of both (no advantage, cosmetic)
-- Gen Counter: Gen(child) = max(Gen(A), Gen(B)) + 1
+**Goal:** Launch mobile-friendly Farcaster integration for social engagement
 
-### Pedigree Tracking
+- **Farcaster Mini App Integration**: Native Farcaster experience for easy onboarding
+- **Social Features**: Pet visiting, community leaderboard integration
+- **Push Notifications**: Care reminders and breeding notifications via Farcaster
+- **Cross-Platform Sync**: Seamless experience between web and Farcaster mini app
 
-**Bloodline Features:**
-- Every donut has verifiable parents (on-chain)
-- View full family tree: ancestors, siblings, offspring
-- Rarity based on lineage: "3rd generation of the Alpha line"
-- Breeding achievements: "Produced 10 offspring"
+### Phase 5: Enhanced Web Experience (MEDIUM/LONG TERM)
 
----
+**Goal:** Advanced web features for core users and ecosystem growth
 
-## Phase 5: Community & Leaderboards
-
-**Goal:** Build social features that increase daily engagement and stickiness
-
-### Leaderboard Systems
-
-1. **Earnings Leaderboard**
-   - Lifetime $DONUT earned
-   - Current week earnings
-
-2. **Trait Rarity Leaderboard**
-   - Ultra-rare trait combos
-   - Highest social score
-   - Best grooming level
-
-3. **Bloodline Leaderboard**
-   - Most offspring produced
-   - Longest unbroken pedigree
-
-4. **Player Achievement Leaderboard**
-   - Total donuts retired
-   - Total donuts bred
-   - Days of consecutive care-taking
-
-### Cosmetics & Customization
-
-**Pet Customization Shop:**
-
-**Hats & Accessories** (50-200 tokens)
-- Wizard hat, crown, sunglasses, etc.
-
-**Animations & Emotes** (100-300 tokens)
-- New gestures (dab, wave, dance)
-- Unique idle animations
-
-**Themes & Skins** (200-500 tokens)
-- Holiday variants (Halloween pumpkin donut, Christmas candy cane)
-- Seasonal events (summer splash, winter frost)
-
-**Pet Name & Bio** (200 tokens, one-time)
-- On-chain naming (immutable, unique)
-
-### Social Interactions
-
-**Pet Visiting System**
-- View other donuts in real-time
-- Interact: pet, poke, compliment
-- Leave comments on pet pages
-- Follow favorite donuts
-
----
-
-## Token Economics: $DONUTAMAGOTCHI
-
-### Supply & Distribution
-
-**Total Supply:** 1 Billion $DONUTAMAGOTCHI
-
-**Allocation:**
-```
-70% (700M) - Play-to-Earn Rewards
-├─ Daily login: +10/day
-├─ Interactions: +5-25 per action
-├─ Breeding: +25 per successful breed
-
-20% (200M) - Treasury & Cosmetics Shop
-├─ Cosmetics inventory budget
-├─ Community events & giveaways
-
-10% (100M) - Liquidity & Staking Rewards
-├─ Initial DEX liquidity
-├─ Staking rewards for governance
-```
-
-### Revenue Model (Sustainable)
-
-**Cosmetics Sales → Burning Cycle:**
-1. Player earns $DONUTAMAGOTCHI through play
-2. Player buys cosmetic (e.g., 200 tokens)
-3. 30% burned (60 tokens removed from circulation)
-4. 70% to treasury (140 tokens)
-
-**Breeding Fees:**
-1. Breeding costs 1000 $DONUTAMAGOTCHI
-2. 100% burned (reduces supply)
-
----
-
-## Future Enhancements
-
-### Phase 6: Advanced Social Features
-- Guild system for collective donut care
-- Breeding competitions and tournaments
-- Community events and seasonal celebrations
-- Donut shows and beauty contests
-
-### Phase 7: Mobile & Push Notifications
-- Mobile app with push notifications
-- Care reminder systems
-- Offline progress tracking
-- Cross-platform synchronization
-
-### Phase 8: Advanced AI Integration
-- AI-generated personality profiles
-- Dynamic story generation for donut adventures
-- Voice interaction capabilities
-- Personalized recommendation engine
+- **Advanced Customization**: Expanded cosmetics shop with rare traits
+- **Community Features**: Guild system, breeding competitions, seasonal events
+- **Advanced Analytics**: Detailed pet performance metrics and optimization tools
+- **AI Integration**: Dynamic story generation for donut adventures
+- **Cross-Chain Expansion**: Potential expansion to other EVM-compatible chains
 
 ---
 
