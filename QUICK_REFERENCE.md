@@ -136,12 +136,13 @@ Team Allocation: 7.5% (75M tokens)
 - Head tilting: Subtle side-to-side rotation during breathing
 - All personality-aware (speed scales with personality)
 
-## Tier 3 Enhancements (Pending)
+## ✅ Tier 3 Enhancements (Complete)
 
-**Visible Limbs** (Medium-high impact)
-- Feet: rotate during jump/bounce gestures
-- Arms/hands: pose during bounce, jump, wiggle, spin
-- Implementation: ~60-80 lines in gesture section
+**Visible Limbs** ✅
+- Arms: rounded rectangles that rotate at shoulders
+- Feet: cute circles at bottom (always visible)
+- State-driven posing (happy=raised, hungry=drooped, sleeping=tucked)
+- Gesture-aware (limbs animate within transforms, not locked to gestures)
 
 ---
 
