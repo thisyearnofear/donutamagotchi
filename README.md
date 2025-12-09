@@ -193,6 +193,10 @@ Donutamagotchi preserves all existing $DONUT mechanics:
 - [docs/TRAIT_GENERATION.md](docs/TRAIT_GENERATION.md) - Trait algorithm details
 - [docs/PHASE_3_BREEDING_PLAN.md](docs/PHASE_3_BREEDING_PLAN.md) - Breeding roadmap
 
+### Deployment & Operations
+- See [SUBMISSION.md](SUBMISSION.md) for full deployment checklist, contract configuration, and security validations
+- See [SUBMISSION.md](SUBMISSION.md) for signer oracle setup guide (ECDSA signature verification)
+
 ## 🎮 Game Loop Summary
 
 **5-Minute Intervals:**
