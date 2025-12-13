@@ -672,6 +672,37 @@ export default function HomePage() {
               </div>
             </Button>
 
+            {/* PROGRESSIVE DISCLOSURE: Show How to Play prominently for new users */}
+            {/* CareGuide auto-expands for donuts < 7 days old */}
+            {hasMiner && <CareGuide ageInDays={ageInDays} />}
+
+            {/* Breeding Badge - Progressive: hidden early, teaser approaching, full when ready */}
+            {hasMiner && (
+              <BreedingBadge
+                lifecycleStage={lifecycleStage}
+                happiness={petState.happiness}
+                ageInDays={ageInDays}
+              />
+            )}
+
+            {/* Retirement Badge - Progressive: hidden until 60 days, teaser 60-89, full at 90+ */}
+            {hasMiner && (
+              <RetirementBadge ageInDays={ageInDays} />
+            )}
+
+            {/* Advanced Features - Only show for older donuts (7+ days) */}
+            {hasMiner && ageInDays >= 7 && (
+              <CollapsibleAdvanced
+                traits={traits}
+                lastInteractionTime={lastInteractionTime}
+                lastFedTime={minerState?.startTime ? Number(minerState.startTime) * 1000 : Date.now()}
+                createdAtSeconds={minerState?.startTime ? Number(minerState.startTime) : 0}
+                hasMiner={hasMiner}
+                minerState={minerState}
+                ageInDays={ageInDays}
+              />
+            )}
+
             {/* Wallet Info */}
             {address && (
               <div className="bg-lime-300 border-4 border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
