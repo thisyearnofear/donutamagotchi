@@ -36,41 +36,21 @@ export default function TransparencyPage() {
               ❓ WHY THIS MATTERS
             </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <h3 className="font-black text-sm text-black mb-2">
-                  Why this transparency matters
-                </h3>
                 <p className="text-xs text-black/80 font-bold">
-                  The $DONUT community has seen projects come and go. We believe the strongest projects
-                  are built on aligned incentives and transparent mechanics. When your project succeeds
-                  because the ecosystem succeeds, everyone wins.
+                  The strongest projects are built on aligned incentives and transparent mechanics. We succeed when $DONUT succeeds.
                 </p>
               </div>
 
               <div>
                 <h3 className="font-black text-sm text-black mb-2">
-                  Our approach to ecosystem alignment
+                  Ecosystem alignment
                 </h3>
-                <ul className="text-xs text-black/80 font-bold space-y-2">
-                  <li>
-                    ✅ <strong>25% of cosmetics revenue locked in $DONUT-WETH LP</strong> (permanent
-                    liquidity, burned to dead address)
-                  </li>
-                  <li>
-                    ✅ <strong>30% of cosmetics burned</strong> (deflation that benefits all holders)
-                  </li>
-                  <li>
-                    ✅ <strong>7.5% team vesting over 12 months</strong> (sustainable incentives,
-                    gradual unlock)
-                  </li>
-                  <li>
-                    ✅ <strong>Transparent treasury</strong> (all allocations auditable on-chain)
-                  </li>
-                  <li>
-                    ✅ <strong>Active community engagement</strong> (regular updates in builders chat,
-                    public decisions)
-                  </li>
+                <ul className="text-xs text-black/80 font-bold space-y-1">
+                  <li>✅ <strong>25%</strong> cosmetics revenue → $DONUT-WETH LP (locked, burned)</li>
+                  <li>✅ <strong>30%</strong> cosmetics burned (deflation for all holders)</li>
+                  <li>✅ <strong>7.5%</strong> team vesting over 12 months</li>
                 </ul>
               </div>
 
@@ -79,23 +59,21 @@ export default function TransparencyPage() {
                   Can I verify this?
                 </h3>
                 <p className="text-xs text-black/80 font-bold mb-2">
-                  Yes. Everything is on-chain and auditable:
+                  Yes. Everything is on-chain:
                 </p>
                 <ul className="text-xs text-black/80 font-bold space-y-1">
                   <li>
                     • Call <code className="bg-gray-200 px-1 py-0.5 rounded text-[10px]">
                       getCosmeticsBreakdown()
-                    </code>{' '}
-                    on the token contract
+                    </code> on contract
                   </li>
                   <li>
-                    • Check the <code className="bg-gray-200 px-1 py-0.5 rounded text-[10px]">
+                    • Check <code className="bg-gray-200 px-1 py-0.5 rounded text-[10px]">
                       lpLockAddress
-                    </code>{' '}
-                    balance on Etherscan
+                    </code> on Etherscan
                   </li>
                   <li>
-                    • View burned LP tokens on Uniswap (sent to dead address 0x000...000)
+                    • View burned LP on Uniswap (0x000...000)
                   </li>
                   <li>• See all transactions on Base Etherscan</li>
                 </ul>
@@ -106,28 +84,10 @@ export default function TransparencyPage() {
                   When is this enforced?
                 </h3>
                 <p className="text-xs text-black/80 font-bold">
-                  From day 1. The smart contract automatically enforces these splits when cosmetics
-                  revenue is processed. There&apos;s no way to change the percentages without
-                  deploying a new contract (which would be immediately flagged by the community).
+                  From day 1. The smart contract automatically enforces these splits. No changes possible without deploying a new contract.
                 </p>
               </div>
             </div>
-          </div>
-
-          {/* Community Commitment */}
-          <div className="bg-lime-300 border-4 border-black rounded-xl p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <h2 className="text-lg font-black mb-3 text-black text-center">
-              🤝 OUR COMMITMENT
-            </h2>
-            <p className="text-xs text-black/80 font-bold mb-3">
-              Donutamagotchi is built <strong>with</strong> the $DONUT ecosystem, not on top of it.
-              We succeed when $DONUT succeeds. Every action we take is designed to strengthen the
-              ecosystem, not extract value.
-            </p>
-            <p className="text-xs text-black/80 font-bold">
-              If you ever see us deviating from these principles, call us out in the builders chat.
-              This commitment is permanent.
-            </p>
           </div>
         </div>
       </div>
