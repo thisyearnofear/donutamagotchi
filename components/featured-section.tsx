@@ -14,7 +14,7 @@ export function FeaturedSection({
   title,
   emoji,
   children,
-  viewAllLabel = "View all",
+  viewAllLabel = "EXPLORE",
   onViewAll,
 }: FeaturedSectionProps) {
   return (

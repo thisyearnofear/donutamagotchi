@@ -172,7 +172,6 @@ export default function DonutsPage() {
             <FeaturedSection
               title="TRENDING PARTNERS"
               emoji="⭐"
-              viewAllLabel={`View all ${sortedDonuts.length}`}
               onViewAll={() => setShowAllDonuts(true)}
             >
               {sortedDonuts.slice(0, 2).map((donut) => {
