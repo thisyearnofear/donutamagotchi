@@ -347,9 +347,9 @@ export default function ShopPage() {
           </div>
 
           {/* Items Grid */}
-          {filteredItems.length > 0 ? (
+          {showAllInCategory && filteredItems.length > 0 ? (
             <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto">
-              {(showAllInCategory ? filteredItems : remainingItems).map((item) => (
+              {filteredItems.map((item) => (
                 <div
                   key={item.id}
                   className={`border-4 ${getRarityBorder(
@@ -394,7 +394,7 @@ export default function ShopPage() {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : !showAllInCategory && filteredItems.length === 0 ? (
             <div className="bg-white border-4 border-black rounded-xl p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex-1 flex flex-col items-center justify-center">
               <div className="text-center space-y-3">
                 <div className="text-4xl">🛍️</div>
@@ -404,7 +404,7 @@ export default function ShopPage() {
                 </p>
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Info Box */}
           <div className="bg-lime-300 border-4 border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
