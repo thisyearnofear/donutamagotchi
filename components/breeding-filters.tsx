@@ -15,7 +15,7 @@ interface BreedingFiltersProps {
 const personalities = ["Friendly", "Energetic", "Lazy", "Stubborn"];
 
 export function BreedingFilters(props: BreedingFiltersProps) {
-  const [fallbackOpen, setFallbackOpen] = useState(false);
+  const [fallbackOpen, setFallbackOpen] = useState(true);
 
   let accordion: ReturnType<typeof useAccordion> | null = null;
   try {

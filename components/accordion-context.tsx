@@ -15,10 +15,11 @@ const AccordionContext = createContext<AccordionContextType | undefined>(undefin
 interface AccordionProviderProps {
   children: ReactNode;
   mode?: "single" | "multiple";
+  defaultOpenId?: string;
 }
 
-export function AccordionProvider({ children, mode = "single" }: AccordionProviderProps) {
-  const [activeId, setActiveId] = useState<string | null>(null);
+export function AccordionProvider({ children, mode = "single", defaultOpenId }: AccordionProviderProps) {
+  const [activeId, setActiveId] = useState<string | null>(defaultOpenId || null);
 
   const toggle = useCallback(
     (id: string) => {

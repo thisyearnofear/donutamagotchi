@@ -154,7 +154,7 @@ export default function BreedingPage() {
 
   return (
     <main className="flex h-screen w-screen justify-center overflow-hidden bg-gradient-to-b from-purple-900 via-pink-900 to-orange-900 font-mono text-white">
-      <AccordionProvider mode="single">
+      <AccordionProvider mode="single" defaultOpenId="breeding-filters">
         <div
           className="relative flex h-full w-full max-w-[520px] flex-1 flex-col overflow-hidden px-3 pb-3"
           style={{
@@ -286,7 +286,7 @@ export default function BreedingPage() {
           </div>
         </div>
       </div>
-        <NavBar />
+      <NavBar />
       </AccordionProvider>
     </main>
   );
