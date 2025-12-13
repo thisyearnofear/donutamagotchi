@@ -164,22 +164,14 @@ function PixelStatBar({
   size?: "normal" | "small";
 }) {
   const percentage = Math.max(0, Math.min(100, value));
-  const blockCount = size === "small" ? 3 : 5;
-  const exactBlocks = (percentage / 100) * blockCount;
-  const scaledBlocks = Math.ceil(exactBlocks) === Math.floor(exactBlocks) 
-    ? exactBlocks 
-    : percentage % (100 / blockCount) >= (100 / blockCount) / 2 
-      ? Math.ceil(exactBlocks) 
-      : Math.floor(exactBlocks);
 
-  const blockColor = color === "red"
+  const fillColor = color === "red"
     ? percentage > 60 ? "bg-green-500" : percentage > 30 ? "bg-yellow-500" : "bg-red-500"
     : percentage > 60 ? "bg-yellow-400" : percentage > 30 ? "bg-orange-400" : "bg-gray-400";
 
   const textSize = size === "small" ? "text-[10px]" : "text-xs";
   const barHeight = size === "small" ? "h-2" : "h-4";
   const labelGap = size === "small" ? "gap-0.5" : "gap-1";
-  const barGap = size === "small" ? "gap-0.5" : "gap-1";
 
   return (
     <div>
@@ -190,14 +182,11 @@ function PixelStatBar({
         </span>
         <span className={`${textSize} font-black text-black`}>{Math.round(percentage)}%</span>
       </div>
-      <div className={`flex ${barGap}`}>
-        {Array.from({ length: blockCount }).map((_, i) => (
-          <div
-            key={i}
-            className={`${barHeight} flex-1 border-2 border-black ${i < scaledBlocks ? blockColor : "bg-gray-200"
-              }`}
-          />
-        ))}
+      <div className={`${barHeight} w-full border-2 border-black bg-gray-200 relative overflow-hidden`}>
+        <div
+          className={`${fillColor} h-full transition-all duration-300`}
+          style={{ width: `${percentage}%` }}
+        />
       </div>
     </div>
   );
