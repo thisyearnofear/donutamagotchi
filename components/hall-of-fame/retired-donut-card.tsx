@@ -41,11 +41,11 @@ export function RetiredDonutCard({ donut }: RetiredDonutProps) {
 
     return (
         <div className="bg-white border-4 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-2">
-            <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
+            <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                         <span className="text-lg">{donut.status === "legendary" ? "⭐" : "🏤"}</span>
-                        <div>
+                        <div className="flex-1 min-w-0">
                             <div className="text-xs font-black text-black">
                                 🎭 {donut.personality} {donut.color} Donut
                             </div>
@@ -53,12 +53,18 @@ export function RetiredDonutCard({ donut }: RetiredDonutProps) {
                         </div>
                     </div>
                 </div>
-                {donut.status === "legendary" && (
-                    <span className="bg-yellow-300 text-black text-[10px] font-black px-2 py-1 rounded-lg border-2 border-black">
-                        LEGENDARY
-                    </span>
-                )}
+                <div className="text-right shrink-0">
+                    <div className="text-[10px] text-black/70 font-bold whitespace-nowrap">
+                        👶 Gen {donut.traits.generation} • 👨‍👩‍👧‍👦 {donut.traits.offspringCount}
+                    </div>
+                    <div className="text-[10px] text-black/70 font-bold whitespace-nowrap">📅 Retired {donut.retiredAt}</div>
+                </div>
             </div>
+            {donut.status === "legendary" && (
+                <span className="bg-yellow-300 text-black text-[10px] font-black px-2 py-1 rounded-lg border-2 border-black inline-block">
+                    LEGENDARY
+                </span>
+            )}
 
             <div className="grid grid-cols-3 gap-2 text-center bg-gray-100 p-2 rounded-lg border-2 border-black">
                 <div>
@@ -73,13 +79,6 @@ export function RetiredDonutCard({ donut }: RetiredDonutProps) {
                     <div className="text-[9px] font-bold text-black/60">ETH</div>
                     <div className="text-xs font-black text-black">Ξ{donut.totalEarningsEth}</div>
                 </div>
-            </div>
-
-            <div className="text-[10px] text-black/70 font-bold space-y-1">
-                <div>
-                    👶 Gen {donut.traits.generation} • 👨‍👩‍👧‍👦 {donut.traits.offspringCount} offspring
-                </div>
-                <div>📅 Retired {donut.retiredAt}</div>
             </div>
 
             {/* Pedigree Display */}

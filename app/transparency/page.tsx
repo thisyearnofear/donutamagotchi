@@ -24,7 +24,7 @@ export default function TransparencyPage() {
               🌍 TRANSPARENCY
             </h1>
             <p className="text-center text-[10px] text-black/70 font-bold mt-1">
-              ON-CHAIN PROOF OF ECOSYSTEM ALIGNMENT
+              ON-CHAIN PROOF
             </p>
           </div>
 
@@ -32,21 +32,10 @@ export default function TransparencyPage() {
 
           {/* FAQ Section */}
           <div className="bg-white border-4 border-black rounded-xl p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <h2 className="text-lg font-black mb-3 text-black text-center">
-              ❓ WHY THIS MATTERS
-            </h2>
-
             <div className="space-y-3">
+           
               <div>
-                <p className="text-xs text-black/80 font-bold">
-                  The strongest projects are built on aligned incentives and transparent mechanics. We succeed when $DONUT succeeds.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="font-black text-sm text-black mb-2">
-                  Ecosystem alignment
-                </h3>
+              
                 <ul className="text-xs text-black/80 font-bold space-y-1">
                   <li>✅ <strong>25%</strong> cosmetics revenue → $DONUT-WETH LP (locked, burned)</li>
                   <li>✅ <strong>30%</strong> cosmetics burned (deflation for all holders)</li>
@@ -54,39 +43,7 @@ export default function TransparencyPage() {
                 </ul>
               </div>
 
-              <div>
-                <h3 className="font-black text-sm text-black mb-2">
-                  Can I verify this?
-                </h3>
-                <p className="text-xs text-black/80 font-bold mb-2">
-                  Yes. Everything is on-chain:
-                </p>
-                <ul className="text-xs text-black/80 font-bold space-y-1">
-                  <li>
-                    • Call <code className="bg-gray-200 px-1 py-0.5 rounded text-[10px]">
-                      getCosmeticsBreakdown()
-                    </code> on contract
-                  </li>
-                  <li>
-                    • Check <code className="bg-gray-200 px-1 py-0.5 rounded text-[10px]">
-                      lpLockAddress
-                    </code> on Etherscan
-                  </li>
-                  <li>
-                    • View burned LP on Uniswap (0x000...000)
-                  </li>
-                  <li>• See all transactions on Base Etherscan</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-black text-sm text-black mb-2">
-                  When is this enforced?
-                </h3>
-                <p className="text-xs text-black/80 font-bold">
-                  From day 1. The smart contract automatically enforces these splits. No changes possible without deploying a new contract.
-                </p>
-              </div>
+            
             </div>
           </div>
         </div>

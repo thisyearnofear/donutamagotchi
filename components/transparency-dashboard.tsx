@@ -104,9 +104,9 @@ export function TransparencyDashboard() {
       <div className="space-y-3">
         {/* Header */}
         <div className="bg-gradient-to-r from-pink-400 to-purple-500 rounded-xl p-4 text-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <h2 className="text-lg font-black mb-2 text-center">🍩 TOKEN NOT YET DEPLOYED</h2>
+          <h2 className="text-lg font-black mb-2 text-center">🍩</h2>
           <p className="text-xs font-bold text-pink-100 text-center">
-            The $DONUTAMAGOTCHI token will be deployed soon. Here&apos;s how it will work:
+            $DONUTAMAGOTCHI token soon.
           </p>
         </div>
 
