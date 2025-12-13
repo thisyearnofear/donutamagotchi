@@ -672,10 +672,6 @@ export default function HomePage() {
               </div>
             </Button>
 
-            {/* PROGRESSIVE DISCLOSURE: Show How to Play prominently for new users */}
-            {/* CareGuide auto-expands for donuts < 7 days old */}
-            {hasMiner && <CareGuide ageInDays={ageInDays} />}
-
             {/* Breeding Badge - Progressive: hidden early, teaser approaching, full when ready */}
             {hasMiner && (
               <BreedingBadge
