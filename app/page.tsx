@@ -633,15 +633,6 @@ export default function HomePage() {
             {/* CareGuide auto-expands for donuts < 7 days old */}
             {hasMiner && <CareGuide ageInDays={ageInDays} />}
 
-            {/* Decay Status - Only show if stats need attention (< 70% avg) */}
-            {hasMiner && traits && (traits.satisfaction + traits.energy + traits.grooming) / 3 < 70 && (
-              <DecayStatus
-                satisfaction={traits.satisfaction}
-                energy={traits.energy}
-                grooming={traits.grooming}
-              />
-            )}
-
             {/* Breeding Badge - Progressive: hidden early, teaser approaching, full when ready */}
             {hasMiner && (
               <BreedingBadge
