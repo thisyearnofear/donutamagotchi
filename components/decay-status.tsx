@@ -60,9 +60,6 @@ export function DecayStatus({ satisfaction, energy, grooming }: DecayStatusProps
         <span className="text-xl">{status.emoji}</span>
         <div className="flex-1">
           <div className="font-black text-sm">{status.message}</div>
-          <div className="text-[9px] font-bold opacity-70">
-            Health: {Math.round(satisfaction)}% | Energy: {Math.round(energy)}% | Grooming: {Math.round(grooming)}%
-          </div>
         </div>
       </div>
     </div>
