@@ -97,7 +97,6 @@ export default function HomePage() {
   const readyRef = useRef(false);
   const autoConnectAttempted = useRef(false);
   const [context, setContext] = useState<MiniAppContext | null>(null);
-  const [customMessage, setCustomMessage] = useState("");
   const [ethUsdPrice, setEthUsdPrice] = useState<number>(3500);
   const [glazeResult, setGlazeResult] = useState<"success" | "failure" | null>(null);
   const [petResponse, setPetResponse] = useState<string>("");
@@ -105,7 +104,6 @@ export default function HomePage() {
   const [lastInteractionTime, setLastInteractionTime] = useState<number>(Date.now());
   const [sessionStartEarnings, setSessionStartEarnings] = useState<bigint | null>(null);
   const glazeResultTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const petResponseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const resetGlazeResult = useCallback(() => {
     if (glazeResultTimeoutRef.current) {
@@ -153,9 +151,6 @@ export default function HomePage() {
     return () => {
       if (glazeResultTimeoutRef.current) {
         clearTimeout(glazeResultTimeoutRef.current);
-      }
-      if (petResponseTimeoutRef.current) {
-        clearTimeout(petResponseTimeoutRef.current);
       }
     };
   }, []);
@@ -429,7 +424,7 @@ export default function HomePage() {
           epochId,
           deadline,
           maxPrice,
-          customMessage.trim() || "Feeding my Donutamagotchi",
+          "Feeding my Donutamagotchi",
         ],
         value: price,
         chainId: base.id,
@@ -442,7 +437,6 @@ export default function HomePage() {
   }, [
     address,
     connectAsync,
-    customMessage,
     minerState,
     primaryConnector,
     resetGlazeResult,
@@ -669,11 +663,10 @@ export default function HomePage() {
 
             {/* Interaction Panel - Core gameplay action */}
             <InteractionPanel
-              customMessage={customMessage}
-              onMessageChange={handleMessageChange}
               petResponse={petResponse}
               isDisabled={isGlazeDisabled}
               onGesture={handleGesture}
+              petState={petState.state}
             />
 
             {/* Feed Button */}
