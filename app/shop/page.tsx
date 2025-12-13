@@ -169,8 +169,8 @@ export default function ShopPage() {
   ];
 
   const filteredItems = cosmetics.filter((item) => item.category === activeCategory);
-  const featuredItems = filteredItems.slice(0, 4);
-  const remainingItems = filteredItems.slice(4);
+  const featuredItems = filteredItems.slice(0, 2);
+  const remainingItems = filteredItems.slice(2);
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
@@ -246,7 +246,7 @@ export default function ShopPage() {
             <FeaturedSection
               title={`${activeCategory.toUpperCase().replace("_", " ")} COSMETICS`}
               emoji="✨"
-              viewAllLabel={`View all ${filteredItems.length}`}
+              viewAllLabel="EXPLORE"
               onViewAll={() => setShowAllInCategory(true)}
             >
               <div className="grid grid-cols-2 gap-2">
