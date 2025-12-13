@@ -112,7 +112,7 @@ export function PetStats({
         <div className="grid grid-cols-3 gap-2">
           <PixelStatBar label="GROOM" value={grooming} emoji="✨" color="yellow" size="small" />
           <PixelStatBar label="ENERGY" value={energyLevel} emoji="⚡" color="yellow" size="small" />
-          <PixelStatBar label="HAPPY" value={satisfaction} emoji="😋" color="yellow" size="small" />
+          <PixelStatBar label="SATISFIED" value={satisfaction} emoji="😋" color="yellow" size="small" />
         </div>
       </div>
 
@@ -164,8 +164,7 @@ function PixelStatBar({
   size?: "normal" | "small";
 }) {
   const percentage = Math.max(0, Math.min(100, value));
-  const blocks = Math.round(percentage / 10);
-  const blockCount = size === "small" ? 5 : 10;
+  const blockCount = size === "small" ? 3 : 5;
   const scaledBlocks = Math.round((percentage / 100) * blockCount);
 
   const blockColor = color === "red"
