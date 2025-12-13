@@ -621,6 +621,14 @@ export default function HomePage() {
               tokensUntilNextMilestone={tokensUntilNextMilestone}
             />
 
+            {/* Interaction Panel - Core gameplay action */}
+            <InteractionPanel
+              petResponse={petResponse}
+              isDisabled={isGlazeDisabled}
+              onGesture={handleGesture}
+              petState={petState.state}
+            />
+
             {/* PROGRESSIVE DISCLOSURE: Show How to Play prominently for new users */}
             {/* CareGuide auto-expands for donuts < 7 days old */}
             {hasMiner && <CareGuide ageInDays={ageInDays} />}
@@ -660,14 +668,6 @@ export default function HomePage() {
                 ageInDays={ageInDays}
               />
             )}
-
-            {/* Interaction Panel - Core gameplay action */}
-            <InteractionPanel
-              petResponse={petResponse}
-              isDisabled={isGlazeDisabled}
-              onGesture={handleGesture}
-              petState={petState.state}
-            />
 
             {/* Feed Button */}
             <Button
