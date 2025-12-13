@@ -95,20 +95,25 @@ export function PetStats({
         </div>
       )}
 
-      <div>
-        <PixelStatBar label="HEALTH" value={health} emoji="❤️" color="red" />
-        <div className="text-[8px] text-black/60 font-bold ml-6 mt-0.5">↳ Affects feeding urgency</div>
-      </div>
-      <div>
-        <PixelStatBar label="HAPPY" value={happiness} emoji="😊" color="yellow" />
-        <div className="text-[8px] text-black/60 font-bold ml-6 mt-0.5">↳ Affects breeding viability</div>
+      {/* Health and Happy on the same line */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <PixelStatBar label="HEALTH" value={health} emoji="❤️" color="red" />
+          <div className="text-[8px] text-black/60 font-bold ml-6 mt-0.5">↳ Feeding urgency</div>
+        </div>
+        <div>
+          <PixelStatBar label="HAPPY" value={happiness} emoji="😊" color="yellow" />
+          <div className="text-[8px] text-black/60 font-bold ml-6 mt-0.5">↳ Breeding viability</div>
+        </div>
       </div>
 
-      {/* Development stats (shown conditionally) */}
-      <div className="pt-1 border-t-2 border-black border-dashed space-y-2">
-        <PixelStatBar label="GROOMING" value={grooming} emoji="✨" color="yellow" size="small" />
-        <PixelStatBar label="ENERGY" value={energyLevel} emoji="⚡" color="yellow" size="small" />
-        <PixelStatBar label="SATISFIED" value={satisfaction} emoji="😋" color="yellow" size="small" />
+      {/* Grooming, Energy, Satisfied on one line */}
+      <div className="pt-1 border-t-2 border-black border-dashed">
+        <div className="grid grid-cols-3 gap-2">
+          <PixelStatBar label="GROOM" value={grooming} emoji="✨" color="yellow" size="small" />
+          <PixelStatBar label="ENERGY" value={energyLevel} emoji="⚡" color="yellow" size="small" />
+          <PixelStatBar label="HAPPY" value={satisfaction} emoji="😋" color="yellow" size="small" />
+        </div>
       </div>
 
       {/* Earnings Section */}
