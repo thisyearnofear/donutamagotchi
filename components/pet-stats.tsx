@@ -165,7 +165,12 @@ function PixelStatBar({
 }) {
   const percentage = Math.max(0, Math.min(100, value));
   const blockCount = size === "small" ? 3 : 5;
-  const scaledBlocks = Math.round((percentage / 100) * blockCount);
+  const exactBlocks = (percentage / 100) * blockCount;
+  const scaledBlocks = Math.ceil(exactBlocks) === Math.floor(exactBlocks) 
+    ? exactBlocks 
+    : percentage % (100 / blockCount) >= (100 / blockCount) / 2 
+      ? Math.ceil(exactBlocks) 
+      : Math.floor(exactBlocks);
 
   const blockColor = color === "red"
     ? percentage > 60 ? "bg-green-500" : percentage > 30 ? "bg-yellow-500" : "bg-red-500"
