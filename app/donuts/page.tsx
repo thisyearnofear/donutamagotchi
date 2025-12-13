@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { getLifecycleStage } from "@/lib/traits";
 import { NavBar } from "@/components/nav-bar";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,19 @@ export default function DonutsPage() {
   const [filterLifecycle, setFilterLifecycle] = useState<"all" | "prime" | "growth" | "birth">("prime");
   const [sortBy, setSortBy] = useState<"earnings" | "age" | "health">("earnings");
   const [showAllDonuts, setShowAllDonuts] = useState(false);
+  const [tipIndex, setTipIndex] = useState(0);
+
+  const tips = [
+    "💡 Tip: Filter by PRIME (⭐) to find breeding partners when your pet is ready!",
+    "💡 Coming soon: Earn +10 $DONUTAMAGOTCHI when exploring other donuts"
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTipIndex((prev) => (prev + 1) % tips.length);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Mock data - will be replaced with subgraph queries
   const allDonuts: DonutCard[] = [
@@ -136,10 +149,10 @@ export default function DonutsPage() {
             </p>
           </div>
 
-          {/* Purpose Guide */}
-          <div className="bg-lime-300 border-4 border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          {/* Rotating Tip Box */}
+          <div className="bg-lime-300 border-4 border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
             <div className="text-[10px] font-black text-black text-center">
-              💡 Tip: Filter by PRIME (⭐) to find breeding partners when your pet is ready!
+              {tips[tipIndex]}
             </div>
           </div>
 
@@ -154,7 +167,7 @@ export default function DonutsPage() {
             />
           </div>
 
-          {/* Featured Section */}
+          {/* Featured Section - only show when not viewing all */}
           {!showAllDonuts && sortedDonuts.length > 0 && (
             <FeaturedSection
               title="TRENDING PARTNERS"
@@ -162,49 +175,56 @@ export default function DonutsPage() {
               viewAllLabel={`View all ${sortedDonuts.length}`}
               onViewAll={() => setShowAllDonuts(true)}
             >
-              {sortedDonuts.slice(0, 4).map((donut) => {
+              {sortedDonuts.slice(0, 2).map((donut) => {
                 const stage = getLifecycleStage(donut.ageInDays);
-                if (stage === "dead") return null; // Skip dead donuts
+                if (stage === "dead") return null;
                 return <DonutCardComponent key={donut.id} donut={donut} stage={stage} />;
               })}
             </FeaturedSection>
           )}
 
-          {/* Filters & Sort */}
-          <ExploreFilters
-            filterLifecycle={filterLifecycle}
-            onFilterLifecycle={setFilterLifecycle}
-            sortBy={sortBy}
-            onSortBy={setSortBy}
-          />
-
-          {/* Full Donuts List */}
-          {sortedDonuts.length > 0 ? (
-            <div className="space-y-2 flex-1 overflow-y-auto">
-              {(showAllDonuts ? sortedDonuts : sortedDonuts.slice(4)).map((donut) => {
-                const stage = getLifecycleStage(donut.ageInDays);
-                if (stage === "dead") return null; // Skip dead donuts
-                return <DonutCardComponent key={donut.id} donut={donut} stage={stage} />;
-              })}
-            </div>
-          ) : (
-            <div className="bg-white border-4 border-black rounded-xl p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex-1 flex flex-col items-center justify-center">
-              <div className="text-center space-y-3">
-                <div className="text-4xl">🔍</div>
-                <div className="text-sm font-black text-black">No Donuts Found</div>
-                <p className="text-xs text-black/70 max-w-xs">
-                  Try adjusting your search or filter to find active donuts
-                </p>
+          {/* Show filters only when viewing all */}
+          {showAllDonuts && (
+            <>
+              <div className="flex items-center justify-between">
+                <Button
+                  onClick={() => setShowAllDonuts(false)}
+                  className="text-xs font-black bg-white text-black border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                >
+                  ← BACK TO FEATURED
+                </Button>
               </div>
-            </div>
+              <ExploreFilters
+                filterLifecycle={filterLifecycle}
+                onFilterLifecycle={setFilterLifecycle}
+                sortBy={sortBy}
+                onSortBy={setSortBy}
+              />
+            </>
           )}
 
-          {/* Info Box */}
-          <div className="bg-lime-300 border-4 border-black rounded-xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <div className="text-[10px] font-black text-black text-center">
-              💡 Coming soon: Earn +10 $DONUTAMAGOTCHI when exploring other donuts
-            </div>
-          </div>
+          {/* Full Donuts List - only show when viewing all */}
+          {showAllDonuts && (
+            sortedDonuts.length > 0 ? (
+              <div className="space-y-2 flex-1 overflow-y-auto">
+                {sortedDonuts.map((donut) => {
+                  const stage = getLifecycleStage(donut.ageInDays);
+                  if (stage === "dead") return null;
+                  return <DonutCardComponent key={donut.id} donut={donut} stage={stage} />;
+                })}
+              </div>
+            ) : (
+              <div className="bg-white border-4 border-black rounded-xl p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex-1 flex flex-col items-center justify-center">
+                <div className="text-center space-y-3">
+                  <div className="text-4xl">🔍</div>
+                  <div className="text-sm font-black text-black">No Donuts Found</div>
+                  <p className="text-xs text-black/70 max-w-xs">
+                    Try adjusting your search or filter to find active donuts
+                  </p>
+                </div>
+              </div>
+            )
+          )}
         </div>
       </div>
         <NavBar />
