@@ -50,3 +50,49 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Background Effects Animations */
+@keyframes float-slow {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(20px, 30px); }
+}
+
+@keyframes float-delayed {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-30px, 10px); }
+}
+
+@keyframes float-particle-1 {
+  0%, 100% { transform: translate(0, 0); opacity: 0.4; }
+  50% { transform: translate(100px, -50px); opacity: 0.8; }
+}
+
+@keyframes float-particle-2 {
+  0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+  50% { transform: translate(-50px, -80px); opacity: 0.6; }
+}
+
+@keyframes float-particle-3 {
+  0%, 100% { transform: translate(0, 0); opacity: 0.5; }
+  50% { transform: translate(40px, 60px); opacity: 0.9; }
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 12s ease-in-out infinite;
+}
+
+.animate-float-particle-1 {
+  animation: float-particle-1 15s ease-in-out infinite;
+}
+
+.animate-float-particle-2 {
+  animation: float-particle-2 20s ease-in-out infinite;
+}
+
+.animate-float-particle-3 {
+  animation: float-particle-3 10s ease-in-out infinite;
+}

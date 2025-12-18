@@ -2,46 +2,128 @@
 
 import { useState } from "react";
 import { Button } from "./ui/button";
+import { Traits } from "@/lib/traits";
 
 interface InteractionPanelProps {
   petResponse: string;
   isDisabled: boolean;
   onGesture: (gesture: "bounce" | "wiggle" | "jump" | "spin" | "nod") => void;
   petState: "idle" | "happy" | "excited" | "hungry" | "sleeping" | "dead" | "bored" | "petting";
+  traits?: Traits | null;
 }
 
 const RESPONSES = {
-  gm: [
-    "☀️ gm gm!",
-    "🌅 Rise and grind!",
-    "😊 Good morning!",
-    "🍩 Morning vibes!",
-    "👋 Hey early bird!"
-  ],
-  donut: [
-    "🍩 I AM a donut!",
-    "🤔 Donut inception?",
-    "😋 Donut talk!",
-    "🍩 You get me!",
-    "💭 Donut dreams..."
-  ],
-  glazed: [
-    "✨ Stay glazed!",
-    "🤩 Glazed and amazed!",
-    "😎 Keep it sweet!",
-    "💫 Glaze gang!",
-    "🍩 Glazed > plain"
-  ]
+  gm: {
+    Friendly: [
+      "☀️ gm bestie!",
+      "😊 Good morning friend!",
+      "👋 Hiiiii!",
+      "🍩 Ready for a great day?",
+      "🌅 You shine brighter than glaze!"
+    ],
+    Energetic: [
+      "🚀 GM GM GM!",
+      "⚡️ LETS GOOOO!",
+      "🏃‍♂️ Up and running!",
+      "🤩 HYPED for today!",
+      "🌅 WAKE UP ITS DONUT TIME!"
+    ],
+    Lazy: [
+      "😴 gm...",
+      "🛌 5 more minutes?",
+      "🥱 *yawn* hey...",
+      "💤 zzz... oh, gm.",
+      "☕️ need coffee first..."
+    ],
+    Stubborn: [
+      "😑 gm.",
+      "🍩 I'm awake, okay?",
+      "😒 Too early.",
+      "😐 Morning.",
+      "🌫️ Hmph. gm."
+    ]
+  },
+  donut: {
+    Friendly: [
+      "🍩 I love being a donut!",
+      "🥰 You're sweet like sugar!",
+      "😋 We make a great team!",
+      "🍩 Hug me!",
+      "💕 Sprinkles of love!"
+    ],
+    Energetic: [
+      "🍩 BEST SHAPE EVER!",
+      "🤪 ROUND POWER!",
+      "🍩 ROLL OUT!",
+      "🤩 SUGAR RUSH!",
+      "⚡️ DONUT ENERGY!"
+    ],
+    Lazy: [
+      "🍩 Round is the best shape for napping.",
+      "🤤 Mmm... me.",
+      "🍩 Too round to move.",
+      "🛋️ Donut disturb.",
+      "🥱 Soft and sweet."
+    ],
+    Stubborn: [
+      "🍩 I am the best donut.",
+      "😤 Acknowledged.",
+      "🍩 Yeah, I know I'm cool.",
+      "🛡️ Tough crust.",
+      "😐 I'm not just a snack."
+    ]
+  },
+  glazed: {
+    Friendly: [
+      "✨ Shining for you!",
+      "🥰 Feeling fresh!",
+      "💫 So sparkly!",
+      "🍩 Glazed with love!",
+      "✨ Glow up!"
+    ],
+    Energetic: [
+      "🤩 BLINDINGLY SHINY!",
+      "⚡️ MAX GLOSS!",
+      "✨ SPARKLE POWER!",
+      "🌟 WATCH ME SHINE!",
+      "💫 ZOOM ZOOM!"
+    ],
+    Lazy: [
+      "✨ Shiny nap spot.",
+      "🫠 Melting...",
+      "😴 Glazed over eyes...",
+      "✨ Sticky situation.",
+      "🥱 Too bright..."
+    ],
+    Stubborn: [
+      "😎 Deal with it.",
+      "✨ Naturally perfect.",
+      "🛡️ Armor up.",
+      "💎 Hard as diamond.",
+      "✨ Yeah, I shine."
+    ]
+  }
 };
 
-export function InteractionPanel({ petResponse, isDisabled, onGesture, petState }: InteractionPanelProps) {
+export function InteractionPanel({ petResponse, isDisabled, onGesture, petState, traits }: InteractionPanelProps) {
   const [currentResponse, setCurrentResponse] = useState("");
 
   const handleInteraction = (type: keyof typeof RESPONSES) => {
-    const responses = RESPONSES[type];
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+    const personality = traits?.personality || "Friendly";
+    const personalityResponses = RESPONSES[type][personality];
+    const randomResponse = personalityResponses[Math.floor(Math.random() * personalityResponses.length)];
+    
     setCurrentResponse(randomResponse);
-    onGesture("bounce");
+    
+    // Personality-based gestures
+    let gesture: "bounce" | "wiggle" | "jump" | "spin" | "nod" = "bounce";
+    
+    if (personality === "Energetic") gesture = Math.random() > 0.5 ? "jump" : "spin";
+    else if (personality === "Lazy") gesture = "nod";
+    else if (personality === "Stubborn") gesture = "wiggle";
+    else gesture = "bounce"; // Friendly default
+
+    onGesture(gesture);
 
     setTimeout(() => setCurrentResponse(""), 3000);
   };

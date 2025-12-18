@@ -75,7 +75,7 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
 
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
-      const baseRadius = 80;
+      const baseRadius = 85; // Slightly larger base
 
       // Get personality-based animation speed
       const personalitySpeed = traits ? getPersonalityTraits(traits.personality).animationSpeed : 1;
@@ -180,27 +180,35 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
       // Draw donut body with trait-based coloring and depth shading
       const donutColor = getDonutColor(state, health, traits);
       
-      // Body with radial gradient for 3D depth effect
+      // KAWAII UPGRADE: Softer gradients and outlines
       const bodyGradient = ctx.createRadialGradient(
-        -actualRadius * 0.2, -actualRadius * 0.2, 0,
+        -actualRadius * 0.3, -actualRadius * 0.3, 0,
         0, 0, actualRadius
       );
-      bodyGradient.addColorStop(0, lightenColor(donutColor, 0.2));
-      bodyGradient.addColorStop(0.5, donutColor);
-      bodyGradient.addColorStop(1, darkenColor(donutColor, 0.2));
+      bodyGradient.addColorStop(0, lightenColor(donutColor, 0.3)); // Brighter highlight
+      bodyGradient.addColorStop(0.4, donutColor);
+      bodyGradient.addColorStop(1, darkenColor(donutColor, 0.1));
       
       ctx.beginPath();
       ctx.arc(0, 0, actualRadius, 0, Math.PI * 2);
       ctx.fillStyle = bodyGradient;
       ctx.fill();
-      ctx.strokeStyle = "#8b4513";
-      ctx.lineWidth = 4;
+      
+      // Softer outline
+      ctx.strokeStyle = darkenColor(donutColor, 0.4);
+      ctx.lineWidth = 3;
       ctx.stroke();
+
+      // KAWAII UPGRADE: Add a glossy shine
+      ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
+      ctx.beginPath();
+      ctx.ellipse(-actualRadius * 0.4, -actualRadius * 0.4, 15, 8, Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
 
       // Draw donut hole (scales with size)
       ctx.beginPath();
-      ctx.arc(0, 0, actualRadius * 0.35, 0, Math.PI * 2);
-      ctx.fillStyle = "#000";
+      ctx.arc(0, 0, actualRadius * 0.28, 0, Math.PI * 2); // Smaller hole for cuteness
+      ctx.fillStyle = "#2a1505"; // Dark chocolate center
       ctx.fill();
 
       // Draw frosting with lifecycle info
@@ -227,12 +235,12 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
       // Draw particles
       drawParticlesEnhanced(ctx, 0, 0, particlesRef.current);
 
-      // Draw limbs (arms and feet)
+      // Draw limbs (arms and feet) - KAWAII UPGRADE: Nubs instead of sticks
       const limbExpr = calculateLimbExpression(state, frameRef.current);
-      drawLimbs(ctx, 0, 0, actualRadius, limbExpr);
+      drawKawaiiLimbs(ctx, 0, 0, actualRadius, limbExpr);
 
       // Draw face with expression-based eyes and mouth
-      drawFaceEnhanced(ctx, 0, 0, state, frameRef.current, traits);
+      drawFaceKawaii(ctx, 0, 0, state, frameRef.current, traits);
 
       // Draw bored indicators
       if (state === "bored") {
@@ -259,16 +267,13 @@ export function DonutPet({ state, happiness, health, isAnimating, gesture, onGes
 }
 
 function getDonutColor(state: PetState, health: number, traits?: Traits | null): string {
-  if (state === "dead") return "#666";
+  if (state === "dead") return "#9ca3af";
   if (state === "bored") return "#e8c4a0";
   if (health < 30) return "#d4a574";
   
   // Use trait-based coloring if available
   if (traits) {
     const baseColor = getColorHex(traits.coloring);
-    // Apply grooming effect: higher grooming = more saturated color
-    const groomingFactor = traits.grooming / 100;
-    // This is a simplified effect; in a real implementation you might use HSL adjustment
     return baseColor;
   }
   
@@ -276,7 +281,7 @@ function getDonutColor(state: PetState, health: number, traits?: Traits | null):
 }
 
 function drawFrosting(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, state: PetState, traits?: Traits | null, lifecycleInfo?: any) {
-  const frostingColor = state === "dead" ? "#888" : traits?.personality === "Friendly" ? "#FFB6C1" : "#ec4899";
+  const frostingColor = state === "dead" ? "#cbd5e1" : traits?.personality === "Friendly" ? "#fbcfe8" : "#f472b6"; // Lighter pastel pinks
   
   // Wave height varies by lifecycle stage (babies have less frosting)
   const waveHeightMultiplier = lifecycleInfo?.stage === "birth" ? 0.5 : lifecycleInfo?.stage === "growth" ? 0.75 : 1;
@@ -298,32 +303,65 @@ function drawFrosting(ctx: CanvasRenderingContext2D, x: number, y: number, width
   if (state !== "dead") {
     // More sprinkles for happy/energetic, fewer for lazy
     const sprinkleCount = traits?.personality === "Energetic" ? 16 : traits?.personality === "Lazy" ? 8 : 12;
-    const colors = ["#ff6b9d", "#ffd93d", "#6bcf7f", "#4ecdc4"];
+    const colors = ["#ff6b9d", "#ffd93d", "#6bcf7f", "#4ecdc4", "#fff"]; // Added white for variety
     
     for (let i = 0; i < sprinkleCount; i++) {
       const angle = (i / sprinkleCount) * Math.PI * 2 + Math.random() * 0.3;
       const dist = 30 + Math.random() * 20;
       ctx.fillStyle = colors[i % colors.length];
-      ctx.fillRect(
-        x + Math.cos(angle) * dist - 2,
-        y + Math.sin(angle) * 10 - 1,
-        8,
-        3
-      );
+      
+      // KAWAII UPGRADE: Personality-based sprinkle shapes
+      const personality = traits?.personality || "Friendly";
+      
+      if (personality === "Friendly") {
+        // Hearts for friendly
+        drawTinyHeart(ctx, x + Math.cos(angle) * dist, y + Math.sin(angle) * 10, 4);
+      } else if (personality === "Energetic") {
+        // Stars for energetic
+        drawTinyStar(ctx, x + Math.cos(angle) * dist, y + Math.sin(angle) * 10, 4);
+      } else if (personality === "Stubborn") {
+        // Diamonds/Squares for stubborn
+        const sx = x + Math.cos(angle) * dist;
+        const sy = y + Math.sin(angle) * 10;
+        ctx.beginPath();
+        ctx.rect(sx - 2, sy - 2, 4, 4);
+        ctx.fill();
+      } else {
+        // Simple circles for Lazy/Default
+        ctx.beginPath();
+        ctx.arc(x + Math.cos(angle) * dist, y + Math.sin(angle) * 10, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   }
 }
 
+function drawTinyHeart(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  ctx.beginPath();
+  ctx.moveTo(x, y + size/2);
+  ctx.bezierCurveTo(x - size, y - size/2, x - size, y - size, x, y - size);
+  ctx.bezierCurveTo(x + size, y - size, x + size, y - size/2, x, y + size/2);
+  ctx.fill();
+}
+
+function drawTinyStar(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  ctx.beginPath();
+  for (let i = 0; i < 5; i++) {
+    const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+    ctx.lineTo(x + Math.cos(angle) * size, y + Math.sin(angle) * size);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
 /**
- * Enhanced face drawing with exaggerated expression animations
- * Uses calculateEyeExpression and calculateMouthExpression for state-driven visuals
- * Includes: big expressive eyes with shine, cheek blushes, improved mouth shapes
+ * KAWAII UPGRADE: Face Drawing
+ * Massive eyes, tiny nose/mouth, sparkles
  */
-function drawFaceEnhanced(ctx: CanvasRenderingContext2D, x: number, y: number, state: PetState, frame: number, traits?: Traits | null) {
-  const eyeY = y + 8;
-  const eyeSpacing = 28;
-  const baseEyeWidth = 20; // Enlarged from 16
-  const baseEyeHeight = 16; // Enlarged from 12
+function drawFaceKawaii(ctx: CanvasRenderingContext2D, x: number, y: number, state: PetState, frame: number, traits?: Traits | null) {
+  const eyeY = y + 10; // Lower eyes slightly for "cute forehead" look
+  const eyeSpacing = 24; // Closer together
+  const baseEyeSize = 28; // MUCH larger eyes (was 20x16)
 
   // Get expression state from physics engine
   const eyeExpr = calculateEyeExpression(state, frame);
@@ -331,174 +369,143 @@ function drawFaceEnhanced(ctx: CanvasRenderingContext2D, x: number, y: number, s
   const eyebrowExpr = traits ? calculateEyebrowExpression(traits.personality, state, frame) : null;
   const eyeAppearance = traits ? getEyeAppearance(traits.personality) : null;
   
-  // Draw cheek blushes (key to cuteness)
-  const blushIntensity = Math.max(0, calculateEyeExpression(state, frame).height * 0.7);
-  drawCheekBlushes(ctx, x, y, blushIntensity, traits?.personality);
+  // Draw cheek blushes (key to cuteness) - larger and softer
+  const blushIntensity = Math.max(0.2, calculateEyeExpression(state, frame).height * 0.8);
+  drawCheekBlushesKawaii(ctx, x, y + 12, blushIntensity, traits?.personality);
   
   // Draw eyebrows before eyes (so eyes render on top)
   if (eyebrowExpr && !("sleeping".includes(state) || "dead".includes(state))) {
-    drawEyebrows(ctx, x, y, eyebrowExpr, eyeSpacing);
+    drawEyebrowsKawaii(ctx, x, y - 5, eyebrowExpr, eyeSpacing);
   }
 
   // Special case: dead pets get X eyes (classic)
   if (state === "dead") {
-    ctx.strokeStyle = "#000";
+    ctx.strokeStyle = "#475569";
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(x - eyeSpacing - 6, eyeY - 6);
-    ctx.lineTo(x - eyeSpacing + 6, eyeY + 6);
-    ctx.moveTo(x - eyeSpacing + 6, eyeY - 6);
-    ctx.lineTo(x - eyeSpacing - 6, eyeY + 6);
-    ctx.moveTo(x + eyeSpacing - 6, eyeY - 6);
-    ctx.lineTo(x + eyeSpacing + 6, eyeY + 6);
-    ctx.moveTo(x + eyeSpacing + 6, eyeY - 6);
-    ctx.lineTo(x + eyeSpacing - 6, eyeY + 6);
+    // Left X
+    ctx.moveTo(x - eyeSpacing - 8, eyeY - 8);
+    ctx.lineTo(x - eyeSpacing + 8, eyeY + 8);
+    ctx.moveTo(x - eyeSpacing + 8, eyeY - 8);
+    ctx.lineTo(x - eyeSpacing - 8, eyeY + 8);
+    // Right X
+    ctx.moveTo(x + eyeSpacing - 8, eyeY - 8);
+    ctx.lineTo(x + eyeSpacing + 8, eyeY + 8);
+    ctx.moveTo(x + eyeSpacing + 8, eyeY - 8);
+    ctx.lineTo(x + eyeSpacing - 8, eyeY + 8);
     ctx.stroke();
   } else if (state === "sleeping") {
-    // Sleeping: straight lines
-    ctx.strokeStyle = "#000";
+    // Sleeping: curved lines (happy sleep)
+    ctx.strokeStyle = "#475569";
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(x - eyeSpacing - 8, eyeY);
-    ctx.lineTo(x - eyeSpacing + 8, eyeY);
-    ctx.moveTo(x + eyeSpacing - 8, eyeY);
-    ctx.lineTo(x + eyeSpacing + 8, eyeY);
+    ctx.arc(x - eyeSpacing, eyeY + 2, 10, Math.PI, 0); // U shape
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x + eyeSpacing, eyeY + 2, 10, Math.PI, 0); // U shape
     ctx.stroke();
   } else {
-    // Draw eyes with exaggerated expression and glancing
-    const eyeWidth = baseEyeWidth * eyeExpr.width;
-    const eyeHeight = baseEyeHeight * eyeExpr.height;
-    const pupilY = eyeY + eyeExpr.pupilOffset * 4; // Pupil can move up/down
-    const glanceShift = eyeExpr.glanceOffset * 6; // Horizontal glance offset
-
-    // Personality-based eye shape
-    const eyeShape = traits?.personality === "Stubborn" ? "round" : traits?.personality === "Lazy" ? "small" : "normal";
+    // Draw Anime Eyes
+    const eyeWidth = baseEyeSize * eyeExpr.width;
+    const eyeHeight = baseEyeSize * eyeExpr.height; // Square-ish ratio
+    const pupilY = eyeY + eyeExpr.pupilOffset * 4;
     
-    // Get personality-based eye colors
-    const pupilColor = eyeAppearance?.pupilColor || "#000";
-    const eyeWhiteColor = eyeAppearance?.eyeWhiteColor || "#fff";
+    const pupilColor = eyeAppearance?.pupilColor || "#1e1e1e";
+    // const eyeWhiteColor = eyeAppearance?.eyeWhiteColor || "#fff";
 
-    // Draw eye whites and pupils (exaggerated for emotion)
-    if (eyeShape === "round" && eyeHeight > 0.1) {
-      // Round eyes (Stubborn personality)
-      const radius = eyeWidth / 2;
-      
-      // Eye white base with personality color
-      ctx.fillStyle = eyeWhiteColor;
-      ctx.beginPath();
-      ctx.arc(x - eyeSpacing + glanceShift, eyeY, radius * 0.9, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x + eyeSpacing + glanceShift, eyeY, radius * 0.9, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Pupils with personality color tint
-      ctx.fillStyle = pupilColor;
-      const pupilRadius = radius * 0.4;
-      ctx.beginPath();
-      ctx.arc(x - eyeSpacing + glanceShift, pupilY, pupilRadius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x + eyeSpacing + glanceShift, pupilY, pupilRadius, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Shine/highlight spots (adds depth and sparkle)
-      ctx.fillStyle = "#fff";
-      ctx.beginPath();
-      ctx.arc(x - eyeSpacing + glanceShift - pupilRadius * 0.5, pupilY - pupilRadius * 0.5, pupilRadius * 0.35, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x + eyeSpacing + glanceShift - pupilRadius * 0.5, pupilY - pupilRadius * 0.5, pupilRadius * 0.35, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      // Oval/rectangular eyes (default/Lazy) - now with shine and glancing
-      ctx.fillStyle = eyeWhiteColor;
-      
-      // Draw rounded rectangle eye whites
-      drawRoundedRect(ctx, x - eyeSpacing + glanceShift - eyeWidth / 2, eyeY - eyeHeight / 2, eyeWidth, eyeHeight, eyeHeight / 3);
-      drawRoundedRect(ctx, x + eyeSpacing + glanceShift - eyeWidth / 2, eyeY - eyeHeight / 2, eyeWidth, eyeHeight, eyeHeight / 3);
-
-      // Pupils (only if eyes are open enough)
-      if (eyeHeight > 3) {
-        ctx.fillStyle = pupilColor;
-        const pupilRadius = Math.max(2, eyeWidth * 0.25);
-        const pupilX1 = x - eyeSpacing + glanceShift;
-        const pupilX2 = x + eyeSpacing + glanceShift;
-        
-        ctx.beginPath();
-        ctx.arc(pupilX1, pupilY, pupilRadius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(pupilX2, pupilY, pupilRadius, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Shine spots on pupils
-        ctx.fillStyle = "#fff";
-        ctx.beginPath();
-        ctx.arc(pupilX1 - pupilRadius * 0.4, pupilY - pupilRadius * 0.4, pupilRadius * 0.3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(pupilX2 - pupilRadius * 0.4, pupilY - pupilRadius * 0.4, pupilRadius * 0.3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
+    // Left Eye
+    drawAnimeEye(ctx, x - eyeSpacing, eyeY, eyeWidth, eyeHeight, pupilColor, eyeExpr.glanceOffset);
+    // Right Eye
+    drawAnimeEye(ctx, x + eyeSpacing, eyeY, eyeWidth, eyeHeight, pupilColor, eyeExpr.glanceOffset);
   }
 
-  // Draw mouth with dynamic expression (improved shapes and shading)
-  const mouthY = y + 35;
+  // Draw mouth - smaller and higher up
+  const mouthY = y + 22; // Closer to eyes
   const mouthIntensity = mouthExpr.intensity;
 
   switch (mouthExpr.type) {
     case "smile":
-      // Happy smile - filled arc with depth
-      drawSmileMouth(ctx, x, mouthY - 5, 20 * mouthIntensity);
+      drawKawaiiSmile(ctx, x, mouthY, 12 * mouthIntensity); // Smaller smile
       break;
     case "surprised":
-      // O shape - open mouth
-      drawSurprisedMouth(ctx, x, mouthY, 8 * mouthIntensity);
+      drawSurprisedMouth(ctx, x, mouthY, 6 * mouthIntensity); // Smaller O
       break;
     case "frown":
-      // Sad frown - arc curving downward
-      drawFrownMouth(ctx, x, mouthY + 10, 20 * mouthIntensity);
+      drawFrownMouth(ctx, x, mouthY + 5, 12 * mouthIntensity);
       break;
     case "open":
-      // Sleeping/resting - slight opening
-      drawOpenMouth(ctx, x, mouthY, 8 * mouthIntensity);
+      drawOpenMouth(ctx, x, mouthY, 6 * mouthIntensity);
       break;
     case "flat":
     default:
-      // Neutral/flat mouth
-      ctx.strokeStyle = "#000";
+      ctx.strokeStyle = "#475569";
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(x - 15, mouthY);
-      ctx.lineTo(x + 15, mouthY);
+      ctx.moveTo(x - 5, mouthY);
+      ctx.lineTo(x + 5, mouthY);
       ctx.stroke();
       break;
   }
 }
 
 /**
+ * Draws a detailed Anime/Kawaii style eye
+ */
+function drawAnimeEye(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string, glance: number) {
+  if (h < 2) {
+    // Blink line
+    ctx.strokeStyle = "#1e1e1e";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x - w/2, y);
+    ctx.lineTo(x + w/2, y);
+    ctx.stroke();
+    return;
+  }
+
+  // Eye shape (tall oval)
+  ctx.fillStyle = color;
+  
+  // Glance shift
+  const gx = glance * 4;
+
+  ctx.beginPath();
+  ctx.ellipse(x + gx, y, w/2, h/2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Highlights (The "Sparkle")
+  ctx.fillStyle = "#fff";
+  
+  // Big top-left shine
+  ctx.beginPath();
+  ctx.ellipse(x + gx - w*0.15, y - h*0.2, w*0.15, h*0.12, Math.PI/4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Small bottom-right shine
+  ctx.beginPath();
+  ctx.arc(x + gx + w*0.15, y + h*0.15, w*0.08, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/**
  * Enhanced particle rendering with physics-based movement
- * Hearts, sparkles, and stars float upward with gravity falloff
  */
 function drawParticlesEnhanced(ctx: CanvasRenderingContext2D, x: number, y: number, particles: Particle[]) {
   particles.forEach(particle => {
     const px = x + particle.x;
     const py = y + particle.y;
     
-    // Fade out as particle dies (life goes 1 -> 0)
-    ctx.globalAlpha = particle.life * 0.8;
+    ctx.globalAlpha = particle.life * 0.9;
     
     switch (particle.type) {
       case "heart":
-        drawHeart(ctx, px, py, 6);
+        drawHeart(ctx, px, py, 8); // Slightly bigger
         break;
       case "sparkle":
-        drawSparkle(ctx, px, py, 5);
+        drawSparkle(ctx, px, py, 6);
         break;
       case "star":
-        drawStar(ctx, px, py, 5);
+        drawStar(ctx, px, py, 6);
         break;
     }
   });
@@ -506,320 +513,227 @@ function drawParticlesEnhanced(ctx: CanvasRenderingContext2D, x: number, y: numb
   ctx.globalAlpha = 1;
 }
 
-/**
- * Draw a heart shape (5x5 pixels)
- */
 function drawHeart(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
   ctx.fillStyle = "#ff6b9d";
   ctx.beginPath();
-  // Simple heart (two circles + triangle)
-  ctx.arc(x - size / 2, y - size / 2, size / 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(x + size / 2, y - size / 2, size / 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(x - size, y - size / 2);
-  ctx.lineTo(x + size, y - size / 2);
-  ctx.lineTo(x, y + size * 1.2);
-  ctx.closePath();
+  ctx.moveTo(x, y + size * 0.5);
+  ctx.bezierCurveTo(x - size, y - size * 0.5, x - size, y - size * 1.5, x, y - size * 1.5);
+  ctx.bezierCurveTo(x + size, y - size * 1.5, x + size, y - size * 0.5, x, y + size * 0.5);
   ctx.fill();
 }
 
-/**
- * Draw a sparkle/diamond shape
- */
 function drawSparkle(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
   ctx.fillStyle = "#ffd93d";
-  // Four-pointed star
   ctx.beginPath();
   ctx.moveTo(x, y - size);
-  ctx.lineTo(x + size / 2, y - size / 2);
-  ctx.lineTo(x + size, y);
-  ctx.lineTo(x + size / 2, y + size / 2);
-  ctx.lineTo(x, y + size);
-  ctx.lineTo(x - size / 2, y + size / 2);
-  ctx.lineTo(x - size, y);
-  ctx.lineTo(x - size / 2, y - size / 2);
-  ctx.closePath();
+  ctx.quadraticCurveTo(x, y, x + size, y);
+  ctx.quadraticCurveTo(x, y, x, y + size);
+  ctx.quadraticCurveTo(x, y, x - size, y);
+  ctx.quadraticCurveTo(x, y, x, y - size);
   ctx.fill();
 }
 
-/**
- * Draw a star shape (5-pointed)
- */
 function drawStar(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
   ctx.fillStyle = "#6bcf7f";
   ctx.beginPath();
-  
-  for (let i = 0; i < 10; i++) {
-    const angle = (i * Math.PI) / 5;
-    const radius = i % 2 === 0 ? size : size / 2;
-    const px = x + Math.cos(angle - Math.PI / 2) * radius;
-    const py = y + Math.sin(angle - Math.PI / 2) * radius;
-    
-    if (i === 0) {
-      ctx.moveTo(px, py);
-    } else {
-      ctx.lineTo(px, py);
-    }
+  for (let i = 0; i < 5; i++) {
+    const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+    const px = x + Math.cos(angle) * size;
+    const py = y + Math.sin(angle) * size;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
   }
-  
   ctx.closePath();
   ctx.fill();
 }
 
 function drawBoreIndicators(ctx: CanvasRenderingContext2D, x: number, y: number, frame: number) {
-  // Floating Z's that indicate boredom
   const zCount = 3;
   for (let i = 0; i < zCount; i++) {
-    const offset = (frame + i * 20) % 120;
-    const zX = x + Math.cos(frame * 0.02 + i) * 80;
-    const zY = y - 60 - offset * 0.5;
-    const zAlpha = Math.max(0, 1 - offset / 60);
+    const offset = (frame + i * 30) % 150;
+    const zX = x + Math.sin(offset * 0.05) * 10 + 40; // Floating away to side
+    const zY = y - 30 - offset * 0.8;
+    const zAlpha = Math.max(0, 1 - offset / 120);
     
-    ctx.fillStyle = `rgba(100, 100, 100, ${zAlpha * 0.6})`;
-    ctx.font = "bold 24px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.globalAlpha = zAlpha;
-    ctx.fillText("Z", zX, zY);
-    ctx.globalAlpha = 1;
+    ctx.fillStyle = `rgba(100, 116, 139, ${zAlpha})`;
+    ctx.font = "bold 20px Comic Sans MS, rounded, sans-serif"; // Cuter font fallback
+    ctx.fillText("z", zX, zY);
   }
 }
 
 /**
- * Draw cute limbs (arms and feet)
- * Simple rounded shapes that pose based on emotional state
+ * KAWAII UPGRADE: Limbs
+ * Short, rounded nubs instead of sticks
  */
-function drawLimbs(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, limbExpr: any) {
-  // Arm dimensions
-  const armWidth = radius * 0.35;
-  const armHeight = radius * 0.25;
-  const armDistance = radius * 0.55; // Distance from center
+function drawKawaiiLimbs(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, limbExpr: any) {
+  // Shorter, rounder dimensions
+  const armSize = 14; 
+  const armDistance = radius * 0.65;
   
-  // Foot dimensions
-  const footRadius = radius * 0.18;
-  const footDistance = radius * 0.65;
+  const footSize = 12;
+  const footDistance = radius * 0.4;
   
-  ctx.fillStyle = "#8b4513"; // Brown (donut color)
-  ctx.strokeStyle = "#654321"; // Darker brown outline
-  ctx.lineWidth = 2;
+  ctx.fillStyle = "#7c2d12"; // Darker brown for limbs
   
-  // Draw left arm
+  // Left Arm (Nub)
   ctx.save();
-  ctx.translate(x - armDistance, y + limbExpr.armYOffset);
+  ctx.translate(x - armDistance, y + limbExpr.armYOffset * 0.5);
   ctx.rotate(limbExpr.leftArmRotation);
-  drawRoundedRect(ctx, -armWidth / 2, -armHeight / 2, armWidth, armHeight, armHeight / 2);
-  ctx.strokeRect(-armWidth / 2, -armHeight / 2, armWidth, armHeight);
+  ctx.beginPath();
+  ctx.ellipse(-armSize/2, 0, armSize, armSize/1.5, 0, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
   
-  // Draw right arm
+  // Right Arm (Nub)
   ctx.save();
-  ctx.translate(x + armDistance, y + limbExpr.armYOffset);
+  ctx.translate(x + armDistance, y + limbExpr.armYOffset * 0.5);
   ctx.rotate(limbExpr.rightArmRotation);
-  drawRoundedRect(ctx, -armWidth / 2, -armHeight / 2, armWidth, armHeight, armHeight / 2);
-  ctx.strokeRect(-armWidth / 2, -armHeight / 2, armWidth, armHeight);
+  ctx.beginPath();
+  ctx.ellipse(armSize/2, 0, armSize, armSize/1.5, 0, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
   
-  // Draw feet (simple circles)
-  ctx.fillStyle = "#8b4513";
+  // Feet (Small nubs at bottom)
   ctx.beginPath();
-  ctx.arc(x - footDistance * 0.7, y + radius + footRadius - 5, footRadius, 0, Math.PI * 2);
+  ctx.ellipse(x - footDistance, y + radius - 5, footSize, footSize/1.5, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.stroke();
   
   ctx.beginPath();
-  ctx.arc(x + footDistance * 0.7, y + radius + footRadius - 5, footRadius, 0, Math.PI * 2);
+  ctx.ellipse(x + footDistance, y + radius - 5, footSize, footSize/1.5, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.stroke();
 }
 
-/**
- * Draw personality-based eyebrows
- * Different styles (curved, sharp, droopy, straight) reinforce personality
- */
-function drawEyebrows(ctx: CanvasRenderingContext2D, x: number, y: number, eyebrowExpr: any, eyeSpacing: number) {
-  const eyebrowY = y - 8; // Above eyes
-  const eyebrowHeight = eyebrowExpr.height;
-  const eyebrowAngle = eyebrowExpr.angle;
+function drawEyebrowsKawaii(ctx: CanvasRenderingContext2D, x: number, y: number, eyebrowExpr: any, eyeSpacing: number) {
+  const eyebrowY = y - 12; 
   
-  ctx.strokeStyle = "#000";
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#475569";
+  ctx.lineWidth = 2;
   ctx.lineCap = "round";
   
-  // Left and right eyebrow positions
   const leftX = x - eyeSpacing;
   const rightX = x + eyeSpacing;
   
-  switch (eyebrowExpr.type) {
-    case "curved":
-      // Soft curved eyebrows - Friendly personality
-      ctx.beginPath();
-      ctx.arc(leftX, eyebrowY + eyebrowHeight, 18, Math.PI, 0, true);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(rightX, eyebrowY + eyebrowHeight, 18, Math.PI, 0, true);
-      ctx.stroke();
-      break;
-      
-    case "sharp":
-      // Pointed angled eyebrows - Energetic personality
-      ctx.beginPath();
-      ctx.moveTo(leftX - 15, eyebrowY + eyebrowHeight - 8);
-      ctx.lineTo(leftX + 15, eyebrowY + eyebrowHeight + 4);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(rightX - 15, eyebrowY + eyebrowHeight - 8);
-      ctx.lineTo(rightX + 15, eyebrowY + eyebrowHeight + 4);
-      ctx.stroke();
-      break;
-      
-    case "droopy":
-      // Relaxed drooping eyebrows - Lazy personality
-      ctx.beginPath();
-      ctx.moveTo(leftX - 18, eyebrowY + eyebrowHeight - 5);
-      ctx.quadraticCurveTo(leftX, eyebrowY + eyebrowHeight + 8, leftX + 18, eyebrowY + eyebrowHeight + 10);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(rightX - 18, eyebrowY + eyebrowHeight - 5);
-      ctx.quadraticCurveTo(rightX, eyebrowY + eyebrowHeight + 8, rightX + 18, eyebrowY + eyebrowHeight + 10);
-      ctx.stroke();
-      break;
-      
-    case "straight":
-      // Determined horizontal eyebrows - Stubborn personality
-      ctx.beginPath();
-      ctx.moveTo(leftX - 18, eyebrowY + eyebrowHeight);
-      ctx.lineTo(leftX + 18, eyebrowY + eyebrowHeight);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(rightX - 18, eyebrowY + eyebrowHeight);
-      ctx.lineTo(rightX + 18, eyebrowY + eyebrowHeight);
-      ctx.stroke();
-      break;
+  // Simplified cute eyebrows (small dashes or curves)
+  ctx.beginPath();
+  if (eyebrowExpr.type === "straight" || eyebrowExpr.type === "sharp") {
+     ctx.moveTo(leftX - 8, eyebrowY);
+     ctx.lineTo(leftX + 8, eyebrowY + 2);
+     ctx.moveTo(rightX - 8, eyebrowY + 2);
+     ctx.lineTo(rightX + 8, eyebrowY);
+  } else {
+     ctx.arc(leftX, eyebrowY + 4, 8, Math.PI * 1.1, Math.PI * 1.9);
+     ctx.moveTo(rightX + 8, eyebrowY + 2); // Start for next arc
+     ctx.arc(rightX, eyebrowY + 4, 8, Math.PI * 1.1, Math.PI * 1.9);
   }
+  ctx.stroke();
 }
 
-/**
- * Draw cheek blushes - circles on the sides that fade based on happiness
- * Core tamagotchi aesthetic element
- */
-function drawCheekBlushes(ctx: CanvasRenderingContext2D, x: number, y: number, intensity: number, personality?: string) {
-  if (intensity < 0.1) return; // Don't draw if very faint
+function drawCheekBlushesKawaii(ctx: CanvasRenderingContext2D, x: number, y: number, intensity: number, personality?: string) {
+  if (intensity < 0.1) return; 
   
-  // Personality-based blush color
-  let blushColor = "#ff9bb5"; // Default pink
-  if (personality === "Friendly") {
-    blushColor = "#ffb3c1"; // Lighter pink
-  } else if (personality === "Energetic") {
-    blushColor = "#ff7fa0"; // More vibrant
-  }
+  let blushColor = "#fda4af"; // Soft pink
+  if (personality === "Friendly") blushColor = "#f9a8d4";
+  if (personality === "Energetic") blushColor = "#fb7185";
+  if (personality === "Lazy") blushColor = "#fbcfe8";
   
   ctx.fillStyle = blushColor;
-  ctx.globalAlpha = intensity * 0.5; // Blushes are semi-transparent
+  ctx.globalAlpha = intensity * 0.6;
   
-  // Left cheek
-  ctx.beginPath();
-  ctx.arc(x - 45, y + 15, 15, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Right cheek
-  ctx.beginPath();
-  ctx.arc(x + 45, y + 15, 15, 0, Math.PI * 2);
-  ctx.fill();
-  
+  if (personality === "Energetic") {
+    // Anime-style hash marks for high energy
+    ctx.strokeStyle = blushColor;
+    ctx.lineWidth = 2;
+    // Left
+    ctx.beginPath();
+    ctx.moveTo(x - 55, y - 5); ctx.lineTo(x - 45, y + 5);
+    ctx.moveTo(x - 50, y - 5); ctx.lineTo(x - 40, y + 5);
+    ctx.stroke();
+    // Right
+    ctx.beginPath();
+    ctx.moveTo(x + 45, y - 5); ctx.lineTo(x + 55, y + 5);
+    ctx.moveTo(x + 40, y - 5); ctx.lineTo(x + 50, y + 5);
+    ctx.stroke();
+  } else if (personality === "Stubborn") {
+    // Small intense dots
+    ctx.beginPath();
+    ctx.arc(x - 50, y, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + 50, y, 8, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (personality === "Lazy") {
+    // Lower, sleepy blushes
+    ctx.beginPath();
+    ctx.ellipse(x - 50, y + 5, 15, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x + 50, y + 5, 15, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    // Friendly/Default: Large soft ovals with shine
+    // Left cheek
+    ctx.beginPath();
+    ctx.ellipse(x - 50, y, 18, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Right cheek
+    ctx.beginPath();
+    ctx.ellipse(x + 50, y, 18, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Add some white shines on cheeks for extra cuteness
+    ctx.globalAlpha = intensity * 0.8;
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.arc(x - 55, y - 3, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + 55, y - 3, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   ctx.globalAlpha = 1;
 }
 
-/**
- * Draw rounded rectangle for eye whites (softer look)
- */
-function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.lineTo(x + width - radius, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-  ctx.lineTo(x + width, y + height - radius);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-  ctx.lineTo(x + radius, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-  ctx.lineTo(x, y + radius);
-  ctx.quadraticCurveTo(x, y, x + radius, y);
-  ctx.closePath();
-  ctx.fill();
-}
-
-/**
- * Smile mouth - filled arc with subtle gradient for depth
- */
-function drawSmileMouth(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
-  // Draw filled smile (more expressive than just stroke)
-  ctx.strokeStyle = "#000";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(x, y, size, 0.2, Math.PI - 0.2);
-  ctx.stroke();
+function drawKawaiiSmile(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  ctx.strokeStyle = "#475569";
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = "round";
   
-  // Optional: add subtle fill for warmth (very light red)
-  ctx.fillStyle = "rgba(255, 150, 150, 0.1)";
+  // "3" mouth shape or simple small cat mouth
   ctx.beginPath();
-  ctx.arc(x, y, size, 0.2, Math.PI - 0.2);
-  ctx.lineTo(x + size * 0.8, y - size * 0.2);
-  ctx.lineTo(x - size * 0.8, y - size * 0.2);
-  ctx.closePath();
-  ctx.fill();
+  // Simple 'u' shape but small
+  ctx.arc(x, y, size, 0.1, Math.PI - 0.1);
+  ctx.stroke();
 }
 
-/**
- * Surprised mouth - open O shape
- */
 function drawSurprisedMouth(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
-  ctx.fillStyle = "#ffb3c1"; // Light pink interior
+  ctx.fillStyle = "#fda4af"; 
   ctx.beginPath();
-  ctx.arc(x, y, size, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size, size * 1.2, 0, 0, Math.PI * 2);
   ctx.fill();
   
-  // Black outline
-  ctx.strokeStyle = "#000";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(x, y, size, 0, Math.PI * 2);
+  ctx.strokeStyle = "#475569";
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 }
 
-/**
- * Frown mouth - sad downward arc
- */
 function drawFrownMouth(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
-  ctx.strokeStyle = "#000";
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#475569";
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.arc(x, y, size, Math.PI + 0.2, Math.PI * 2 - 0.2);
+  ctx.arc(x, y + size, size, Math.PI * 1.1, Math.PI * 1.9);
   ctx.stroke();
 }
 
-/**
- * Open mouth - sleeping or resting
- */
 function drawOpenMouth(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
-  ctx.fillStyle = "#ffb3c1";
+  ctx.fillStyle = "#fda4af";
   ctx.beginPath();
-  ctx.arc(x, y, size, 0, Math.PI);
-  ctx.lineTo(x - size, y);
-  ctx.closePath();
+  ctx.arc(x, y, size, 0, Math.PI * 2);
   ctx.fill();
-  
-  ctx.strokeStyle = "#000";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(x, y, size, 0, Math.PI);
-  ctx.stroke();
 }
 
-/**
- * Utility: Lighten color by percentage (for highlights)
- */
 function lightenColor(hex: string, percent: number): string {
   const num = parseInt(hex.replace("#", ""), 16);
   const amt = Math.round(2.55 * percent * 100);
@@ -829,9 +743,6 @@ function lightenColor(hex: string, percent: number): string {
   return "#" + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
 }
 
-/**
- * Utility: Darken color by percentage (for shadows)
- */
 function darkenColor(hex: string, percent: number): string {
   const num = parseInt(hex.replace("#", ""), 16);
   const amt = Math.round(2.55 * percent * 100);

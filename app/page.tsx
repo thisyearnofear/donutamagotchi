@@ -35,6 +35,7 @@ import { RetirementBadge } from "@/components/retirement-badge";
 import { DecayStatus } from "@/components/decay-status";
 import { CareGuide } from "@/components/care-guide";
 import { AccordionProvider } from "@/components/accordion-context";
+import { BackgroundEffects } from "@/components/background-effects";
 
 type MiniAppContext = {
   user?: {
@@ -154,89 +155,6 @@ export default function HomePage() {
       }
     };
   }, []);
-
-  const getPetResponse = useCallback((message: string, state: "idle" | "happy" | "excited" | "hungry" | "sleeping" | "dead" | "bored" | "petting") => {
-    const msg = message.toLowerCase();
-
-    // Positive keywords
-    const positive = ["love", "cute", "good", "nice", "sweet", "yum", "delicious", "tasty", "best", "amazing", "awesome", "great"];
-    const negative = ["bad", "ugly", "hate", "gross", "yuck", "worst", "terrible"];
-    const food = ["hungry", "feed", "eat", "food", "donut", "snack"];
-    const greetings = ["hi", "hello", "hey", "sup", "yo"];
-
-    const hasPositive = positive.some(word => msg.includes(word));
-    const hasNegative = negative.some(word => msg.includes(word));
-    const hasFood = food.some(word => msg.includes(word));
-    const hasGreeting = greetings.some(word => msg.includes(word));
-
-    // State-based responses
-    if (state === "dead") {
-      return hasPositive ? "💀 *ghost noises*" : "💀 Too late...";
-    }
-
-    if (state === "hungry") {
-      if (hasFood) return "😟 Yes please! I'm starving!";
-      if (hasPositive) return "😟 Thanks but... I need food!";
-      return "😟 *stomach rumbles*";
-    }
-
-    if (state === "sleeping") {
-      return "😴 Zzz... *snoring*";
-    }
-
-    if (state === "bored") {
-      if (hasPositive) return "😑 Thanks, I guess...";
-      if (hasFood) return "😑 Not really hungry...";
-      return "😑 *yawn*";
-    }
-
-    if (state === "excited" || state === "happy" || state === "petting") {
-      if (hasPositive) return "😊 Aww thanks! You're the best!";
-      if (hasFood) return "🤩 More donuts? YES!";
-      if (hasGreeting) return "😊 Hey there friend!";
-      return "😊 *happy donut noises*";
-    }
-
-    // Message-based responses
-    if (hasNegative) return "😢 That's not very nice...";
-    if (hasPositive) return "😊 You're so sweet!";
-    if (hasFood) return "🍩 Mmm, I love donuts!";
-    if (hasGreeting) return "👋 Hello!";
-
-    // Default responses
-    const defaults = [
-      "🍩 *wiggles happily*",
-      "😊 *blinks*",
-      "🍩 I'm listening!",
-      "😊 Tell me more!",
-      "🍩 *donut sounds*"
-    ];
-
-    return defaults[Math.floor(Math.random() * defaults.length)];
-  }, []);
-
-  const handleMessageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setCustomMessage(value);
-
-    // Clear existing timeout
-    if (petResponseTimeoutRef.current) {
-      clearTimeout(petResponseTimeoutRef.current);
-    }
-
-    // Show response after user stops typing (500ms delay)
-    if (value.trim().length > 2) {
-      petResponseTimeoutRef.current = setTimeout(() => {
-        const response = getPetResponse(value, petState.state);
-        setPetResponse(response);
-
-        // Clear response after 3 seconds
-        setTimeout(() => setPetResponse(""), 3000);
-      }, 500);
-    } else {
-      setPetResponse("");
-    }
-  }, [getPetResponse]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -565,11 +483,12 @@ export default function HomePage() {
     (hasMiner ? `${minerAddress.slice(0, 6)}...${minerAddress.slice(-4)}` : "Nobody");
 
   return (
-    <main className="flex h-screen w-screen justify-center overflow-hidden bg-gradient-to-b from-purple-900 via-pink-900 to-orange-900 font-mono text-white">
+    <main className="flex h-screen w-screen justify-center overflow-hidden bg-gradient-to-b from-purple-100 via-pink-100 to-orange-50 font-mono text-black relative">
+      <BackgroundEffects />
       <AddToFarcasterDialog showOnFirstVisit={true} />
       <AccordionProvider mode="single">
         <div
-          className="relative flex h-full w-full max-w-[520px] flex-1 flex-col overflow-hidden px-3 pb-3"
+          className="relative flex h-full w-full max-w-[520px] flex-1 flex-col overflow-hidden px-3 pb-3 z-10"
           style={{
             paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
             paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)",
@@ -577,8 +496,8 @@ export default function HomePage() {
         >
           <div className="flex flex-1 flex-col overflow-y-auto space-y-2">
             {/* Header */}
-            <div className="bg-yellow-300 border-4 border-black rounded-2xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <h1 className="text-2xl font-black text-center text-black tracking-tight">
+            <div className="bg-white/80 backdrop-blur-sm border-4 border-black rounded-2xl p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <h1 className="text-2xl font-black text-center text-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500" style={{ WebkitTextStroke: "1px black" }}>
                 DONUTAMAGOTCHI
               </h1>
               <p className="text-center text-[10px] text-black/70 font-bold mt-0.5">
@@ -627,6 +546,7 @@ export default function HomePage() {
               isDisabled={isGlazeDisabled}
               onGesture={handleGesture}
               petState={petState.state}
+              traits={traits}
             />
 
             {/* PROGRESSIVE DISCLOSURE: Show How to Play prominently for new users */}
