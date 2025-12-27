@@ -14,7 +14,7 @@ import { base } from "wagmi/chains";
 import { formatEther, formatUnits, zeroAddress, type Address } from "viem";
 
 import { Button } from "@/components/ui/button";
-import { CONTRACT_ADDRESSES, MULTICALL_ABI } from "@/lib/contracts";
+import { CONTRACT_ADDRESSES, MULTICALL_ABI, DONUTAMAGOTCHI_TOKEN_ABI } from "@/lib/contracts";
 import { getEthPrice } from "@/lib/utils";
 import {
   calculateSessionEarnings,
@@ -36,6 +36,7 @@ import { DecayStatus } from "@/components/decay-status";
 import { CareGuide } from "@/components/care-guide";
 import { AccordionProvider } from "@/components/accordion-context";
 import { BackgroundEffects } from "@/components/background-effects";
+import { feedback } from "@/lib/feedback";
 
 type MiniAppContext = {
   user?: {
@@ -214,6 +215,26 @@ export default function HomePage() {
 
   const { data: accountData } = useAccountData(address);
 
+  // Fetch staking info for DPS boost visual effects
+  const { data: stakingInfo } = useReadContract({
+    address: CONTRACT_ADDRESSES.donutamagotchiToken as Address,
+    abi: DONUTAMAGOTCHI_TOKEN_ABI,
+    functionName: "getStakingInfo",
+    args: address ? [address] : undefined,
+    chainId: base.id,
+    query: {
+      enabled: !!address && CONTRACT_ADDRESSES.donutamagotchiToken !== "0x0000000000000000000000000000000000000000",
+      refetchInterval: 30_000, // Less frequent since staking doesn't change often
+    },
+  });
+
+  // Extract hasDpsBoost from staking info (index 2 in the tuple)
+  const hasDpsBoost = useMemo(() => {
+    if (!stakingInfo) return false;
+    const info = stakingInfo as [bigint, bigint, boolean, bigint, bigint];
+    return info[2] ?? false;
+  }, [stakingInfo]);
+
   useEffect(() => {
     if (!readyRef.current && minerState) {
       readyRef.current = true;
@@ -294,16 +315,19 @@ export default function HomePage() {
   const handlePetting = useCallback(() => {
     setGesture("nod");
     setLastInteractionTime(Date.now());
+    feedback.onPet();
   }, []);
 
   const handleShake = useCallback(() => {
     setGesture("wiggle");
     setLastInteractionTime(Date.now());
+    feedback.onPlay();
   }, []);
 
   const handleGesture = useCallback((gesture: "bounce" | "wiggle" | "jump" | "spin" | "nod") => {
     setGesture(gesture);
     setLastInteractionTime(Date.now());
+    feedback.onTap();
   }, []);
 
   const handleGlaze = useCallback(async () => {
@@ -311,6 +335,9 @@ export default function HomePage() {
     resetGlazeResult();
     setLastInteractionTime(Date.now());
     setGesture("bounce");
+
+    // Trigger feed haptic/sound immediately for responsiveness
+    feedback.onFeed();
     try {
       let targetAddress = address;
       if (!targetAddress) {
@@ -350,6 +377,7 @@ export default function HomePage() {
     } catch (error) {
       console.error("Failed to feed:", error);
       showGlazeResult("failure");
+      feedback.onError();
       resetWrite();
     }
   }, [
@@ -520,6 +548,7 @@ export default function HomePage() {
                 onGestureComplete={() => setGesture(null)}
                 traits={traits}
                 createdAtSeconds={minerState?.startTime ? Number(minerState.startTime) : undefined}
+                hasDpsBoost={hasDpsBoost}
               />
             </div>
 

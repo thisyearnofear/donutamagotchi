@@ -40,10 +40,10 @@ export function simulateSpring(
   const springForce = displacement * stiffness;
   const dampingForce = velocity * damping;
   const acceleration = springForce - dampingForce;
-  
+
   const newVelocity = velocity + acceleration * deltaTime;
   const newPosition = current + newVelocity * deltaTime;
-  
+
   return {
     position: newPosition,
     velocity: newVelocity,
@@ -139,7 +139,7 @@ export function calculateSquashStretch(progress: number): { scaleX: number; scal
   const peak = Math.sin(progress * Math.PI);
   const compress = 1 - peak * 0.15;
   const stretch = 1 + peak * 0.1;
-  
+
   return {
     scaleX: compress,
     scaleY: stretch,
@@ -231,18 +231,18 @@ export function calculateEyeExpression(state: string, frame: number): EyeExpress
   const blinkCycle = 70;
   const blinkPhase = Math.floor(frame / blinkCycle) % 30;
   const isBlink = blinkPhase < 3; // Blink duration: 3 frames
-  
+
   // Occasional glances (look left/right) every 180+ frames
   const glanceCycle = Math.sin(frame * 0.004) * 0.3; // Gentle horizontal sway
   const glancePhase = Math.floor(frame / 180) % 10;
   const hasGlance = glancePhase > 2 ? glanceCycle : 0; // Random glances
-  
+
   // Base eye dimensions (will be scaled based on state)
   let widthScale = 1;
   let heightScale = 1;
   let pupilOffset = 0;
   let rotation = 0;
-  
+
   switch (state) {
     case "happy":
     case "excited":
@@ -274,10 +274,10 @@ export function calculateEyeExpression(state: string, frame: number): EyeExpress
       widthScale = 1;
       heightScale = 1;
   }
-  
+
   // Apply blink (close eyes briefly, more frequently)
   if (isBlink) heightScale *= 0.05;
-  
+
   return {
     width: widthScale,
     height: Math.max(0.05, heightScale), // Minimum 5% height for blink
@@ -307,11 +307,11 @@ export interface MouthExpression {
 export function calculateEyebrowExpression(personality: string, state: string, frame: number): EyebrowExpression {
   // Subtle breathing/bobbing of eyebrows
   const breatheAmount = Math.sin(frame * 0.03) * 0.15;
-  
+
   // State-based height changes
   let stateHeightBoost = 0;
   let stateAngle = 0;
-  
+
   switch (state) {
     case "happy":
     case "excited":
@@ -328,7 +328,7 @@ export function calculateEyebrowExpression(personality: string, state: string, f
       stateAngle = -0.05;
       break;
   }
-  
+
   // Personality-based eyebrow shape
   let type: "curved" | "sharp" | "droopy" | "straight";
   switch (personality) {
@@ -347,7 +347,7 @@ export function calculateEyebrowExpression(personality: string, state: string, f
     default:
       type = "curved";
   }
-  
+
   return {
     type,
     height: breatheAmount + stateHeightBoost,
@@ -381,7 +381,7 @@ export function getEyeAppearance(personality: string): EyeAppearance {
       eyeWhiteColor: "#ffffff",
     },
   };
-  
+
   return appearances[personality] || appearances.Friendly;
 }
 
@@ -410,7 +410,7 @@ export interface LimbExpression {
 export function calculateLimbExpression(state: string, frame: number): LimbExpression {
   // Gentle idle arm sway
   const idleSway = Math.sin(frame * 0.02) * 0.08;
-  
+
   switch (state) {
     case "happy":
     case "petting":
@@ -469,7 +469,7 @@ export function calculateLimbExpression(state: string, frame: number): LimbExpre
 export function calculateMouthExpression(state: string, frame: number): MouthExpression {
   // Subtle pulsing on certain states
   const pulse = Math.sin(frame * 0.05) * 0.2 + 0.8;
-  
+
   switch (state) {
     case "happy":
     case "petting":
@@ -541,7 +541,7 @@ export function spawnParticles(
     const angle = (i / count) * Math.PI * 2 + (frame % 60) / 60;
     const r = speed * (0.7 + Math.random() * 0.3);
     const type: "heart" | "sparkle" | "star" = i % 3 === 0 ? "heart" : i % 3 === 1 ? "sparkle" : "star";
-    
+
     particles.push({
       x: 0,
       y: 0,
@@ -552,4 +552,205 @@ export function spawnParticles(
     });
   }
   return particles;
+}
+
+// ============================================================
+// IDLE QUIRKS SYSTEM - Personality-specific idle behaviors
+// ============================================================
+
+export type IdleQuirkType =
+  | "stretch"      // Arms up, slight vertical stretch
+  | "yawn"         // Mouth opens wide, sleepy
+  | "curious"      // Head tilt, eye shift
+  | "wiggle"       // Happy side-to-side
+  | "doze"         // Eyes droop briefly
+  | "bounce"       // Excited small bounce
+  | "huff"         // Stubborn exhale (small puff)
+  | null;          // No active quirk
+
+export interface IdleQuirkState {
+  type: IdleQuirkType;
+  progress: number;     // 0-1 animation progress
+  intensity: number;    // 0-1 how pronounced
+}
+
+/**
+ * Determine which idle quirk should play based on personality and timing
+ * Uses pseudo-random timing to make behavior feel organic
+ * @param personality Personality type
+ * @param frame Current frame number
+ * @param state Pet emotional state
+ * @returns Current quirk or null
+ */
+export function calculateIdleQuirk(
+  personality: string,
+  frame: number,
+  state: string,
+): IdleQuirkState {
+  // Don't quirk during active states
+  if (["excited", "hungry", "dead", "sleeping"].includes(state)) {
+    return { type: null, progress: 0, intensity: 0 };
+  }
+
+  // Quirk timing varies by personality (frames between quirks)
+  const quirkIntervals: Record<string, number> = {
+    Friendly: 420,    // ~7 seconds - regular, warm frequency
+    Energetic: 240,   // ~4 seconds - frequent quirking
+    Lazy: 720,        // ~12 seconds - slow, deliberate
+    Stubborn: 540,    // ~9 seconds - less frequent
+  };
+
+  const interval = quirkIntervals[personality] || 420;
+  const quirkCycle = frame % interval;
+  const quirkDuration = 60; // 1 second at 60fps
+
+  // Only active during first quirkDuration frames of each cycle
+  if (quirkCycle >= quirkDuration) {
+    return { type: null, progress: 0, intensity: 0 };
+  }
+
+  const progress = quirkCycle / quirkDuration;
+
+  // Each personality has characteristic quirks
+  const quirks: Record<string, IdleQuirkType[]> = {
+    Friendly: ["wiggle", "curious", "stretch"],
+    Energetic: ["bounce", "wiggle", "stretch"],
+    Lazy: ["yawn", "doze", "stretch"],
+    Stubborn: ["huff", "curious", null],
+  };
+
+  const personalityQuirks = quirks[personality] || ["curious"];
+  // Cycle through quirks based on which "round" we're in
+  const quirkIndex = Math.floor(frame / interval) % personalityQuirks.length;
+  const quirkType = personalityQuirks[quirkIndex];
+
+  // Intensity follows a bell curve (peaks at middle of animation)
+  const intensity = Math.sin(progress * Math.PI);
+
+  return { type: quirkType, progress, intensity };
+}
+
+/**
+ * Calculate visual transforms for active quirk
+ * Returns offsets/scales to apply during rendering
+ */
+export interface QuirkTransform {
+  scaleX: number;
+  scaleY: number;
+  offsetY: number;
+  rotation: number;
+  eyeSquint: number;      // 0-1, how closed eyes are
+  mouthOpen: number;      // 0-1, how open mouth is
+}
+
+export function getQuirkTransform(quirk: IdleQuirkState): QuirkTransform {
+  const base: QuirkTransform = {
+    scaleX: 1,
+    scaleY: 1,
+    offsetY: 0,
+    rotation: 0,
+    eyeSquint: 0,
+    mouthOpen: 0,
+  };
+
+  if (!quirk.type) return base;
+
+  const ease = easeOutElastic(quirk.progress);
+  const i = quirk.intensity;
+
+  switch (quirk.type) {
+    case "stretch":
+      return {
+        ...base,
+        scaleX: 1 - i * 0.05,
+        scaleY: 1 + i * 0.1,
+        offsetY: -i * 8,
+      };
+    case "yawn":
+      return {
+        ...base,
+        scaleY: 1 + i * 0.05,
+        eyeSquint: i * 0.7,
+        mouthOpen: i,
+      };
+    case "curious":
+      return {
+        ...base,
+        rotation: i * 0.15 * (Math.sin(quirk.progress * Math.PI * 2) > 0 ? 1 : -1),
+      };
+    case "wiggle":
+      return {
+        ...base,
+        rotation: Math.sin(quirk.progress * Math.PI * 4) * 0.1 * i,
+      };
+    case "doze":
+      return {
+        ...base,
+        offsetY: i * 3,
+        eyeSquint: i * 0.8,
+      };
+    case "bounce":
+      return {
+        ...base,
+        offsetY: -Math.abs(Math.sin(quirk.progress * Math.PI * 2)) * 15 * i,
+        scaleY: 1 + Math.sin(quirk.progress * Math.PI * 2) * 0.05,
+      };
+    case "huff":
+      return {
+        ...base,
+        scaleX: 1 + i * 0.08,
+        scaleY: 1 - i * 0.03,
+        rotation: i * 0.02,
+      };
+    default:
+      return base;
+  }
+}
+
+// ============================================================
+// STAKING AURA SYSTEM - Visual rewards for DPS boost
+// ============================================================
+
+export interface StakingAura {
+  active: boolean;
+  pulsePhase: number;     // 0-1 for pulsing glow
+  particleAngle: number;  // For orbiting particles
+  glowIntensity: number;  // 0-1 current glow strength
+  crownBob: number;       // Vertical offset for floating crown
+}
+
+/**
+ * Calculate staking aura visual state
+ * @param hasDpsBoost Whether user has 1M+ staked
+ * @param frame Current frame for animation
+ * @returns Aura visual parameters
+ */
+export function calculateStakingAura(hasDpsBoost: boolean, frame: number): StakingAura {
+  if (!hasDpsBoost) {
+    return {
+      active: false,
+      pulsePhase: 0,
+      particleAngle: 0,
+      glowIntensity: 0,
+      crownBob: 0,
+    };
+  }
+
+  // Slow, majestic pulse (3 second cycle)
+  const pulsePhase = (frame % 180) / 180;
+  const glowIntensity = 0.4 + Math.sin(pulsePhase * Math.PI * 2) * 0.2;
+
+  // Orbiting particles (8 second full rotation)
+  const particleAngle = (frame % 480) / 480 * Math.PI * 2;
+
+  // Crown floats gently (2 second bob)
+  const crownBob = Math.sin((frame % 120) / 120 * Math.PI * 2) * 3;
+
+  return {
+    active: true,
+    pulsePhase,
+    particleAngle,
+    glowIntensity,
+    crownBob,
+  };
 }

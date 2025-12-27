@@ -105,6 +105,8 @@ const RESPONSES = {
   }
 };
 
+import { feedback } from "@/lib/feedback";
+
 export function InteractionPanel({ petResponse, isDisabled, onGesture, petState, traits }: InteractionPanelProps) {
   const [currentResponse, setCurrentResponse] = useState("");
 
@@ -112,12 +114,21 @@ export function InteractionPanel({ petResponse, isDisabled, onGesture, petState,
     const personality = traits?.personality || "Friendly";
     const personalityResponses = RESPONSES[type][personality];
     const randomResponse = personalityResponses[Math.floor(Math.random() * personalityResponses.length)];
-    
+
     setCurrentResponse(randomResponse);
-    
+
+    // Trigger haptic/sound feedback based on interaction type
+    if (type === "donut") {
+      feedback.onPet();
+    } else if (type === "glazed") {
+      feedback.onPlay();
+    } else {
+      feedback.onTap();
+    }
+
     // Personality-based gestures
     let gesture: "bounce" | "wiggle" | "jump" | "spin" | "nod" = "bounce";
-    
+
     if (personality === "Energetic") gesture = Math.random() > 0.5 ? "jump" : "spin";
     else if (personality === "Lazy") gesture = "nod";
     else if (personality === "Stubborn") gesture = "wiggle";
