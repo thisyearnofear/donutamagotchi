@@ -24,6 +24,7 @@ import {
 import { getLifecycleStage, getDPSMultiplier, getLifecycleInfo, getAgeInDays } from "@/lib/traits";
 import { useAccountData } from "@/hooks/useAccountData";
 import { useTraits } from "@/hooks/useTraits";
+import { useDonutamagotchiToken } from "@/hooks/useDonutamagotchiToken";
 import { NavBar } from "@/components/nav-bar";
 import { DonutPet } from "@/components/donut-pet";
 import { CollapsibleStats } from "@/components/collapsible-stats";
@@ -215,25 +216,47 @@ export default function HomePage() {
 
   const { data: accountData } = useAccountData(address);
 
-  // Fetch staking info for DPS boost visual effects
-  const { data: stakingInfo } = useReadContract({
-    address: CONTRACT_ADDRESSES.donutamagotchiToken as Address,
-    abi: DONUTAMAGOTCHI_TOKEN_ABI,
-    functionName: "getStakingInfo",
-    args: address ? [address] : undefined,
-    chainId: base.id,
-    query: {
-      enabled: !!address && CONTRACT_ADDRESSES.donutamagotchiToken !== "0x0000000000000000000000000000000000000000",
-      refetchInterval: 30_000, // Less frequent since staking doesn't change often
-    },
-  });
+  // Unified token hook for staking info and care streaks
+  const {
+    tokenStats,
+    careInfo,
+    stakingInfo: tokenStakingInfo,
+    getStreakEmoji,
+    getMultiplierLabel,
+    mintCareReward
+  } = useDonutamagotchiToken();
 
-  // Extract hasDpsBoost from staking info (index 2 in the tuple)
-  const hasDpsBoost = useMemo(() => {
-    if (!stakingInfo) return false;
-    const info = stakingInfo as [bigint, bigint, boolean, bigint, bigint];
-    return info[2] ?? false;
-  }, [stakingInfo]);
+  // Extract hasDpsBoost from unified hook (fallback to false)
+  const hasDpsBoost = tokenStats?.hasDpsBoost ?? false;
+
+  const handleClaimCareReward = useCallback(async (action: "feeding" | "petting" | "daily_checkin" | "playing") => {
+    if (!address) return;
+    try {
+      // 1. Get signature from API
+      const response = await fetch("/api/care-reward", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address, action }),
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
+      // 2. Mint on-chain
+      await mintCareReward(
+        data.to as Address,
+        BigInt(data.amount),
+        data.reason,
+        BigInt(data.nonce),
+        data.signature as `0x${string}`
+      );
+
+      feedback.onStakingUnlocked(); // Success sound as feedback
+    } catch (error) {
+      console.error("Failed to claim reward:", error);
+      // Don't show error feedback here to avoid spamming if rate limited
+    }
+  }, [address, mintCareReward]);
 
   useEffect(() => {
     if (!readyRef.current && minerState) {
@@ -374,6 +397,10 @@ export default function HomePage() {
         value: price,
         chainId: base.id,
       });
+
+      // Claim care reward for feeding (separate transaction)
+      handleClaimCareReward("feeding");
+
     } catch (error) {
       console.error("Failed to feed:", error);
       showGlazeResult("failure");
@@ -551,6 +578,23 @@ export default function HomePage() {
                 hasDpsBoost={hasDpsBoost}
               />
             </div>
+
+            {/* Streak Badge (Only show if streak exists) */}
+            {careInfo && careInfo.streak > 0 && (
+              <div className="flex justify-center -mt-2 mb-2 relative z-10">
+                <div className="bg-white/90 border-2 border-black rounded-full px-4 py-1 shadow-sm flex items-center gap-2 animate-bounce-slow">
+                  <span className="text-lg">{getStreakEmoji(careInfo.streak)}</span>
+                  <span className="text-xs font-bold font-mono">
+                    {careInfo.streak} DAY STREAK
+                    {careInfo.multiplier > 100 && (
+                      <span className="text-green-600 ml-1">
+                        (x{careInfo.multiplier / 100})
+                      </span>
+                    )}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Collapsible Stats (now always shows status indicator + key stats) */}
             <CollapsibleStats

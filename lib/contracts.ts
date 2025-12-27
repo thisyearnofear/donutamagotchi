@@ -363,6 +363,43 @@ export const DONUTAMAGOTCHI_TOKEN_ABI = [
       { name: "feePoolBalance", type: "uint256" },
     ],
   },
+  // Care Streak System
+  {
+    name: "getCareInfo",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [
+      { name: "streak", type: "uint16" },
+      { name: "multiplier", type: "uint256" },
+      { name: "totalRewards", type: "uint256" },
+      { name: "lastCare", type: "uint256" },
+      { name: "streakActive", type: "bool" },
+      { name: "actionsToday", type: "uint256" },
+    ],
+  },
+  {
+    name: "getCareMultiplier",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "getUserStats",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [
+      { name: "balance", type: "uint256" },
+      { name: "staked", type: "uint256" },
+      { name: "careStreak_", type: "uint16" },
+      { name: "careMultiplier", type: "uint256" },
+      { name: "totalCareEarnings", type: "uint256" },
+      { name: "hasDpsBoost", type: "bool" },
+      { name: "pendingFees_", type: "uint256" },
+    ],
+  },
   // Care rewards
   {
     name: "mintCareReward",
@@ -375,6 +412,30 @@ export const DONUTAMAGOTCHI_TOKEN_ABI = [
       { name: "nonce", type: "uint256" },
       { name: "signature", type: "bytes" },
     ],
+  },
+  // Cosmetics
+  {
+    name: "purchaseCosmetic",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "cosmeticId", type: "bytes32" }],
+  },
+  {
+    name: "ownsCosmetic",
+    type: "function",
+    stateMutability: "view",
+    inputs: [
+      { name: "user", type: "address" },
+      { name: "cosmeticId", type: "bytes32" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    name: "cosmeticPrices",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "cosmeticId", type: "bytes32" }],
+    outputs: [{ name: "", type: "uint256" }],
   },
   // Breeding burn
   {
@@ -477,8 +538,36 @@ export const DONUTAMAGOTCHI_TOKEN_ABI = [
     type: "event",
     inputs: [
       { name: "user", type: "address", indexed: true },
-      { name: "amount", type: "uint256", indexed: false },
+      { name: "baseAmount", type: "uint256", indexed: false },
+      { name: "finalAmount", type: "uint256", indexed: false },
       { name: "reason", type: "string", indexed: false },
+      { name: "newStreak", type: "uint16", indexed: false },
+    ],
+  },
+  {
+    name: "StreakBroken",
+    type: "event",
+    inputs: [
+      { name: "user", type: "address", indexed: true },
+      { name: "previousStreak", type: "uint16", indexed: false },
+    ],
+  },
+  {
+    name: "StreakMilestone",
+    type: "event",
+    inputs: [
+      { name: "user", type: "address", indexed: true },
+      { name: "streak", type: "uint16", indexed: false },
+      { name: "multiplier", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    name: "CosmeticPurchased",
+    type: "event",
+    inputs: [
+      { name: "user", type: "address", indexed: true },
+      { name: "cosmeticId", type: "bytes32", indexed: true },
+      { name: "cost", type: "uint256", indexed: false },
     ],
   },
 ] as const;

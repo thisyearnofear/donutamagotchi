@@ -4,9 +4,9 @@ This directory contains all smart contracts for the Donutamagotchi ecosystem.
 
 ## Design Principles
 
-- **SIMPLE**: Minimal code, easy to audit
-- **ALIGNED**: More $DONUT activity = more staker rewards
+- **ALIGNED**: More daily care = more rewards = more sticky
 - **DEFLATIONARY**: Burn on cosmetics and breeding
+- **ENGAGING**: Streak system rewards consistency
 - **COMPOSABLE**: Works with existing $DONUT protocol unchanged
 
 ---
@@ -15,15 +15,16 @@ This directory contains all smart contracts for the Donutamagotchi ecosystem.
 
 ### `/donutamagotchi`
 
-#### DonutamagotchiToken.sol (~215 lines)
+#### DonutamagotchiToken.sol (~320 lines)
 
-**Simplified ERC20 token with staking and fee share**
+**Enhanced ERC20 token with staking, streaks, and cosmetics**
 
 **Core Features**:
 - **Staking**: Stake tokens to earn share of ETH fee pool
-- **DPS Boost**: 1M+ staked = 10% DPS boost when owning donut
+- **DPS Boost**: 1M+ staked = 10% boost on CARE REWARDS
+- **Care Streaks**: Daily engagement multipliers (up to 2x at 30 days)
+- **Cosmetics**: On-chain ownership with burn mechanics
 - **Burn**: Used for cosmetics and breeding
-- **Care Rewards**: Backend-signed minting for gameplay actions
 
 **Token Info**:
 - **Total Supply**: 1 Billion tokens (fixed, no inflation)
@@ -33,19 +34,38 @@ This directory contains all smart contracts for the Donutamagotchi ecosystem.
 | Stake Amount | Benefit |
 |--------------|---------|
 | Any | Share of 40% fee pool (ETH) |
-| 1M+ | 10% DPS boost when owning donut |
+| 1M+ | 10% bonus on all care rewards |
+
+**Care Streak System**:
+| Streak Days | Multiplier |
+|-------------|------------|
+| 0-6 | 1x (base rate) |
+| 7-13 | 1.25x |
+| 14-29 | 1.5x |
+| 30+ | 2x |
+
+- Streak window: 36 hours between care actions
+- Same-day actions don't increment streak
+- Streak broken if gap > 36 hours
+
+**Cosmetics**:
+- On-chain ownership via `ownedCosmetics[user][cosmeticId]`
+- `purchaseCosmetic(bytes32 cosmeticId)` burns tokens
+- Admin sets prices via `setCosmeticPrice()`
+
+**Care Rewards** (backend-signed):
+```
+feeding: 10 tokens × streak multiplier × DPS boost
+petting: 2 tokens × streak multiplier × DPS boost
+daily_checkin: 5 tokens × streak multiplier × DPS boost
+playing: 3 tokens × streak multiplier × DPS boost
+```
 
 **Fee Flow (via 0xSplit)**:
 ```
 5% App Provider Fee (from $DONUT feeding)
 ├── 60% → Operations
 └── 40% → Staker Pool → Contract receives ETH → Stakers claim
-```
-
-**Care Rewards** (backend-signed):
-```
-feeding: Tokens for feeding your donut
-daily_checkin: Small tokens for daily engagement
 ```
 
 ---
@@ -75,6 +95,7 @@ daily_checkin: Small tokens for daily engagement
 - **Requirement**: 90+ days old
 - **Effect**: Preserved in Hall of Fame forever
 - **Tiers**: Legendary, Honored, Cherished, Retired
+- **Passive Income**: Tier-based daily $DONUTAMAGOTCHI distribution
 
 ---
 
@@ -92,34 +113,38 @@ Configure the app provider address in $DONUT to point to a 0xSplit:
 
 ### Frontend Integration
 
-1. **Staking**:
+1. **Unified Token Hook**:
    ```typescript
-   // Stake tokens
-   await token.stake(amount);
+   import { useDonutamagotchiToken } from "@/hooks/useDonutamagotchiToken";
    
-   // Claim ETH fees
-   await token.claimFees();
-   
-   // Check DPS boost
-   const hasBoost = await token.hasDPSBoost(userAddress);
+   const { 
+     tokenStats,     // balance, staked, careStreak, etc.
+     careInfo,       // streak, multiplier, lastCare
+     stakingInfo,    // pending fees, DPS boost
+     stake, unstake, claimFees,
+   } = useDonutamagotchiToken();
    ```
 
-2. **Care Rewards** (backend signs, frontend claims):
+2. **Care Rewards** (via API):
    ```typescript
-   // Backend generates signature for care reward
-   const sig = await signCareReward(user, amount, reason, nonce);
+   // Request signature from backend
+   const response = await fetch("/api/care-reward", {
+     method: "POST",
+     body: JSON.stringify({ address, action: "feeding" }),
+   });
+   const { to, amount, reason, nonce, signature } = await response.json();
    
-   // Frontend claims
-   await token.mintCareReward(user, amount, reason, nonce, sig);
+   // Claim on-chain
+   await token.mintCareReward(to, amount, reason, nonce, signature);
    ```
 
-3. **Breeding** (Phase 2):
+3. **Cosmetics**:
    ```typescript
-   // Burn tokens for breeding
-   await token.burnForBreeding();
+   // Purchase (burns tokens)
+   await token.purchaseCosmetic(cosmeticId);
    
-   // Then call breeding contract
-   await breeding.breed(parentA, parentB, geneticData, signature);
+   // Check ownership
+   const owns = await token.ownsCosmetic(user, cosmeticId);
    ```
 
 ---
@@ -135,15 +160,21 @@ Configure the app provider address in $DONUT to point to a 0xSplit:
    - _initialHolder: Your wallet (for LP seeding)
    ```
 
-2. Configure 0xSplit:
+2. Set cosmetic prices:
+   ```solidity
+   token.setCosmeticPrice(keccak256("hat_crown"), 100e18);  // 100 tokens
+   token.setCosmeticPrice(keccak256("aura_fire"), 250e18); // 250 tokens
+   ```
+
+3. Configure 0xSplit:
    - Create split with 60/40 (ops/token contract)
    - Set as app provider address in $DONUT
 
-3. Seed LP:
+4. Seed LP:
    - Create $DONUT/$DONUTAMAGOTCHI pool
    - Add initial liquidity
 
-4. Reserve tokens:
+5. Reserve tokens:
    - Transfer portion to contract for care rewards
    - Keep portion for future breeding/cosmetics
 
@@ -165,18 +196,35 @@ Configure the app provider address in $DONUT to point to a 0xSplit:
 2. **Signed minting**: Only backend can authorize care rewards
 3. **Replay protection**: Signatures can only be used once
 4. **Staker safety**: Tokens locked in contract, ETH distributed proportionally
-5. **Emergency withdraw**: Only if no stakers (safety valve)
+5. **Rate limiting**: Backend limits care actions per hour
+6. **Emergency withdraw**: Only if no stakers (safety valve)
 
 ---
 
-## Removed Complexity
+## Key Contract Functions
 
-The following were intentionally removed for simplicity:
-- ❌ Complex allocation caps (70/20/10 splits)
-- ❌ Treasury minting functions
-- ❌ Team vesting (handled externally)
-- ❌ Governance voting thresholds
-- ❌ Cosmetics vault routing (25/30/45 splits)
-- ❌ LP lock mechanisms
+### User Functions
+| Function | Description |
+|----------|-------------|
+| `stake(amount)` | Stake tokens for fees + boost |
+| `unstake(amount)` | Withdraw staked tokens |
+| `claimFees()` | Claim pending ETH share |
+| `purchaseCosmetic(id)` | Buy cosmetic (burns tokens) |
+| `burnForBreeding()` | Burn 1000 tokens for breeding |
 
-The new design is ~215 lines vs ~450 lines previously.
+### View Functions
+| Function | Description |
+|----------|-------------|
+| `getUserStats(user)` | All user data in one call |
+| `getCareInfo(user)` | Streak and care details |
+| `getStakingInfo(user)` | Staking and fee details |
+| `getCareMultiplier(user)` | Current streak multiplier |
+| `ownsCosmetic(user, id)` | Check cosmetic ownership |
+
+### Admin Functions
+| Function | Description |
+|----------|-------------|
+| `setCosmeticPrice(id, price)` | Set/update cosmetic price |
+| `setCareSigner(address)` | Update reward signer |
+| `emergencyWithdraw()` | Safety valve (no stakers only) |
+
