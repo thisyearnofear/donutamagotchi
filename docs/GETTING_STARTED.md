@@ -14,8 +14,8 @@
    - **Personality**: Friendly, Energetic, Lazy, or Stubborn
    - **Color**: Pink, Blue, Purple, Yellow, Orange, Green
    - **Stats**: Health, happiness, cleanliness (decay over time)
-4. **Interact Daily**:
-   - 🍩 Feed (every 4h) | 🎪 Play (every 6h) | 🤚 Pet (every 2h) | 👆 Poke (anytime)
+4. **Feed Once Per Day** (critical):
+   - 🍩 Feed (once per 24h) → Keeps donut healthy, prevents auto-retirement
 
 ### For Developers
 
@@ -52,12 +52,18 @@ const { traits } = useTraits({ minerAddress, lastInteractionTime, lastFedTime })
 | Prime | 31-90d | 100% | Peak |
 | Twilight | 90+d | 80% | Retire eligible |
 
-### 3. Decay Mechanics
+### 3. Engagement System
 
-Stats decay to encourage engagement:
-- **Health**: -0.5%/30min (critical <10%)
-- **Happiness**: -1%/30min (low <30%)
-- **Cleanliness**: -2%/30min (low <30%)
+**One-Daily-Minimum Model**:
+- **Feed is CRITICAL**: Once per 24 hours to stay healthy
+- **Play/Pet are OPTIONAL**: Cosmetic boosters, no penalties for skipping
+- **Real consequences**: Miss 3 days = auto-retire to sanctuary
+
+Status progression:
+- Day 0 (< 24h): ✅ Healthy, 1.0x DPS, can breed
+- Day 1 (24-48h): 😢 Sad, 0.8x DPS, 1.5x feed reward multiplier
+- Day 2 (48-72h): 😵 Neglected, 0.6x DPS, 2.0x feed reward, can't breed
+- Day 3+ (72h+): 💀 Dead, auto-retired to sanctuary
 
 ### 4. Breeding System
 

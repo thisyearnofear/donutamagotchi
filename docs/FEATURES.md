@@ -2,7 +2,30 @@
 
 Quick reference for all implemented features in Donutamagotchi.
 
-## 1. Traits System
+## 1. Engagement System (Critical)
+
+**One-Daily-Minimum Model**: Feed is the ONLY stat that matters.
+
+### Status Progression
+- **Day 0** (< 24h since feed): ✅ Healthy
+  - DPS: 1.0x | Feed reward: 1.0x | Can breed: Yes
+- **Day 1** (24-48h): 😢 Sad
+  - DPS: 0.8x | Feed reward: 1.5x | Can breed: Yes (catch-up bonus!)
+- **Day 2** (48-72h): 😵 Neglected
+  - DPS: 0.6x | Feed reward: 2.0x | Can breed: No
+- **Day 3+** (72h+): 💀 Dead
+  - Auto-retired to sanctuary (graceful exit)
+
+### Reward Multiplier (Catch-Up Bonus)
+- Fed within 24h: **1.0x** normal reward
+- Fed after 24h: **1.5x** catch-up reward
+- Fed after 48h: **2.0x** urgent reward (last chance before retirement)
+
+This incentivizes consistent daily care while rewarding players who miss a day or two.
+
+---
+
+## 2. Traits System
 
 Every donut has **deterministic traits** generated from wallet address hash:
 
@@ -10,12 +33,10 @@ Every donut has **deterministic traits** generated from wallet address hash:
 |-------|-----------|---------|
 | **Personality** | Address hash | Energetic (1.4x speed) / Friendly (0.9x) / Lazy (0.5x) / Stubborn (1.0x) |
 | **Coloring** | Address hash | Pink / Blue / Purple / Yellow / Orange / Green |
-| **Health** | 100 base, decays -0.5%/30min | Feed (+15), critical <10% |
-| **Happiness** | 100 base, decays -1%/30min | Play (+10), low <30% |
-| **Cleanliness** | 100 base, decays -2%/30min | Pet (+10), low <30% |
-| **Energy** | 50 base, decays -0.5%/30min | Play (+10), Poke (+8) |
-| **Grooming** | 50 base, decays -1%/30min | Pet (+10) |
-| **Satisfaction** | 50 base, decays -1%/30min | Feed (+15), Play (+5), Pet (+5) |
+| **Feeding Status** | Tracks lastFedTime | Day 0: Healthy | Day 1: Sad | Day 2: Neglected | Day 3+: Dead |
+| **DPS Multiplier** | Based on feeding | 1.0x → 0.8x → 0.6x → 0x |
+| **Feed Reward** | Based on days neglected | 1.0x → 1.5x → 2.0x (catch-up bonus) |
+| **Cosmetic Stats** | Grooming, Energy, Satisfaction | Optional boosts from play/pet (visual only) |
 
 **Key Functions** (`lib/traits.ts`):
 - `generateTraits(address)` → Deterministic base traits
@@ -23,7 +44,7 @@ Every donut has **deterministic traits** generated from wallet address hash:
 - `updateTraitFromInteraction(traits, type)` → Update after action
 - `getBreedingSuccessRate(p1, p2)` → (health + cleanliness) / 2
 
-## 2. Animation System
+## 3. Animation System
 
 **Canvas-based rendering** with `requestAnimationFrame`:
 
@@ -36,7 +57,7 @@ Every donut has **deterministic traits** generated from wallet address hash:
 
 **Performance**: Single canvas, 60 FPS target, memoized calculations
 
-## 3. Lifecycle Stages
+## 4. Lifecycle Stages
 
 | Stage | Age | DPS | Status |
 |-------|-----|-----|--------|
@@ -47,7 +68,7 @@ Every donut has **deterministic traits** generated from wallet address hash:
 
 Visual indicators: Size, animation speed, lifecycle badge
 
-## 4. Breeding System
+## 5. Breeding System
 
 **Contract**: DonutBreeding.sol (24h cooldown, costs 1000 $DONUTAMAGOTCHI)
 
@@ -68,7 +89,7 @@ Visual indicators: Size, animation speed, lifecycle badge
 - `breeding-filters.tsx` - Filter by personality/color/gen
 - Success rate displayed before breeding
 
-## 5. Sanctuary & Retirement
+## 6. Sanctuary & Retirement
 
 **Contract**: DonutSanctuary.sol
 
@@ -85,7 +106,7 @@ Visual indicators: Size, animation speed, lifecycle badge
 - Retired donut gallery
 - Achievement showcase
 
-## 6. Shop & Cosmetics
+## ([0-9]). Shop & Cosmetics
 
 **Purchase**: Burn $DONUTAMAGOTCHI tokens
 
@@ -98,7 +119,7 @@ Visual indicators: Size, animation speed, lifecycle badge
 - 30% → Burn (deflationary)
 - 45% → Treasury (operations)
 
-## 7. Notifications
+## ([0-9]). Notifications
 
 **Farcaster Push Notifications** (opt-in):
 - Feed Reminder: health < 30%
@@ -109,7 +130,7 @@ Visual indicators: Size, animation speed, lifecycle badge
 
 Check frequency: Every 30 minutes (smart timing)
 
-## 8. Explorer & Social
+## ([0-9]). Explorer & Social
 
 **Donut Explorer** (`/donuts`):
 - View all active donuts on-chain
@@ -119,7 +140,7 @@ Check frequency: Every 30 minutes (smart timing)
 
 **Visiting**: View any donut's profile, breeding history, achievements (read-only)
 
-## 9. Transparency Dashboard
+## ([0-9]). Transparency Dashboard
 
 **Real-time on-chain data** (`/transparency`):
 - Total cosmetics revenue processed
@@ -131,7 +152,7 @@ Check frequency: Every 30 minutes (smart timing)
 
 Updates: Every 5 minutes
 
-## 10. Token Economics
+## 11. Token Economics
 
 **DonutamagotchiToken.sol** (ERC20 + Staking):
 - **Staking**: Earn share of 40% fee pool (ETH)
