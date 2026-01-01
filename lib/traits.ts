@@ -132,83 +132,80 @@ export function getPersonalityTraits(personality: PersonalityType) {
 }
 
 /**
- * Calculate trait decay based on time elapsed and interaction type
+ * @deprecated Use calculateEngagementState() from lib/engagement.ts instead
+ * 
+ * Apply cosmetic decay to traits (visual only, no consequences)
+ * Old system removed - keeping this stub for backwards compatibility only
  */
 export function decayTraits(
   traits: Traits,
-  lastInteractionTime: number,
+  _lastInteractionTime: number,
   lastFedTime: number,
   currentTime: number = Date.now(),
 ): Traits {
-  const timeSinceInteraction = (currentTime - lastInteractionTime) / 1000; // seconds
-  const timeSinceFed = (currentTime - lastFedTime) / 1000; // seconds
+  // Import new engagement system for cosmetic decay
+  const { applyCosmeticDecay } = require("./engagement");
+  
+  const millisecondsSinceFed = currentTime - lastFedTime;
+  const hoursSinceFed = millisecondsSinceFed / (1000 * 60 * 60);
+  
+  return applyCosmeticDecay(traits, hoursSinceFed);
+}
 
-  // Decay rates (per 30 minutes)
-  const HEALTH_DECAY_RATE = 0.005; // -0.5% per 30 minutes
-  const HAPPINESS_DECAY_RATE = 0.01; // -1% per 30 minutes
-  const CLEANLINESS_DECAY_RATE = 0.02; // -2% per 30 minutes
-
-  const thirtyMinutes = 30 * 60;
-
-  // Calculate decay multipliers
-  let healthMultiplier = 1;
-  let happinessMultiplier = 1;
-  let cleanlinessMultiplier = 1;
-
-  // Health decays slowly unless recently fed
-  if (timeSinceFed > 5 * 60) {
-    // Decay only if not fed in last 5 minutes
-    const decayPeriods = timeSinceFed / thirtyMinutes;
-    healthMultiplier = Math.max(0, 1 - HEALTH_DECAY_RATE * decayPeriods);
-  }
-
-  // Happiness decays unless recently played with
-  if (timeSinceInteraction > 5 * 60) {
-    const decayPeriods = timeSinceInteraction / thirtyMinutes;
-    happinessMultiplier = Math.max(0, 1 - HAPPINESS_DECAY_RATE * decayPeriods);
-  }
-
-  // Cleanliness (grooming) decays unless recently interacted
-  if (timeSinceInteraction > 2 * 60) {
-    const decayPeriods = timeSinceInteraction / thirtyMinutes;
-    cleanlinessMultiplier = Math.max(0, 1 - CLEANLINESS_DECAY_RATE * decayPeriods);
-  }
-
+/**
+ * Apply feed effect to traits
+ * FEED is the ONLY interaction that resets the engagement counter
+ * Play/Pet are optional cosmetic boosters (use applyPlayBoost/applyPetBoost instead)
+ */
+export function updateTraitFromFeed(traits: Traits): Traits {
   return {
     ...traits,
-    satisfaction: Math.max(0, Math.min(100, traits.satisfaction * healthMultiplier)),
-    energy: Math.max(0, Math.min(100, traits.energy * happinessMultiplier)),
-    grooming: Math.max(0, Math.min(100, traits.grooming * cleanlinessMultiplier)),
+    satisfaction: Math.min(100, traits.satisfaction + 15),
   };
 }
 
 /**
- * Increase trait based on interaction type
+ * Apply play boost to traits (cosmetic, optional)
+ * No tracking required - just visual enhancement
+ */
+export function applyPlayBoost(traits: Traits): Traits {
+  return {
+    ...traits,
+    energy: Math.min(100, traits.energy + 10),
+    satisfaction: Math.min(100, traits.satisfaction + 5),
+  };
+}
+
+/**
+ * Apply pet boost to traits (cosmetic, optional)
+ * No tracking required - just visual enhancement
+ */
+export function applyPetBoost(traits: Traits): Traits {
+  return {
+    ...traits,
+    grooming: Math.min(100, traits.grooming + 10),
+    satisfaction: Math.min(100, traits.satisfaction + 5),
+  };
+}
+
+/**
+ * @deprecated Use updateTraitFromFeed, applyPlayBoost, or applyPetBoost instead
  */
 export function updateTraitFromInteraction(
   traits: Traits,
   interactionType: "feed" | "play" | "pet" | "poke",
 ): Traits {
-  const updates = { ...traits };
-
   switch (interactionType) {
     case "feed":
-      updates.satisfaction = Math.min(100, traits.satisfaction + 15);
-      break;
+      return updateTraitFromFeed(traits);
     case "play":
-      updates.energy = Math.min(100, traits.energy + 10);
-      updates.satisfaction = Math.min(100, traits.satisfaction + 5);
-      break;
+      return applyPlayBoost(traits);
     case "pet":
-      updates.grooming = Math.min(100, traits.grooming + 10);
-      updates.satisfaction = Math.min(100, traits.satisfaction + 5);
-      break;
+      return applyPetBoost(traits);
     case "poke":
-      updates.energy = Math.min(100, traits.energy + 8);
-      break;
+      // Poke is no longer supported - use play instead
+      return applyPlayBoost(traits);
   }
-
-  return updates;
 }
 
 /**
@@ -231,7 +228,23 @@ export interface BreedingViability {
   message: string;
 }
 
-export function getBreedingViability(traits: Traits): BreedingViability {
+export function getBreedingViability(traits: Traits, lastFedTime?: number): BreedingViability {
+  const { calculateEngagementState } = require("./engagement");
+  
+  // Check engagement status first - can't breed if neglected
+  if (lastFedTime !== undefined) {
+    const engagement = calculateEngagementState(lastFedTime);
+    if (!engagement.canBreed) {
+      return {
+        canBreed: false,
+        successRate: 0,
+        status: "impossible",
+        message: `❌ Too neglected to breed. Feed your donut! (${engagement.statusMessage})`,
+      };
+    }
+  }
+  
+  // Breed success based on trait health (satisfaction + grooming)
   const healthCleanliness = (traits.satisfaction + traits.grooming) / 2;
   const successRate = healthCleanliness;
 
@@ -274,7 +287,8 @@ export function getBreedingViability(traits: Traits): BreedingViability {
 }
 
 /**
- * Calculate care routine check-in requirements
+ * @deprecated Use calculateEngagementState() from lib/engagement.ts instead
+ * This function is no longer used - engagement now tracks only lastFedTime
  */
 export interface CareRoutine {
   feedDueIn: string;
@@ -284,30 +298,21 @@ export interface CareRoutine {
 }
 
 export function getCareRoutine(
-  lastInteractionTime: number,
+  _lastInteractionTime: number,
   lastFedTime: number,
   currentTime: number = Date.now(),
 ): CareRoutine {
-  const timeSinceFed = (currentTime - lastFedTime) / 1000 / 60; // minutes
-  const timeSincePlay = (currentTime - lastInteractionTime) / 1000 / 60; // minutes
-
-  const feedDueInMinutes = Math.max(0, 240 - timeSinceFed); // 4 hours
-  const playDueInMinutes = Math.max(0, 360 - timeSincePlay); // 6 hours
-  const petDueInMinutes = Math.max(0, 120 - timeSincePlay); // 2 hours
-
-  const formatTime = (minutes: number): string => {
-    if (minutes <= 0) return "NOW!";
-    const hours = Math.floor(minutes / 60);
-    const mins = Math.round(minutes % 60);
-    if (hours > 0) return `${hours}h ${mins}m`;
-    return `${mins}m`;
-  };
-
+  const { calculateEngagementState, getTimeUntilRetire } = require("./engagement");
+  
+  const engagement = calculateEngagementState(lastFedTime, currentTime);
+  const timeUntilRetire = getTimeUntilRetire(engagement.daysSinceFed);
+  
+  // Legacy format - only feed matters now
   return {
-    feedDueIn: formatTime(feedDueInMinutes),
-    playDueIn: formatTime(playDueInMinutes),
-    petDueIn: formatTime(petDueInMinutes),
-    urgent: feedDueInMinutes <= 30 || playDueInMinutes <= 30,
+    feedDueIn: timeUntilRetire,
+    playDueIn: "Optional",
+    petDueIn: "Optional",
+    urgent: engagement.daysSinceFed >= 2,
   };
 }
 

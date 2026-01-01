@@ -2,44 +2,74 @@
 
 import { useMemo } from "react";
 import { Address, zeroAddress } from "viem";
-import { generateTraits, decayTraits, updateTraitFromInteraction, Traits } from "@/lib/traits";
+import { generateTraits, updateTraitFromFeed, applyPlayBoost, applyPetBoost, Traits } from "@/lib/traits";
+import { calculateEngagementState, applyCosmeticDecay, EngagementState } from "@/lib/engagement";
 
 interface UseTraitsOptions {
   minerAddress?: Address;
-  lastInteractionTime?: number;
   lastFedTime?: number;
   currentTime?: number;
 }
 
+export interface UseTraitsReturn {
+  traits: Traits | null;
+  engagement: EngagementState | null;
+  updateTraitsFromFeed: () => Traits | null;
+  updateTraitsFromPlay: () => Traits | null;
+  updateTraitsFromPet: () => Traits | null;
+}
+
 /**
- * Hook to manage pet traits
+ * Hook to manage pet traits with engagement system
+ * 
+ * NEW MODEL: Feed is CRITICAL (once per 24h)
+ * Play/Pet are OPTIONAL (cosmetic boosters only)
+ * 
  * Generates traits deterministically from miner address
- * Calculates decay based on interaction times
+ * Calculates engagement state based on lastFedTime only
  */
 export function useTraits({
   minerAddress = zeroAddress,
-  lastInteractionTime = Date.now(),
   lastFedTime = Date.now(),
   currentTime = Date.now(),
-}: UseTraitsOptions = {}) {
-  const traits = useMemo(() => {
+}: UseTraitsOptions = {}): UseTraitsReturn {
+  const { traits, engagement } = useMemo(() => {
     if (minerAddress === zeroAddress) {
-      return null;
+      return { traits: null, engagement: null };
     }
 
+    // Generate base traits (deterministic, never changes)
     const baseTraits = generateTraits(minerAddress);
-    const decayedTraits = decayTraits(baseTraits, lastInteractionTime, lastFedTime, currentTime);
+    
+    // Calculate engagement state (feeding status only)
+    const engagementState = calculateEngagementState(lastFedTime, currentTime);
+    
+    // Apply cosmetic decay (visual only, no consequences)
+    const decayedTraits = applyCosmeticDecay(baseTraits, engagementState.hoursSinceFed);
 
-    return decayedTraits;
-  }, [minerAddress, lastInteractionTime, lastFedTime, currentTime]);
+    return { traits: decayedTraits, engagement: engagementState };
+  }, [minerAddress, lastFedTime, currentTime]);
 
-  const updateTraits = (interactionType: "feed" | "play" | "pet" | "poke"): Traits | null => {
+  const updateTraitsFromFeed = (): Traits | null => {
     if (!traits) return null;
-    return updateTraitFromInteraction(traits, interactionType);
+    return updateTraitFromFeed(traits);
+  };
+
+  const updateTraitsFromPlay = (): Traits | null => {
+    if (!traits) return null;
+    return applyPlayBoost(traits);
+  };
+
+  const updateTraitsFromPet = (): Traits | null => {
+    if (!traits) return null;
+    return applyPetBoost(traits);
   };
 
   return {
     traits,
-    updateTraits,
+    engagement,
+    updateTraitsFromFeed,
+    updateTraitsFromPlay,
+    updateTraitsFromPet,
   };
 }
