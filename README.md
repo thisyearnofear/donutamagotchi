@@ -2,6 +2,8 @@
 
 A tamagotchi-style virtual pet game built on top of the $DONUT mining protocol. Care for your unique donut, watch it grow through lifecycle stages, breed with other players' donuts, and build lasting legacies.
 
+> **📚 Documentation**: See [GETTING_STARTED.md](docs/GETTING_STARTED.md) for setup and basics, [FEATURES.md](docs/FEATURES.md) for feature reference, and [ARCHITECTURE.md](docs/ARCHITECTURE.md) for technical details.
+
 ## 🎮 What is Donutamagotchi?
 
 Donutamagotchi enhances the $DONUT mining protocol with:
@@ -231,13 +233,6 @@ Donutamagotchi preserves all existing $DONUT mechanics:
 - **Testing**: All core features tested and functional
 - **Type Safety**: 100% TypeScript with no `any` types
 
-## 🎃 Project History
-
-**Kiroween Hackathon** → Foundation (pet UI, basic stats)
-**Phase 1** → Traits system (personality, colors, visual customization)
-**Phase 1.5** → Decay system (natural stat degradation, breeding viability)
-**Phase 2** → Lifecycle (age progression, maturation stages)
-**Phase 3** → Breeding (coming next - trait inheritance, pedigree)
 
 ## 🌟 Key Principles
 
