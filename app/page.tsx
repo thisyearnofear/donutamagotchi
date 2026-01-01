@@ -649,7 +649,6 @@ export default function HomePage() {
             {hasMiner && ageInDays >= 7 && (
               <CollapsibleAdvanced
                 traits={traits}
-                lastInteractionTime={lastInteractionTime}
                 lastFedTime={minerState?.startTime ? Number(minerState.startTime) * 1000 : Date.now()}
                 createdAtSeconds={minerState?.startTime ? Number(minerState.startTime) : 0}
                 hasMiner={hasMiner}
@@ -688,7 +687,6 @@ export default function HomePage() {
             {hasMiner && ageInDays >= 7 && (
               <CollapsibleAdvanced
                 traits={traits}
-                lastInteractionTime={lastInteractionTime}
                 lastFedTime={minerState?.startTime ? Number(minerState.startTime) * 1000 : Date.now()}
                 createdAtSeconds={minerState?.startTime ? Number(minerState.startTime) : 0}
                 hasMiner={hasMiner}

@@ -7,7 +7,6 @@ import { LifecycleDisplay } from "./lifecycle-display";
 
 interface CollapsibleAdvancedProps {
   traits: any;
-  lastInteractionTime: number;
   lastFedTime: number;
   createdAtSeconds: number;
   hasMiner: boolean;

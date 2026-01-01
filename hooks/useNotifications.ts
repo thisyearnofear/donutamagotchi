@@ -117,30 +117,44 @@ export function useNotifications() {
 export function useGameNotifications() {
   const { sendNotification } = useNotifications();
 
-  const notifyStatAlert = useCallback(
-    (statName: string, status: "hungry" | "sad" | "dirty") => {
-      const titles = {
-        hungry: "Your donut is HUNGRY! 😟",
-        sad: "Your donut is SAD! 😢",
-        dirty: "Your donut needs cleaning! 🧼",
-      };
-
-      const bodies = {
-        hungry: "Feed your donut now to maintain health!",
-        sad: "Play with your donut to boost happiness!",
-        dirty: "Interact with your donut to clean it!",
-      };
+  /**
+   * NEW: Only check feeding status (lastFedTime)
+   * OLD system had: hungry, sad, dirty alerts
+   * 
+   * Play/Pet are now cosmetic - no notifications needed
+   */
+  const notifyFeedingAlert = useCallback(
+    (daysSinceFed: number, status: "warning" | "critical") => {
+      const isCritical = status === "critical";
+      const daysLeft = Math.max(0, 3 - daysSinceFed);
 
       return sendNotification({
-        id: `stat-alert-${Date.now()}`,
-        title: titles[status],
-        body: bodies[status],
+        id: `feeding-alert-${Date.now()}`,
+        title: isCritical 
+          ? `🔴 URGENT: Feed Now! (${daysLeft}d left)` 
+          : "⚠️ Haven't Fed in 24h",
+        body: isCritical
+          ? `Your donut will auto-retire to sanctuary in ${daysLeft} day${daysLeft !== 1 ? 's' : ''} if not fed!`
+          : "Feed your donut within the next 24 hours to stay healthy and earn rewards!",
         icon: "🍩",
-        tag: `stat-alert-${status}`,
+        tag: `feeding-alert-${status}`,
         timestamp: Date.now(),
       });
     },
     [sendNotification]
+  );
+
+  /**
+   * @deprecated Old stat alert system (happiness, cleanliness)
+   * Kept for backwards compatibility but no longer used
+   */
+  const notifyStatAlert = useCallback(
+    (statName: string, status: "hungry" | "sad" | "dirty") => {
+      console.warn(`[DEPRECATED] notifyStatAlert called with ${status}. Use notifyFeedingAlert instead.`);
+      // No-op - old system no longer relevant
+      return Promise.resolve(false);
+    },
+    []
   );
 
   const notifyBreedingReady = useCallback(() => {
@@ -211,7 +225,8 @@ export function useGameNotifications() {
   }, [sendNotification]);
 
   return {
-    notifyStatAlert,
+    notifyFeedingAlert,     // NEW: Use this for feeding status alerts
+    notifyStatAlert,        // @deprecated: Old system, no longer used
     notifyBreedingReady,
     notifyBreedingRequest,
     notifyMilestone,
