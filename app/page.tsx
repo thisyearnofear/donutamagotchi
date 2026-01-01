@@ -30,6 +30,7 @@ import { DonutPet } from "@/components/donut-pet";
 import { CollapsibleStats } from "@/components/collapsible-stats";
 import { CollapsibleAdvanced } from "@/components/collapsible-advanced";
 import { InteractionPanel } from "@/components/interaction-panel";
+import { EngagementDisplay } from "@/components/engagement-display";
 import { AddToFarcasterDialog } from "@/components/add-to-farcaster-dialog";
 import { BreedingBadge } from "@/components/breeding-badge";
 import { RetirementBadge } from "@/components/retirement-badge";
@@ -297,10 +298,9 @@ export default function HomePage() {
   const minerAddress = minerState?.miner ?? zeroAddress;
   const hasMiner = minerAddress !== zeroAddress;
 
-  // Get traits for the miner (includes decay calculations)
-  const { traits } = useTraits({
+  // Get traits and engagement state for the miner
+  const { traits, engagement } = useTraits({
     minerAddress: hasMiner ? minerAddress : zeroAddress,
-    lastInteractionTime,
     lastFedTime: minerState?.startTime ? Number(minerState.startTime) * 1000 : Date.now(),
     currentTime: Date.now(),
   });
@@ -594,6 +594,11 @@ export default function HomePage() {
                   </span>
                 </div>
               </div>
+            )}
+
+            {/* Engagement Status Display - NEW */}
+            {hasMiner && engagement && (
+              <EngagementDisplay engagement={engagement} />
             )}
 
             {/* Collapsible Stats (now always shows status indicator + key stats) */}
